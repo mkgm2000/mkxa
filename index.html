@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MKXA</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--mk:#00C49A;--xb:#7CB518;--ac:#00C49A;--bg:#fff;--bg2:#f5f5f3;--t1:#1a1a18;--t2:#5a5a56;--t3:#9a9994;--bd:rgba(0,0,0,0.09);--bd2:rgba(0,0,0,0.18);--r-md:8px;--r-lg:12px;--r-xl:16px}
+@media(prefers-color-scheme:dark){:root{--bg:#111110;--bg2:#1c1c1a;--t1:#f0efeb;--t2:#9a9994;--t3:#5a5a56;--bd:rgba(255,255,255,0.07);--bd2:rgba(255,255,255,0.14)}}
+body{background:var(--bg);color:var(--t1);font-family:'Manrope',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+.bebas{font-family:'Bebas Neue',sans-serif}
+.screen{display:none}.screen.active{display:block}
+button{cursor:pointer;font-family:inherit;border:none;background:none}
+
+#s-pick{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;max-width:420px;margin:0 auto}
+.logo-wrap{margin-bottom:3rem}
+.pick-cards{display:flex;flex-direction:column;gap:10px;width:100%}
+.pick-card{border:0.5px solid var(--bd);border-radius:var(--r-xl);padding:1.25rem 1.5rem;cursor:pointer;background:var(--bg);transition:border-color .15s,background .15s}
+.pick-card:hover{background:var(--bg2);border-color:var(--bd2)}
+.pick-card-top{display:flex;align-items:center;justify-content:space-between}
+.athlete-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
+.athlete-name{font-size:32px;letter-spacing:.02em;line-height:1;color:var(--t1)}
+.pick-card.mk .athlete-label{color:var(--mk)}
+.pick-card.xb .athlete-label{color:var(--xb)}
+.avatar-btn{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;border:0.5px solid var(--bd);transition:border-color .15s;background:var(--bg2)}
+.pick-card.mk .avatar-btn{background:rgba(0,196,154,.1);border-color:rgba(0,196,154,.25)}
+.pick-card.xb .avatar-btn{background:rgba(124,181,24,.1);border-color:rgba(124,181,24,.25)}
+
+/* OVERLAY */
+.av-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:flex-end;justify-content:center}
+.av-overlay.open{display:flex}
+.av-sheet{background:var(--bg);border-radius:20px 20px 0 0;padding:1.5rem;width:100%;max-width:420px}
+.av-sheet-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:1.25rem}
+.av-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1rem}
+.av-opt{height:52px;border-radius:var(--r-lg);border:0.5px solid var(--bd);background:var(--bg2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s}
+.av-opt:hover{transform:scale(1.06)}
+.av-opt.sel{border-width:2px}
+.av-opt svg{width:26px;height:26px}
+.av-close{width:100%;padding:11px;border-radius:var(--r-md);border:0.5px solid var(--bd);font-size:13px;font-weight:600;color:var(--t2);background:var(--bg2);font-family:inherit;cursor:pointer}
+
+/* MAIN */
+#s-main{max-width:480px;margin:0 auto}
+.sticky-hdr{position:sticky;top:0;background:var(--bg);border-bottom:0.5px solid var(--bd);padding:12px 16px;z-index:50}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.hdr-left{display:flex;align-items:center;gap:10px}
+.hdr-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-av svg{width:20px;height:20px}
+.hdr-eyebrow{font-size:10px;color:var(--t3);letter-spacing:.1em;text-transform:uppercase}
+.hdr-name{font-size:20px;letter-spacing:.03em;line-height:1;color:var(--ac)}
+.change-btn{font-size:12px;color:var(--t3);border:0.5px solid var(--bd);border-radius:var(--r-md);padding:6px 14px;font-weight:500}
+.change-btn:hover{border-color:var(--bd2);color:var(--t2)}
+.nav-tabs{display:flex;gap:6px}
+.nav-tab{padding:7px 14px;border-radius:999px;border:0.5px solid transparent;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--t3)}
+.nav-tab.active{border-color:var(--ac);color:var(--ac)}
+
+.week-nav{display:flex;align-items:center;justify-content:space-between;padding:16px}
+.week-arrow{width:36px;height:36px;border-radius:var(--r-md);border:0.5px solid var(--bd);background:var(--bg);color:var(--t2);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.week-arrow:hover{border-color:var(--bd2);color:var(--t1)}
+.week-lbl{font-size:32px;letter-spacing:.03em;line-height:1;color:var(--t1);text-align:center}
+.week-meta{font-size:11px;color:var(--t3);margin-top:3px;text-align:center;font-weight:500}
+.bar-wrap{height:2px;background:var(--bg2);margin:0 16px 20px;border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;background:var(--ac);border-radius:2px;transition:width .4s}
+
+.sessions{padding:0 16px;display:flex;flex-direction:column;gap:8px;padding-bottom:2rem}
+.s-card{border:0.5px solid var(--bd);border-radius:var(--r-lg);background:var(--bg);overflow:hidden}
+.s-card.done{border-color:var(--ac)}
+.s-hdr{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.s-icon{width:38px;height:38px;border-radius:9px;background:var(--bg2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.s-icon svg{width:18px;height:18px}
+.s-card.done .s-icon{background:color-mix(in srgb,var(--ac) 14%,transparent)}
+.s-labels{flex:1;min-width:0}
+.s-tag-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px}
+.s-day{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ac)}
+.s-badge{font-size:10px;padding:2px 7px;border-radius:999px;font-weight:600}
+.s-title{font-size:14px;font-weight:600;color:var(--t1)}
+.chev{color:var(--t3);font-size:12px;transition:transform .2s;flex-shrink:0;border:0.5px solid var(--bd);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+.chev.open{transform:rotate(180deg)}
+.s-detail{display:none}.s-detail.open{display:block}
+.blocks{padding:0 16px;border-top:0.5px solid var(--bd)}
+.b-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid var(--bd)}
+.b-row:last-child{border-bottom:none}
+.b-dot{width:4px;height:4px;border-radius:50%;background:var(--ac);margin-top:9px;flex-shrink:0}
+.b-name{font-size:13px;font-weight:600;color:var(--t1)}
+.b-sets{font-size:11px;font-weight:700;color:var(--ac);white-space:nowrap}
+.b-load{font-size:11px;color:var(--t3);margin-top:1px}
+.log-area{margin:12px 16px 14px;background:var(--bg2);border-radius:var(--r-md);padding:14px}
+.log-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
+.done-row{display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:12px}
+.chkbox{width:18px;height:18px;border-radius:5px;border:0.5px solid var(--bd2);background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.chkbox.on{background:var(--ac);border-color:var(--ac)}
+.done-txt{font-size:13px;color:var(--t2);font-weight:500}
+.rpe-lbl{font-size:10px;color:var(--t3);margin-bottom:7px;font-weight:500}
+.rpe-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.rpe-btn{width:29px;height:29px;border-radius:50%;border:0.5px solid var(--bd2);background:var(--bg);color:var(--t3);font-size:11px;font-weight:700;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center}
+.rpe-btn.sel{color:#fff;border-width:2px}
+.log-ta{width:100%;background:var(--bg);border:0.5px solid var(--bd);border-radius:var(--r-md);padding:10px;color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;min-height:60px}
+.log-ta:focus{border-color:var(--ac)}
+.save-btn{width:100%;margin-top:9px;padding:10px;border-radius:var(--r-md);border:0.5px solid var(--ac);background:transparent;color:var(--ac);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.save-btn.saved{background:var(--ac);color:#fff}
+.wnote-wrap{margin:0 16px 2rem;border:0.5px solid var(--bd);border-radius:var(--r-lg);padding:14px}
+.wnote-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
+
+#tab-obj{padding:16px 16px 2rem}
+.obj-slbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
+.obj-card{border:0.5px solid var(--bd);border-radius:var(--r-lg);background:var(--bg);padding:16px;margin-bottom:10px}
+.obj-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}
+.obj-name{font-size:15px;font-weight:700;color:var(--t1)}
+.obj-dtag{font-size:10px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--bg2);color:var(--t2);white-space:nowrap}
+.obj-weeks{font-size:30px;letter-spacing:.02em;color:var(--ac);line-height:1}
+.obj-wlbl{font-size:11px;color:var(--t3);font-weight:500;margin-top:2px}
+.obj-add{border:0.5px dashed var(--bd2);border-radius:var(--r-lg);padding:14px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:var(--t3);font-size:13px;font-weight:600;margin-bottom:10px;transition:border-color .15s,color .15s}
+.obj-add:hover{border-color:var(--ac);color:var(--ac)}
+.obj-form{border:0.5px solid var(--bd);border-radius:var(--r-lg);padding:16px;margin-bottom:10px;background:var(--bg2)}
+.obj-form label{font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:6px}
+.obj-form input{width:100%;background:var(--bg);border:0.5px solid var(--bd);border-radius:var(--r-md);padding:9px 12px;color:var(--t1);font-size:14px;font-family:inherit;outline:none;margin-bottom:12px}
+.obj-form input:focus{border-color:var(--ac)}
+.obj-btns{display:flex;gap:8px}
+.obj-btns button{flex:1;padding:10px;border-radius:var(--r-md);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-cancel{border:0.5px solid var(--bd);color:var(--t2);background:transparent}
+.btn-sobj{border:0.5px solid var(--ac);color:var(--ac);background:transparent}
+.btn-sobj:hover{background:var(--ac);color:#fff}
+.obj-del{font-size:11px;color:var(--t3);cursor:pointer;margin-top:8px;display:block;text-align:right}
+.obj-del:hover{color:#ef4444}
+
+#tab-prog{padding:16px 16px 2rem}
+.prog-intro{font-size:12px;color:var(--t2);margin-bottom:16px;font-weight:500}
+.prog-tbl{border-collapse:collapse;width:100%}
+.prog-tbl td,.prog-tbl th{padding:3px 4px;font-size:11px}
+.prog-wh{color:var(--t3);text-align:center;font-weight:600}
+.prog-dl{font-weight:700;font-size:10px;letter-spacing:.06em;color:var(--ac);padding-right:8px}
+.prog-cell{width:28px;height:25px;border-radius:5px;text-align:center;vertical-align:middle;border:0.5px solid var(--bd);background:var(--bg2);color:var(--t3);font-weight:700;font-size:10px}
+.prog-leg{font-size:11px;color:var(--t3);margin-top:14px;text-align:center;font-weight:500}
+</style>
+</head>
+<body>
+
+<!-- AVATAR OVERLAY -->
+<div class="av-overlay" id="av-overlay" onclick="closeAv(event)">
+  <div class="av-sheet" onclick="event.stopPropagation()">
+    <p class="av-sheet-title" id="av-title">Elige tu avatar</p>
+    <div class="av-grid" id="av-grid"></div>
+    <button class="av-close" onclick="closeAv()">Cerrar</button>
+  </div>
+</div>
+
+<!-- PICK -->
+<div id="s-pick" class="screen active">
+  <div class="logo-wrap">
+    <svg width="300" height="90" viewBox="0 0 600 180" role="img" xmlns="http://www.w3.org/2000/svg">
+      <title>MKXA</title>
+      <defs>
+        <clipPath id="cl"><rect x="0" y="0" width="268" height="180"/></clipPath>
+        <clipPath id="cr"><rect x="246" y="0" width="210" height="180"/></clipPath>
+        <clipPath id="ca"><rect x="392" y="0" width="210" height="180"/></clipPath>
+      </defs>
+      <!-- M en aqua, pegada al bloque KX -->
+      <text x="4" y="158" font-family="'Bebas Neue',sans-serif" font-size="165px" fill="#00C49A" letter-spacing="-8">MKXA</text>
+      <!-- Repintamos K en aqua y XA en verde encima, con clips -->
+      <!-- Todo en aqua primero ya hecho arriba. Ahora X y A en verde -->
+      <g clip-path="url(#cr)">
+        <text x="4" y="158" font-family="'Bebas Neue',sans-serif" font-size="165px" fill="#7CB518" letter-spacing="-8">MKXA</text>
+      </g>
+      <g clip-path="url(#ca)">
+        <text x="4" y="158" font-family="'Bebas Neue',sans-serif" font-size="165px" fill="#7CB518" letter-spacing="-8">MKXA</text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="pick-cards">
+    <div class="pick-card mk" onclick="selectAthlete('MK')">
+      <div class="pick-card-top">
+        <div>
+          <p class="athlete-label">Atleta</p>
+          <p class="bebas athlete-name">MK</p>
+        </div>
+        <div class="avatar-btn" id="av-btn-MK" onclick="openAv(event,'MK')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#00C49A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/><path d="M7 20l2-6 3 3 2-3 1 6"/><path d="M6 10c2-1 8-1 10 0l-1 5H7l-1-5z"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="pick-card xb" onclick="selectAthlete('Xabi')">
+      <div class="pick-card-top">
+        <div>
+          <p class="athlete-label">Atleta</p>
+          <p class="bebas athlete-name">Xabi</p>
+        </div>
+        <div class="avatar-btn" id="av-btn-Xabi" onclick="openAv(event,'Xabi')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#7CB518" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M3 20l5-8 4 5 3-4 6 7H3z"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="s-main" class="screen">
+  <div class="sticky-hdr">
+    <div class="hdr-row">
+      <div class="hdr-left">
+        <div class="hdr-av" id="hdr-av">
+          <svg id="hdr-av-svg" viewBox="0 0 24 24" fill="none" stroke="#00C49A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></svg>
+        </div>
+        <div>
+          <p class="hdr-eyebrow">MKXA</p>
+          <p class="bebas hdr-name" id="hdr-name">MK</p>
+        </div>
+      </div>
+      <button class="change-btn" onclick="goBack()">Cambiar</button>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" id="btn-plan" onclick="switchTab('plan')">Plan</button>
+      <button class="nav-tab" id="btn-obj" onclick="switchTab('obj')">Objetivos</button>
+      <button class="nav-tab" id="btn-prog" onclick="switchTab('prog')">Progresion</button>
+    </div>
+  </div>
+
+  <div id="tab-plan">
+    <div class="week-nav">
+      <button class="week-arrow" onclick="changeWeek(-1)">&#8249;</button>
+      <div>
+        <p class="bebas week-lbl" id="week-lbl">SEMANA 1</p>
+        <p class="week-meta" id="week-meta">0/4 sesiones</p>
+      </div>
+      <button class="week-arrow" onclick="changeWeek(1)">&#8250;</button>
+    </div>
+    <div class="bar-wrap"><div class="bar-fill" id="bar-fill" style="width:0%"></div></div>
+    <div class="sessions" id="sessions-list"></div>
+    <div class="wnote-wrap">
+      <p class="wnote-lbl">Nota de la semana</p>
+      <textarea class="log-ta" id="week-note" rows="2" placeholder="Sensaciones generales..." oninput="saveWeekNote()"></textarea>
+    </div>
+  </div>
+
+  <div id="tab-obj" style="display:none">
+    <p class="obj-slbl">Mis objetivos</p>
+    <div id="obj-list"></div>
+    <div class="obj-add" onclick="showObjForm()">+ Anadir objetivo</div>
+    <div class="obj-form" id="obj-form" style="display:none">
+      <label>Objetivo</label>
+      <input type="text" id="obj-name" placeholder="Ej: HYROX Valencia sub 1:10">
+      <label>Fecha objetivo</label>
+      <input type="date" id="obj-date">
+      <div class="obj-btns">
+        <button class="btn-cancel" onclick="hideObjForm()">Cancelar</button>
+        <button class="btn-sobj" onclick="saveObj()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-prog" style="display:none">
+    <p class="prog-intro">Registro semana a semana</p>
+    <div style="overflow-x:auto"><table class="prog-tbl" id="prog-tbl"></table></div>
+    <p class="prog-leg">Verde = bajo esfuerzo · Rojo = alto esfuerzo</p>
+  </div>
+</div>
+
+<script>
+// AVATARES SVG minimalistas — mismos para ambos, color se aplica dinámicamente
+const AVATARS=[
+  {id:'run', label:'Correr', path:'<path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/><path d="M7 20l2-6 3 3 2-3 1 6"/><path d="M6 10c2-1 8-1 10 0l-1 5H7l-1-5z"/>'},
+  {id:'lift', label:'Pesa', path:'<path d="M6 8h12"/><path d="M4 8h2v8H4z"/><path d="M18 8h2v8h-2z"/><path d="M11 8v8"/><path d="M13 8v8"/>'},
+  {id:'mtn', label:'Montana', path:'<path d="M3 20l5-8 4 5 3-4 6 7H3z"/>'},
+  {id:'wave', label:'Ola', path:'<path d="M2 12c1.5-2 3-2 4.5 0s3 2 4.5 0 3-2 4.5 0 3 2 4.5 0"/>'},
+  {id:'bolt', label:'Rayo', path:'<path d="M13 2L4 14h8l-1 8 9-12h-8z"/>'},
+  {id:'eagle', label:'Aguila', path:'<path d="M12 3c0 0-4 3-4 8h8c0-5-4-8-4-8z"/><path d="M8 11c-3 1-5 3-5 5h18c0-2-2-4-5-5"/><path d="M12 11v6"/>'},
+  {id:'leaf', label:'Hoja', path:'<path d="M12 21c0 0 8-6 8-13a8 8 0 0 0-16 0c0 7 8 13 8 13z"/><path d="M12 21V8"/>'},
+  {id:'fire', label:'Fuego', path:'<path d="M12 2c0 5-5 6-5 11a5 5 0 0 0 10 0c0-5-5-6-5-11z"/><path d="M12 12c0 2-2 3-2 5a2 2 0 0 0 4 0c0-2-2-3-2-5z"/>'},
+  {id:'wolf', label:'Lobo', path:'<path d="M4 3l4 5H8L6 12h3l1 2-3 1 1 3h3l2 3 2-3h3l1-3-3-1 1-2h3L15 8h-.5l4-5-5 3L12 4l-3 2L4 3z"/>'},
+  {id:'drop', label:'Gota', path:'<path d="M12 2c0 0-7 7-7 13a7 7 0 0 0 14 0c0-6-7-13-7-13z"/>'},
+];
+
+function svgIcon(pathStr, color, w, h){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="'+(w||24)+'" height="'+(h||24)+'">'+pathStr+'</svg>';
+}
+
+const DAYS=[
+  {key:'D1',title:'Fuerza + Trineo',avId:'lift',blocks:[
+    {name:'Sentadilla',sets:'4x5',load:'MK: 35kg · Xabi: aprendizaje'},
+    {name:'RDL / Peso Muerto',sets:'4x4',load:'MK: 45kg · Xabi: bisagra tecnica'},
+    {name:'Press Banca',sets:'4x8',load:'MK: 30kg · Xabi: ~60kg est.'},
+    {name:'Dominadas / Asistidas',sets:'3x6',load:'BW o banda'},
+    {name:'Sled Push',sets:'4x20m',load:'Ligero - pasos cortos'},
+    {name:'Sled Pull',sets:'4x20m',load:'Ligero'},
+    {name:'Plancha',sets:'3x30"',load:''},
+  ]},
+  {key:'D2',title:'Z2 Suave',avId:'run',blocks:[
+    {name:'Carrera continua Z2',sets:"30-40'",load:'MK: ~6:30/km · Xabi: ~7:00/km'},
+    {name:'Conversacional nariz',sets:'',load:'Si no puedes hablar, mas lento'},
+    {name:'Movilidad post',sets:"10'",load:'Cadera + tobillo'},
+  ]},
+  {key:'D3',title:'HYROX Tecnico',avId:'fire',blocks:[
+    {name:'Ski Erg',sets:'4x250m',load:'Cadencia alta, tecnica'},
+    {name:'Remo',sets:'4x250m',load:'Tiron de espalda, no brazos'},
+    {name:'Wall Balls',sets:'4x10',load:'MK: 6kg · Xabi: 9kg'},
+    {name:'Farmer Carry',sets:'3x40m',load:'MK: 2x12kg · Xabi: 2x20kg'},
+    {name:'Burpee Broad Jump',sets:'3x8',load:'Respiracion controlada'},
+  ]},
+  {key:'D4',title:'Series Carrera',avId:'bolt',blocks:[
+    {name:'Calentamiento',sets:"10'",load:'Trote suave + 3x100m progresivos'},
+    {name:'Series 400m',sets:'6x400m',load:'MK: 2:02-2:08 · Xabi: 2:20-2:35'},
+    {name:'Rec 90" caminando',sets:'',load:'Respiracion nasal'},
+    {name:'Vuelta a la calma',sets:"5'",load:'Trote suave'},
+  ]},
+];
+
+const RC={1:'#22c55e',2:'#22c55e',3:'#4ade80',4:'#84cc16',5:'#eab308',6:'#f97316',7:'#f97316',8:'#ef4444',9:'#dc2626',10:'#991b1b'};
+const SEL={MK:'run', Xabi:'mtn'};
+let athlete=null, week=1, allData={}, activeAvAthlete=null;
+
+function ac(){return athlete==='MK'?'#00C49A':'#7CB518'}
+function setAC(){document.documentElement.style.setProperty('--ac',ac())}
+
+function load(){
+  try{const d=localStorage.getItem('mkxa-v3');if(d){const p=JSON.parse(d);allData=p.data||{};if(p.sel){SEL.MK=p.sel.MK||'run';SEL.Xabi=p.sel.Xabi||'mtn'}}}catch{}
+  updateAvBtn('MK'); updateAvBtn('Xabi');
+}
+function save(){try{localStorage.setItem('mkxa-v3',JSON.stringify({data:allData,sel:SEL}))}catch{}}
+
+function getAv(id){return AVATARS.find(a=>a.id===id)||AVATARS[0]}
+function updateAvBtn(a){
+  const av=getAv(SEL[a]);
+  const color=a==='MK'?'#00C49A':'#7CB518';
+  document.getElementById('av-btn-'+a).innerHTML=svgIcon(av.path,color,28,28);
+}
+
+function openAv(e,a){
+  e.stopPropagation();
+  activeAvAthlete=a;
+  const color=a==='MK'?'#00C49A':'#7CB518';
+  document.getElementById('av-title').textContent='Avatar de '+a;
+  document.getElementById('av-grid').innerHTML=AVATARS.map(av=>
+    '<div class="av-opt'+(SEL[a]===av.id?' sel':'')+'" style="'+(SEL[a]===av.id?'border-color:'+color+';background:'+color+'18':'')+'" onclick="pickAv(\''+av.id+'\',this)">'+
+    svgIcon(av.path,SEL[a]===av.id?color:'var(--t3)',26,26)+
+    '</div>'
+  ).join('');
+  document.getElementById('av-overlay').classList.add('open');
+}
+function closeAv(e){
+  if(!e||e.target===document.getElementById('av-overlay'))
+    document.getElementById('av-overlay').classList.remove('open');
+}
+function pickAv(id, el){
+  const a=activeAvAthlete, color=a==='MK'?'#00C49A':'#7CB518';
+  SEL[a]=id;
+  updateAvBtn(a);
+  if(athlete===a) updateHdrAv();
+  document.querySelectorAll('#av-grid .av-opt').forEach(o=>{
+    o.classList.remove('sel');o.style.borderColor='';o.style.background='';
+    o.querySelector('svg').setAttribute('stroke','var(--t3)');
+  });
+  el.classList.add('sel');el.style.borderColor=color;el.style.background=color+'18';
+  el.querySelector('svg').setAttribute('stroke',color);
+  save();
+}
+
+function updateHdrAv(){
+  const av=getAv(SEL[athlete]);
+  document.getElementById('hdr-av-svg').innerHTML=av.path;
+  document.getElementById('hdr-av-svg').setAttribute('stroke',ac());
+}
+
+function selectAthlete(a){
+  athlete=a;setAC();
+  document.getElementById('s-pick').classList.remove('active');
+  document.getElementById('s-main').classList.add('active');
+  document.getElementById('hdr-name').textContent=a;
+  const hav=document.getElementById('hdr-av');
+  hav.style.background=a==='MK'?'rgba(0,196,154,.12)':'rgba(124,181,24,.12)';
+  updateHdrAv();
+  renderWeek();
+}
+function goBack(){
+  document.getElementById('s-main').classList.remove('active');
+  document.getElementById('s-pick').classList.add('active');
+  athlete=null;
+}
+function switchTab(t){
+  ['plan','obj','prog'].forEach(x=>{
+    document.getElementById('tab-'+x).style.display=x===t?'block':'none';
+    document.getElementById('btn-'+x).classList.toggle('active',x===t);
+  });
+  if(t==='prog')renderProg();
+  if(t==='obj')renderObj();
+}
+function changeWeek(d){week=Math.max(1,week+d);renderWeek()}
+function getLog(day){return allData[athlete]?.logs?.['W'+week]?.[day]||{}}
+function setLog(day,data){
+  allData[athlete]=allData[athlete]||{};
+  allData[athlete].logs=allData[athlete].logs||{};
+  allData[athlete].logs['W'+week]=allData[athlete].logs['W'+week]||{};
+  allData[athlete].logs['W'+week][day]={...getLog(day),...data};
+  save();
+}
+function renderWeek(){
+  const done=DAYS.filter(d=>getLog(d.key).completed).length;
+  document.getElementById('week-lbl').textContent='SEMANA '+week;
+  document.getElementById('week-meta').textContent=done+'/4 sesiones completadas';
+  document.getElementById('bar-fill').style.width=(done/4*100)+'%';
+  document.getElementById('week-note').value=allData[athlete]?.weekNotes?.['W'+week]||'';
+  const list=document.getElementById('sessions-list');
+  list.innerHTML='';DAYS.forEach(day=>buildCard(day,list));
+}
+function buildCard(day,container){
+  const log=getLog(day.key),color=ac();
+  const av=getAv(day.avId);
+  const iconColor=log.completed?color:'var(--t3)';
+  const card=document.createElement('div');
+  card.className='s-card'+(log.completed?' done':'');
+  card.innerHTML=
+    '<div class="s-hdr" onclick="toggleCard(\''+day.key+'\',this)">'+
+    '<div class="s-icon">'+svgIcon(av.path,iconColor,18,18)+'</div>'+
+    '<div class="s-labels">'+
+    '<div class="s-tag-row"><span class="s-day">'+day.key+'</span>'+
+    (log.completed?'<span class="s-badge" style="background:'+color+'22;color:'+color+'">Completada</span>':'')+
+    (log.rpe?'<span class="s-badge" style="background:'+RC[log.rpe]+'22;color:'+RC[log.rpe]+'">RPE '+log.rpe+'</span>':'')+
+    '</div><div class="s-title">'+day.title+'</div></div>'+
+    '<div class="chev">&#8964;</div></div>'+
+    '<div class="s-detail" id="det-'+day.key+'">'+
+    '<div class="blocks">'+
+    day.blocks.map(b=>'<div class="b-row"><div class="b-dot"></div><div style="flex:1"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="b-name">'+b.name+'</span>'+(b.sets?'<span class="b-sets">'+b.sets+'</span>':'')+'</div>'+(b.load?'<div class="b-load">'+b.load+'</div>':'')+'</div></div>').join('')+
+    '</div><div class="log-area">'+
+    '<p class="log-lbl">Registrar</p>'+
+    '<div class="done-row" onclick="toggleDone(\''+day.key+'\')"><div class="chkbox'+(log.completed?' on':'')+'" id="chk-'+day.key+'">'+(log.completed?'&#10003;':'')+'</div><span class="done-txt">Sesion completada</span></div>'+
+    '<p class="rpe-lbl">RPE — esfuerzo percibido</p>'+
+    '<div class="rpe-row" id="rpe-'+day.key+'">'+
+    [1,2,3,4,5,6,7,8,9,10].map(n=>'<button class="rpe-btn'+(log.rpe===n?' sel':'')+'" style="'+(log.rpe===n?'background:'+RC[n]+';border-color:'+RC[n]+';color:#fff':'')+'" onclick="setRPE(\''+day.key+'\','+n+')">'+n+'</button>').join('')+
+    '</div><textarea class="log-ta" id="notes-'+day.key+'" rows="2" placeholder="Sensaciones, cargas reales...">'+(log.notes||'')+'</textarea>'+
+    '<button class="save-btn" id="sbtn-'+day.key+'" onclick="saveSess(\''+day.key+'\')">Guardar</button>'+
+    '</div></div>';
+  container.appendChild(card);
+}
+function toggleCard(k,h){
+  const d=document.getElementById('det-'+k),c=h.querySelector('.chev'),o=d.classList.contains('open');
+  d.classList.toggle('open',!o);c.classList.toggle('open',!o);
+}
+function toggleDone(k){setLog(k,{completed:!getLog(k).completed});renderWeek()}
+function setRPE(k,n){
+  setLog(k,{rpe:n});
+  document.querySelectorAll('#rpe-'+k+' .rpe-btn').forEach((b,i)=>{
+    const v=i+1;b.classList.toggle('sel',v===n);
+    b.style.background=v===n?RC[n]:'';b.style.borderColor=v===n?RC[n]:'';b.style.color=v===n?'#fff':'';
+  });
+}
+function saveSess(k){
+  setLog(k,{notes:document.getElementById('notes-'+k)?.value||''});
+  const btn=document.getElementById('sbtn-'+k);
+  btn.classList.add('saved');btn.textContent='Guardado';
+  setTimeout(()=>{btn.classList.remove('saved');btn.textContent='Guardar'},2000);
+  renderWeek();
+}
+function saveWeekNote(){
+  const v=document.getElementById('week-note').value;
+  allData[athlete]=allData[athlete]||{};allData[athlete].weekNotes=allData[athlete].weekNotes||{};
+  allData[athlete].weekNotes['W'+week]=v;save();
+}
+
+// OBJETIVOS
+function getObjs(){return allData[athlete]?.objetivos||[]}
+function saveObjs(arr){allData[athlete]=allData[athlete]||{};allData[athlete].objetivos=arr;save()}
+function weeksLeft(dateStr){
+  const diff=Math.ceil((new Date(dateStr)-new Date())/(1000*60*60*24*7));
+  return diff>0?diff:0;
+}
+function renderObj(){
+  const objs=getObjs();
+  document.getElementById('obj-list').innerHTML=objs.map((o,i)=>{
+    const w=weeksLeft(o.date);
+    const ds=new Date(o.date).toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'});
+    return '<div class="obj-card">'+
+      '<div class="obj-card-top"><div class="obj-name">'+o.name+'</div><div class="obj-dtag">'+ds+'</div></div>'+
+      '<div class="obj-weeks">'+w+'</div>'+
+      '<div class="obj-wlbl">'+(w===1?'semana restante':'semanas restantes')+'</div>'+
+      '<span class="obj-del" onclick="deleteObj('+i+')">Eliminar</span>'+
+      '</div>';
+  }).join('');
+}
+function showObjForm(){document.getElementById('obj-form').style.display='block'}
+function hideObjForm(){document.getElementById('obj-form').style.display='none';document.getElementById('obj-name').value='';document.getElementById('obj-date').value=''}
+function saveObj(){
+  const name=document.getElementById('obj-name').value.trim();
+  const date=document.getElementById('obj-date').value;
+  if(!name||!date)return;
+  const objs=getObjs();objs.push({name,date});saveObjs(objs);
+  hideObjForm();renderObj();
+}
+function deleteObj(i){const objs=getObjs();objs.splice(i,1);saveObjs(objs);renderObj()}
+
+// PROGRESION
+function renderProg(){
+  const weeks=Array.from({length:week},(_,i)=>i+1).slice(-10);
+  let html='<tr><th></th>'+weeks.map(w=>'<th class="prog-wh">S'+w+'</th>').join('')+'</tr>';
+  DAYS.forEach(day=>{
+    html+='<tr><td class="prog-dl">'+day.key+'</td>';
+    weeks.forEach(w=>{
+      const log=allData[athlete]?.logs?.['W'+w]?.[day.key]||{},c=log.rpe?RC[log.rpe]:null;
+      html+='<td class="prog-cell" style="'+(c?'background:'+c+'22;border-color:'+c+'44;color:'+c:'')+'">'+( log.rpe||(log.completed?'v':'·'))+'</td>';
+    });
+    html+='</tr>';
+  });
+  document.getElementById('prog-tbl').innerHTML=html;
+}
+
+load();
+</script>
+</body>
+</html>
