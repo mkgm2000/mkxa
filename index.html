@@ -11,7 +11,9 @@
 @media(prefers-color-scheme:dark){:root{--bg:#111110;--bg2:#1c1c1a;--t1:#f0efeb;--t2:#9a9994;--t3:#5a5a56;--bd:rgba(255,255,255,0.07);--bd2:rgba(255,255,255,0.14)}}
 body{background:var(--bg);color:var(--t1);font-family:'Manrope',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
 .bebas{font-family:'Bebas Neue',sans-serif}
-.screen{display:none}.screen.active{display:block}
+.screen{display:none;opacity:0;transform:translateY(14px);transition:opacity .28s ease,transform .28s ease;position:fixed;inset:0;overflow-y:auto;background:var(--bg)}
+.screen.active{display:block}
+.screen.visible{opacity:1;transform:translateY(0)}
 button{cursor:pointer;font-family:inherit;border:none;background:none}
 
 #s-pick{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;max-width:420px;margin:0 auto}
@@ -85,6 +87,13 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 .b-name{font-size:13px;font-weight:600;color:var(--t1)}
 .b-sets{font-size:11px;font-weight:700;color:var(--ac);white-space:nowrap}
 .b-load{font-size:11px;color:var(--t3);margin-top:1px}
+.b-row{cursor:pointer}
+.b-edit-icon{font-size:11px;color:var(--t3);opacity:0;transition:opacity .15s;flex-shrink:0;margin-left:4px}
+.b-row:hover .b-edit-icon{opacity:1}
+.b-editor{padding:8px 0 4px;border-bottom:0.5px solid var(--bd)}
+.ed-input{width:100%;background:var(--bg);border:0.5px solid var(--bd2);border-radius:var(--r-md);padding:7px 10px;color:var(--t1);font-size:13px;font-family:inherit;outline:none;margin-bottom:6px}
+.ed-input:focus{border-color:var(--ac)}
+.ed-btn{flex:1;padding:8px;border-radius:var(--r-md);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:0.5px solid var(--bd);color:var(--t2);background:transparent}
 .log-area{margin:12px 16px 14px;background:var(--bg2);border-radius:var(--r-md);padding:14px}
 .log-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
 .done-row{display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:12px}
@@ -203,15 +212,14 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
           <svg id="hdr-av-svg" viewBox="0 0 24 24" fill="none" stroke="#00C49A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></svg>
         </div>
         <div>
-          <p class="hdr-eyebrow">MKXA</p>
+          <p class="hdr-eyebrow"><span style="color:#00C49A;font-weight:700">MK</span><span style="color:#7CB518;font-weight:700">XA</span></p>
           <p class="bebas hdr-name" id="hdr-name">MK</p>
         </div>
       </div>
-      <button class="change-btn" onclick="goBack()">Cambiar</button>
+      <button class="change-btn" onclick="goBack()">Inicio</button>
     </div>
     <div class="nav-tabs">
       <button class="nav-tab active" id="btn-plan" onclick="switchTab('plan')">Plan</button>
-      <button class="nav-tab" id="btn-obj" onclick="switchTab('obj')">Objetivos</button>
       <button class="nav-tab" id="btn-prog" onclick="switchTab('prog')">Progresion</button>
     </div>
   </div>
@@ -231,23 +239,13 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
       <p class="wnote-lbl">Nota de la semana</p>
       <textarea class="log-ta" id="week-note" rows="2" placeholder="Sensaciones generales..." oninput="saveWeekNote()"></textarea>
     </div>
-  </div>
-
-  <div id="tab-obj" style="display:none">
-    <p class="obj-slbl">Mis objetivos</p>
-    <div id="obj-list"></div>
-    <div class="obj-add" onclick="showObjForm()">+ Anadir objetivo</div>
-    <div class="obj-form" id="obj-form" style="display:none">
-      <label>Objetivo</label>
-      <input type="text" id="obj-name" placeholder="Ej: HYROX Valencia sub 1:10">
-      <label>Fecha objetivo</label>
-      <input type="date" id="obj-date">
-      <div class="obj-btns">
-        <button class="btn-cancel" onclick="hideObjForm()">Cancelar</button>
-        <button class="btn-sobj" onclick="saveObj()">Guardar</button>
-      </div>
+    <div style="padding:0 16px 2rem">
+      <button onclick="exportWeek()" style="width:100%;padding:11px;border-radius:var(--r-md);border:0.5px solid var(--bd2);background:var(--bg2);color:var(--t2);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+        ↗ Exportar semana para ajuste
+      </button>
     </div>
   </div>
+
 
   <div id="tab-prog" style="display:none">
     <p class="prog-intro">Registro semana a semana</p>
@@ -275,39 +273,107 @@ function svgIcon(pathStr, color, w, h){
   return '<svg viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="'+(w||24)+'" height="'+(h||24)+'">'+pathStr+'</svg>';
 }
 
-const DAYS=[
-  {key:'D1',title:'Fuerza + Trineo',avId:'lift',blocks:[
-    {name:'Sentadilla',sets:'4x5',load:'MK: 35kg · Xabi: aprendizaje'},
-    {name:'RDL / Peso Muerto',sets:'4x4',load:'MK: 45kg · Xabi: bisagra tecnica'},
-    {name:'Press Banca',sets:'4x8',load:'MK: 30kg · Xabi: ~60kg est.'},
-    {name:'Dominadas / Asistidas',sets:'3x6',load:'BW o banda'},
-    {name:'Sled Push',sets:'4x20m',load:'Ligero - pasos cortos'},
-    {name:'Sled Pull',sets:'4x20m',load:'Ligero'},
-    {name:'Plancha',sets:'3x30"',load:''},
-  ]},
-  {key:'D2',title:'Z2 Suave',avId:'run',blocks:[
-    {name:'Carrera continua Z2',sets:"30-40'",load:'MK: ~6:30/km · Xabi: ~7:00/km'},
-    {name:'Conversacional nariz',sets:'',load:'Si no puedes hablar, mas lento'},
-    {name:'Movilidad post',sets:"10'",load:'Cadera + tobillo'},
-  ]},
-  {key:'D3',title:'HYROX Tecnico',avId:'fire',blocks:[
-    {name:'Ski Erg',sets:'4x250m',load:'Cadencia alta, tecnica'},
-    {name:'Remo',sets:'4x250m',load:'Tiron de espalda, no brazos'},
-    {name:'Wall Balls',sets:'4x10',load:'MK: 6kg · Xabi: 9kg'},
-    {name:'Farmer Carry',sets:'3x40m',load:'MK: 2x12kg · Xabi: 2x20kg'},
-    {name:'Burpee Broad Jump',sets:'3x8',load:'Respiracion controlada'},
-  ]},
-  {key:'D4',title:'Series Carrera',avId:'bolt',blocks:[
-    {name:'Calentamiento',sets:"10'",load:'Trote suave + 3x100m progresivos'},
-    {name:'Series 400m',sets:'6x400m',load:'MK: 2:02-2:08 · Xabi: 2:20-2:35'},
-    {name:'Rec 90" caminando',sets:'',load:'Respiracion nasal'},
-    {name:'Vuelta a la calma',sets:"5'",load:'Trote suave'},
-  ]},
-];
+// ── PLAN POR SEMANAS ─────────────────────────────────────────
+// Fecha inicio: 11 mayo 2025 = S1
+const START_DATE = new Date('2026-05-11');
+
+function getCurrentWeek(){
+  const now = new Date();
+  const diff = Math.floor((now - START_DATE) / (1000*60*60*24*7));
+  return Math.max(1, diff + 1);
+}
+
+const PLAN = {
+  1: [
+    {key:'D1',title:'Fuerza + Trineo',avId:'lift',rpe:'RPE 6-7',nota:'Prioridad tecnica. Cargas conservadoras. Aprender el movimiento.',blocks:[
+      {name:'Sentadilla',sets:'4x8',load:{MK:'30kg',Xabi:'Tecnica BW / 20kg'},tip:'Amplitud completa, rodilla sigue pie'},
+      {name:'RDL / Peso Muerto',sets:'4x8',load:{MK:'40kg',Xabi:'30kg'},tip:'Espalda neutra, empuje de caderas'},
+      {name:'Press Banca',sets:'4x10',load:{MK:'25kg',Xabi:'60kg'},tip:'Recorrido completo, codos 45°'},
+      {name:'Dominadas asistidas',sets:'3x6',load:{MK:'Banda M',Xabi:'Banda M/G'},tip:'Escapulas activas'},
+      {name:'Sled Push',sets:'4x20m',load:{MK:'20kg',Xabi:'30kg'},tip:'Pasos cortos, cadera baja'},
+      {name:'Sled Pull',sets:'4x20m',load:{MK:'20kg',Xabi:'30kg'},tip:'Tirar con todo el cuerpo'},
+      {name:'Plancha',sets:'3x30"',load:{MK:'BW',Xabi:'BW'},tip:'Gluteo activo, no hundir cadera'},
+    ]},
+    {key:'D2',title:'Z2 Suave',avId:'run',rpe:'RPE 4-5',nota:'Conversacional. Nariz si es posible. Construir base aerobica.',blocks:[
+      {name:'Carrera Z2 continua',sets:"30'",load:{MK:'~6:30/km',Xabi:'~7:15/km'},tip:'FC <75% FCmax'},
+      {name:'Movilidad post',sets:"10'",load:{MK:'Cadera + tobillo',Xabi:'Cadera + tobillo'},tip:'Psoas, gluteo, soleo'},
+    ]},
+    {key:'D3',title:'HYROX Tecnico',avId:'fire',rpe:'RPE 5-6',nota:'Aprender movimientos HYROX. Sin agobio de tiempo. Tecnica > velocidad.',blocks:[
+      {name:'Ski Erg',sets:'4x250m',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'Cadencia alta, brazos rectos'},
+      {name:'Remo',sets:'4x250m',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'Tiron de espalda, no brazos'},
+      {name:'Wall Balls',sets:'4x10',load:{MK:'6kg',Xabi:'9kg'},tip:'Squat profundo + extension total'},
+      {name:'Farmer Carry',sets:'3x40m',load:{MK:'2x10kg',Xabi:'2x16kg'},tip:'Hombros atras, no inclinarse'},
+      {name:'Burpee Broad Jump',sets:'3x8',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'Salto hacia delante, no vertical'},
+    ]},
+    {key:'D4',title:'Series Carrera',avId:'bolt',rpe:'RPE 6-7',nota:'Primera toma de contacto con series. Ritmo comodo, no al limite.',blocks:[
+      {name:'Calentamiento',sets:"10'",load:{MK:'Trote suave',Xabi:'Trote suave'},tip:'3x100m progresivos al final'},
+      {name:'Series 400m',sets:'5x400m',load:{MK:'2:10-2:15',Xabi:'2:30-2:40'},tip:'Rec 90" caminando entre series'},
+      {name:'Vuelta a la calma',sets:"5'",load:{MK:'Trote suave',Xabi:'Trote suave'},tip:'Estiramientos dinamicos'},
+    ]},
+  ],
+  2: [
+    {key:'D1',title:'Fuerza + Trineo',avId:'lift',rpe:'RPE 6-7',nota:'+5% cargas si tecnica fue buena S1. Añadir 1 serie en sentadilla.',blocks:[
+      {name:'Sentadilla',sets:'5x6',load:{MK:'32kg',Xabi:'25kg'},tip:'Mas series, misma tecnica S1'},
+      {name:'RDL / Peso Muerto',sets:'4x8',load:{MK:'42.5kg',Xabi:'35kg'},tip:'Si bisagra controlada, subir carga'},
+      {name:'Press Banca',sets:'4x10',load:{MK:'27.5kg',Xabi:'62.5kg'},tip:'Mismo recorrido S1'},
+      {name:'Dominadas asistidas',sets:'3x8',load:{MK:'Banda M',Xabi:'Banda M'},tip:'+2 reps respecto S1'},
+      {name:'Sled Push',sets:'5x20m',load:{MK:'20kg',Xabi:'35kg'},tip:'+1 serie, mismo peso'},
+      {name:'Sled Pull',sets:'5x20m',load:{MK:'20kg',Xabi:'35kg'},tip:'+1 serie'},
+      {name:'Plancha',sets:'3x35"',load:{MK:'BW',Xabi:'BW'},tip:'+5" respecto S1'},
+    ]},
+    {key:'D2',title:'Z2 Suave',avId:'run',rpe:'RPE 4-5',nota:'+5 minutos de duracion. Mismo ritmo o mas lento si hace falta.',blocks:[
+      {name:'Carrera Z2 continua',sets:"35'",load:{MK:'~6:20/km',Xabi:'~7:10/km'},tip:'+5min respecto S1'},
+      {name:'Movilidad post',sets:"10'",load:{MK:'Cadera + tobillo',Xabi:'Cadera + tobillo'},tip:'Psoas, gluteo, soleo'},
+    ]},
+    {key:'D3',title:'HYROX Tecnico',avId:'fire',rpe:'RPE 6',nota:'Introducir concepto de transicion entre estaciones. Sin cronometro.',blocks:[
+      {name:'Ski Erg',sets:'4x250m',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'Mantener cadencia uniforme'},
+      {name:'Remo',sets:'4x250m',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'Mejorar ratio tiron/recuperacion'},
+      {name:'Wall Balls',sets:'4x12',load:{MK:'6kg',Xabi:'9kg'},tip:'+2 reps respecto S1'},
+      {name:'Farmer Carry',sets:'3x40m',load:{MK:'2x12kg',Xabi:'2x18kg'},tip:'+2kg si postura fue bien'},
+      {name:'Burpee Broad Jump',sets:'3x10',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'+2 reps, ritmo constante'},
+    ]},
+    {key:'D4',title:'Series Carrera',avId:'bolt',rpe:'RPE 6-7',nota:'+1 serie respecto S1. Mismos ritmos o ligeramente mas rapidos.',blocks:[
+      {name:'Calentamiento',sets:"10'",load:{MK:'Trote suave',Xabi:'Trote suave'},tip:'3x100m progresivos'},
+      {name:'Series 400m',sets:'6x400m',load:{MK:'2:08-2:13',Xabi:'2:28-2:38'},tip:'+1 serie respecto S1'},
+      {name:'Vuelta a la calma',sets:"5'",load:{MK:'Trote suave',Xabi:'Trote suave'},tip:'Estiramientos dinamicos'},
+    ]},
+  ],
+  3: [
+    {key:'D1',title:'Fuerza + Trineo — Descarga',avId:'lift',rpe:'RPE 5-6',nota:'Semana de descarga. Mismas cargas S2 pero -30% volumen. El cuerpo consolida.',blocks:[
+      {name:'Sentadilla',sets:'3x5',load:{MK:'32kg',Xabi:'25kg'},tip:'Calidad maxima, menos volumen'},
+      {name:'RDL / Peso Muerto',sets:'3x6',load:{MK:'42.5kg',Xabi:'35kg'},tip:'Foco en tecnica perfecta'},
+      {name:'Press Banca',sets:'3x8',load:{MK:'27.5kg',Xabi:'62.5kg'},tip:'-1 serie respecto S2'},
+      {name:'Dominadas asistidas',sets:'2x6',load:{MK:'Banda M',Xabi:'Banda M'},tip:'-1 serie respecto S2'},
+      {name:'Sled Push',sets:'3x20m',load:{MK:'20kg',Xabi:'35kg'},tip:'-2 series respecto S2'},
+      {name:'Sled Pull',sets:'3x20m',load:{MK:'20kg',Xabi:'35kg'},tip:'-2 series respecto S2'},
+      {name:'Plancha',sets:'2x35"',load:{MK:'BW',Xabi:'BW'},tip:'-1 serie respecto S2'},
+    ]},
+    {key:'D2',title:'Z2 Suave — Descarga',avId:'run',rpe:'RPE 3-4',nota:'Reducir duracion. Ritmo libre, que apetezca. El objetivo es recuperar.',blocks:[
+      {name:'Carrera Z2 continua',sets:"25'",load:{MK:'Libre',Xabi:'Libre'},tip:'-10min respecto S2, por sensaciones'},
+      {name:'Movilidad post',sets:"15'",load:{MK:'Full body',Xabi:'Full body'},tip:'Mas tiempo en descarga'},
+    ]},
+    {key:'D3',title:'HYROX Tecnico — Descarga',avId:'fire',rpe:'RPE 4-5',nota:'Revisar tecnica aprendida. Menos volumen, mas atencion al detalle.',blocks:[
+      {name:'Ski Erg',sets:'3x250m',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'-1 serie, maxima calidad'},
+      {name:'Remo',sets:'3x250m',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'-1 serie, foco en eficiencia'},
+      {name:'Wall Balls',sets:'3x10',load:{MK:'6kg',Xabi:'9kg'},tip:'Menos volumen, tecnica perfecta'},
+      {name:'Farmer Carry',sets:'2x40m',load:{MK:'2x12kg',Xabi:'2x18kg'},tip:'-1 serie'},
+      {name:'Burpee Broad Jump',sets:'2x8',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'-1 serie'},
+    ]},
+    {key:'D4',title:'Series Carrera — Descarga',avId:'bolt',rpe:'RPE 5',nota:'Menos series, ritmo libre. Disfrutar la carrera sin presion.',blocks:[
+      {name:'Calentamiento',sets:"10'",load:{MK:'Trote suave',Xabi:'Trote suave'},tip:'Sin acelerones'},
+      {name:'Series 400m',sets:'4x400m',load:{MK:'Libre',Xabi:'Libre'},tip:'-2 series, ritmo comodo'},
+      {name:'Vuelta a la calma',sets:"10'",load:{MK:'Trote muy suave',Xabi:'Trote muy suave'},tip:'Mas tiempo de cierre'},
+    ]},
+  ],
+};
+
+function getDays(){
+  return PLAN[week] || PLAN[1];
+}
 
 const RC={1:'#22c55e',2:'#22c55e',3:'#4ade80',4:'#84cc16',5:'#eab308',6:'#f97316',7:'#f97316',8:'#ef4444',9:'#dc2626',10:'#991b1b'};
 const SEL={MK:'run', Xabi:'mtn'};
-let athlete=null, week=1, allData={}, activeAvAthlete=null;
+let athlete=null, week=getCurrentWeek(), allData={}, activeAvAthlete=null;
 
 function ac(){return athlete==='MK'?'#00C49A':'#7CB518'}
 function setAC(){document.documentElement.style.setProperty('--ac',ac())}
@@ -361,28 +427,38 @@ function updateHdrAv(){
   document.getElementById('hdr-av-svg').setAttribute('stroke',ac());
 }
 
+function showScreen(inId, outId, callback){
+  const out=document.getElementById(outId);
+  const inn=document.getElementById(inId);
+  out.classList.remove('visible');
+  setTimeout(()=>{
+    out.classList.remove('active');
+    inn.classList.add('active');
+    inn.scrollTop=0;
+    if(callback) callback();
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{ inn.classList.add('visible'); });
+    });
+  }, 220);
+}
+
 function selectAthlete(a){
-  athlete=a;setAC();
-  document.getElementById('s-pick').classList.remove('active');
-  document.getElementById('s-main').classList.add('active');
+  athlete=a; setAC();
   document.getElementById('hdr-name').textContent=a;
   const hav=document.getElementById('hdr-av');
   hav.style.background=a==='MK'?'rgba(0,196,154,.12)':'rgba(124,181,24,.12)';
   updateHdrAv();
-  renderWeek();
+  showScreen('s-main','s-pick', renderWeek);
 }
 function goBack(){
-  document.getElementById('s-main').classList.remove('active');
-  document.getElementById('s-pick').classList.add('active');
-  athlete=null;
+  showScreen('s-pick','s-main',()=>{ athlete=null; });
 }
 function switchTab(t){
-  ['plan','obj','prog'].forEach(x=>{
+  ['plan','prog'].forEach(x=>{
     document.getElementById('tab-'+x).style.display=x===t?'block':'none';
     document.getElementById('btn-'+x).classList.toggle('active',x===t);
   });
   if(t==='prog')renderProg();
-  if(t==='obj')renderObj();
 }
 function changeWeek(d){week=Math.max(1,week+d);renderWeek()}
 function getLog(day){return allData[athlete]?.logs?.['W'+week]?.[day]||{}}
@@ -393,14 +469,24 @@ function setLog(day,data){
   allData[athlete].logs['W'+week][day]={...getLog(day),...data};
   save();
 }
+function getWeekDates(w){
+  const start = new Date(START_DATE);
+  start.setDate(start.getDate() + (w-1)*7);
+  const end = new Date(start); end.setDate(end.getDate()+6);
+  const fmt = d => d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+  return fmt(start)+' – '+fmt(end);
+}
+
 function renderWeek(){
-  const done=DAYS.filter(d=>getLog(d.key).completed).length;
-  document.getElementById('week-lbl').textContent='SEMANA '+week;
-  document.getElementById('week-meta').textContent=done+'/4 sesiones completadas';
-  document.getElementById('bar-fill').style.width=(done/4*100)+'%';
+  const days = getDays();
+  const done = days.filter(d=>getLog(d.key).completed).length;
+  const isAuto = week === getCurrentWeek();
+  document.getElementById('week-lbl').textContent='SEMANA '+week+(isAuto?' · HOY':'');
+  document.getElementById('week-meta').textContent=getWeekDates(week)+' · '+done+'/4 sesiones';
+  document.getElementById('bar-fill').style.width=(done/days.length*100)+'%';
   document.getElementById('week-note').value=allData[athlete]?.weekNotes?.['W'+week]||'';
   const list=document.getElementById('sessions-list');
-  list.innerHTML='';DAYS.forEach(day=>buildCard(day,list));
+  list.innerHTML='';days.forEach(day=>buildCard(day,list));
 }
 function buildCard(day,container){
   const log=getLog(day.key),color=ac();
@@ -419,7 +505,36 @@ function buildCard(day,container){
     '<div class="chev">&#8964;</div></div>'+
     '<div class="s-detail" id="det-'+day.key+'">'+
     '<div class="blocks">'+
-    day.blocks.map(b=>'<div class="b-row"><div class="b-dot"></div><div style="flex:1"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="b-name">'+b.name+'</span>'+(b.sets?'<span class="b-sets">'+b.sets+'</span>':'')+'</div>'+(b.load?'<div class="b-load">'+b.load+'</div>':'')+'</div></div>').join('')+
+    day.blocks.map((b,bi)=>{
+      const bl=typeof b.load==='object'?b.load[athlete]:b.load;
+      const customKey=athlete+'_'+day.key+'_'+bi;
+      const custom=allData[athlete]?.customBlocks?.[customKey]||{};
+      const name=custom.name||b.name;
+      const load=custom.load!==undefined?custom.load:bl;
+      const sets=custom.sets!==undefined?custom.sets:b.sets;
+      return '<div class="b-row" onclick="editBlock(\''+day.key+'\','+bi+',this)">'+
+        '<div class="b-dot"></div>'+
+        '<div style="flex:1">'+
+          '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">'+
+            '<span class="b-name">'+name+'</span>'+
+            (sets?'<span class="b-sets">'+sets+'</span>':'')+
+          '</div>'+
+          (load?'<div class="b-load">'+load+'</div>':'')+
+        '</div>'+
+        '<div class="b-edit-icon">&#9998;</div>'+
+      '</div>'+
+      '<div class="b-editor" id="ed-'+day.key+'-'+bi+'" style="display:none">'+
+        '<input class="ed-input" id="ed-name-'+day.key+'-'+bi+'" value="'+name+'" placeholder="Ejercicio">'+
+        '<div style="display:flex;gap:6px">'+
+          '<input class="ed-input" id="ed-sets-'+day.key+'-'+bi+'" value="'+sets+'" placeholder="Series" style="width:80px;flex-shrink:0">'+
+          '<input class="ed-input" id="ed-load-'+day.key+'-'+bi+'" value="'+load+'" placeholder="Carga / nota">'+
+        '</div>'+
+        '<div style="display:flex;gap:6px;margin-top:6px">'+
+          '<button class="ed-btn ed-cancel" onclick="cancelEdit(\''+day.key+'\','+bi+',event)">Cancelar</button>'+
+          '<button class="ed-btn ed-save" onclick="saveBlock(\''+day.key+'\','+bi+',event)" style="border-color:var(--ac);color:var(--ac)">Guardar</button>'+
+        '</div>'+
+      '</div>';
+    }).join('')+
     '</div><div class="log-area">'+
     '<p class="log-lbl">Registrar</p>'+
     '<div class="done-row" onclick="toggleDone(\''+day.key+'\')"><div class="chkbox'+(log.completed?' on':'')+'" id="chk-'+day.key+'">'+(log.completed?'&#10003;':'')+'</div><span class="done-txt">Sesion completada</span></div>'+
@@ -456,6 +571,45 @@ function saveWeekNote(){
   allData[athlete].weekNotes['W'+week]=v;save();
 }
 
+function exportWeek(){
+  const days=getDays();
+  const lines=[];
+  lines.push('═══════════════════════════════');
+  lines.push('MKXA · SEMANA '+week+' · '+athlete);
+  lines.push('Fechas: '+getWeekDates(week));
+  lines.push('═══════════════════════════════');
+  days.forEach(day=>{
+    const log=getLog(day.key);
+    lines.push('');
+    lines.push('▸ '+day.key+' — '+day.title);
+    lines.push('  Completada: '+(log.completed?'Sí':'No'));
+    lines.push('  RPE: '+(log.rpe||'—'));
+    lines.push('  Notas: '+(log.notes||'—'));
+  });
+  const wn=allData[athlete]?.weekNotes?.['W'+week]||'—';
+  lines.push('');
+  lines.push('───────────────────────────────');
+  lines.push('Nota general: '+wn);
+  lines.push('═══════════════════════════════');
+  const text=lines.join('\n');
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>showToast('Copiado ✓ — pégalo en el chat'));
+  } else {
+    const ta=document.createElement('textarea');
+    ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    showToast('Copiado ✓ — pégalo en el chat');
+  }
+}
+
+function showToast(msg){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';
+    t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--t1);color:var(--bg);padding:10px 22px;border-radius:999px;font-size:13px;font-weight:600;font-family:Manrope,sans-serif;z-index:999;transition:opacity .3s;white-space:nowrap;';
+    document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity='1';
+  setTimeout(()=>{t.style.opacity='0';},2500);
+}
+
 // OBJETIVOS
 function getObjs(){return allData[athlete]?.objetivos||[]}
 function saveObjs(arr){allData[athlete]=allData[athlete]||{};allData[athlete].objetivos=arr;save()}
@@ -476,7 +630,28 @@ function renderObj(){
       '</div>';
   }).join('');
 }
-function showObjForm(){document.getElementById('obj-form').style.display='block'}
+function editBlock(dayKey, bi, row){
+  // Close any open editors first
+  document.querySelectorAll('.b-editor').forEach(e=>e.style.display='none');
+  const ed=document.getElementById('ed-'+dayKey+'-'+bi);
+  if(ed) ed.style.display='block';
+}
+function cancelEdit(dayKey, bi, e){
+  e.stopPropagation();
+  document.getElementById('ed-'+dayKey+'-'+bi).style.display='none';
+}
+function saveBlock(dayKey, bi, e){
+  e.stopPropagation();
+  const name=document.getElementById('ed-name-'+dayKey+'-'+bi).value.trim();
+  const sets=document.getElementById('ed-sets-'+dayKey+'-'+bi).value.trim();
+  const load=document.getElementById('ed-load-'+dayKey+'-'+bi).value.trim();
+  const customKey=athlete+'_'+dayKey+'_'+bi;
+  allData[athlete]=allData[athlete]||{};
+  allData[athlete].customBlocks=allData[athlete].customBlocks||{};
+  allData[athlete].customBlocks[customKey]={name,sets,load};
+  save();
+  renderWeek();
+}
 function hideObjForm(){document.getElementById('obj-form').style.display='none';document.getElementById('obj-name').value='';document.getElementById('obj-date').value=''}
 function saveObj(){
   const name=document.getElementById('obj-name').value.trim();
@@ -491,10 +666,10 @@ function deleteObj(i){const objs=getObjs();objs.splice(i,1);saveObjs(objs);rende
 function renderProg(){
   const weeks=Array.from({length:week},(_,i)=>i+1).slice(-10);
   let html='<tr><th></th>'+weeks.map(w=>'<th class="prog-wh">S'+w+'</th>').join('')+'</tr>';
-  DAYS.forEach(day=>{
-    html+='<tr><td class="prog-dl">'+day.key+'</td>';
+  ['D1','D2','D3','D4'].forEach(key=>{
+    html+='<tr><td class="prog-dl">'+key+'</td>';
     weeks.forEach(w=>{
-      const log=allData[athlete]?.logs?.['W'+w]?.[day.key]||{},c=log.rpe?RC[log.rpe]:null;
+      const log=allData[athlete]?.logs?.['W'+w]?.[key]||{},c=log.rpe?RC[log.rpe]:null;
       html+='<td class="prog-cell" style="'+(c?'background:'+c+'22;border-color:'+c+'44;color:'+c:'')+'">'+( log.rpe||(log.completed?'v':'·'))+'</td>';
     });
     html+='</tr>';
@@ -503,6 +678,12 @@ function renderProg(){
 }
 
 load();
+// Fade in pantalla inicial
+requestAnimationFrame(()=>{
+  requestAnimationFrame(()=>{
+    document.getElementById('s-pick').classList.add('visible');
+  });
+});
 </script>
 </body>
 </html>
