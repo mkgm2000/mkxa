@@ -309,9 +309,8 @@ const PLAN = {
         {name:'RDL',sets:'4x8',load:'40.0kg',tip:'Espalda neutra, empuje de caderas'},
         {name:'Press Banca',sets:'4x10',load:'17.5kg',tip:'Recorrido completo, codos 45°'},
         {name:'Dominadas asistidas',sets:'3x6',load:'Banda M',tip:'Escapulas activas'},
-        {name:'Sled Push',sets:'4x20m',load:'20kg',tip:'Pasos cortos, cadera baja'},
-        {name:'Sled Pull',sets:'4x20m',load:'20kg',tip:'Tirar con todo el cuerpo'},
-        {name:'Plancha',sets:'3x30"',load:'BW',tip:'Gluteo activo'},
+        {name:'Hip Thrust',sets:'3x12',load:'30kg',tip:'Gluteo apretado arriba, no hiperlordosis'},
+        {name:'Plancha',sets:'3x30"',load:'BW',tip:'Gluteo activo, no hundir cadera'},
       ]},
       {key:'D2',title:'Z2 Suave',avId:'run',rpe:'RPE 4-5',nota:'Conversacional. Nariz si es posible.',blocks:[
         {name:'Carrera Z2 continua',sets:"30'",load:'6:20-6:35/km',tip:'FC <75% FCmax'},
@@ -347,14 +346,12 @@ const PLAN = {
   },
   2: {
     MK: [
-      {key:'D1',title:'Fuerza Gimnasio',avId:'lift',rpe:'RPE 6-7',nota:'+5% cargas. +1 serie fuerza.',blocks:[
-        {name:'Sentadilla',sets:'5x6',load:'32.5kg',tip:'+1 serie. Misma tecnica S1'},
-        {name:'RDL',sets:'4x8',load:'42.5kg',tip:'+5% carga respecto S1'},
-        {name:'Press Banca',sets:'4x10',load:'17.5kg',tip:'Mismo recorrido S1'},
+      {key:'D1',title:'Fuerza Gimnasio',avId:'lift',rpe:'RPE 6-7',nota:'+5% cargas. Alternamos patron respecto S1.',blocks:[
+        {name:'RDL',sets:'4x8',load:'42.5kg',tip:'Espalda neutra, empuje de caderas'},
         {name:'Dominadas asistidas',sets:'3x8',load:'Banda M',tip:'+2 reps respecto S1'},
-        {name:'Sled Push',sets:'5x20m',load:'20kg',tip:'+1 serie respecto S1'},
-        {name:'Sled Pull',sets:'5x20m',load:'20kg',tip:'+1 serie respecto S1'},
-        {name:'Plancha',sets:'3x35"',load:'BW',tip:'+5" respecto S1'},
+        {name:'Sled Push',sets:'4x20m',load:'20kg',tip:'Pasos cortos, cadera baja'},
+        {name:'Sled Pull',sets:'4x20m',load:'20kg',tip:'Tirar con todo el cuerpo'},
+        {name:'Hollow Hold',sets:'3x30"',load:'BW',tip:'Espalda baja pegada al suelo'},
       ]},
       {key:'D2',title:'Z2 Suave',avId:'run',rpe:'RPE 4-5',nota:'+5 minutos. Mismo ritmo o mas lento.',blocks:[
         {name:'Carrera Z2 continua',sets:"35'",load:'6:20-6:35/km',tip:'+5min respecto S1'},
@@ -367,15 +364,12 @@ const PLAN = {
       ]},
     ],
     Xabi: [
-      {key:'D1',title:'Fuerza Casa',avId:'lift',rpe:'RPE 6-7',nota:'+5% cargas donde aplique.',blocks:[
-        {name:'Sentadilla Bulgara',sets:'3x8 c/pierna',load:'10kg',tip:'+2kg respecto S1'},
-        {name:'RDL una pierna',sets:'3x8 c/pierna',load:'14kg',tip:'+2kg respecto S1'},
-        {name:'Hip Thrust',sets:'3x12',load:'18kg',tip:'+2kg respecto S1'},
-        {name:'Press Mancuerna',sets:'4x10',load:'12kg',tip:'+2kg respecto S1'},
-        {name:'Remo Mancuerna',sets:'4x10 c/brazo',load:'16kg',tip:'+2kg respecto S1'},
+      {key:'D1',title:'Fuerza Casa',avId:'lift',rpe:'RPE 6-7',nota:'+5% cargas. Alternamos patron respecto S1.',blocks:[
+        {name:'RDL una pierna',sets:'3x8 c/pierna',load:'14kg',tip:'Bisagra de cadera, espalda neutra'},
+        {name:'Remo Mancuerna',sets:'4x10 c/brazo',load:'16kg',tip:'Codo hacia atras, no rotar cadera'},
         {name:'Dominadas',sets:'3x8',load:'BW',tip:'+2 reps respecto S1'},
-        {name:'Flexiones',sets:'3x12',load:'BW',tip:'+2 reps respecto S1'},
-        {name:'Plancha',sets:'3x35"',load:'BW',tip:'+5" respecto S1'},
+        {name:'Flexiones',sets:'3x12',load:'BW',tip:'Cuerpo recto, codos 45°'},
+        {name:'Hollow Hold',sets:'3x30"',load:'BW',tip:'Espalda baja pegada al suelo'},
       ]},
       {key:'D2',title:'Z2 Suave',avId:'run',rpe:'RPE 4-5',nota:'+5 minutos. Mismo ritmo o mas lento.',blocks:[
         {name:'Carrera Z2 continua',sets:"35'",load:'7:00-7:15/km',tip:'+5min respecto S1'},
@@ -390,14 +384,12 @@ const PLAN = {
   },
   3: {
     MK: [
-      {key:'D1',title:'Fuerza + Trineo DESCARGA',avId:'lift',rpe:'RPE 5-6',nota:'DESCARGA. -30% volumen. Xabi: 1er dia con trineo.',blocks:[
-        {name:'Sentadilla',sets:'3x5',load:'32.5kg',tip:'Calidad maxima, menos volumen'},
-        {name:'RDL',sets:'3x6',load:'42.5kg',tip:'Tecnica perfecta'},
-        {name:'Press Banca',sets:'3x8',load:'17.5kg',tip:'-1 serie respecto S2'},
-        {name:'Dominadas asistidas',sets:'2x6',load:'Banda M',tip:'-1 serie respecto S2'},
+      {key:'D1',title:'Fuerza + Trineo Descarga',avId:'lift',rpe:'RPE 5-6',nota:'DESCARGA. -30% volumen.',blocks:[
+        {name:'Sentadilla',sets:'3x5',load:'30.0kg',tip:'Calidad maxima, menos volumen'},
+        {name:'Dominadas asistidas',sets:'2x6',load:'Banda M',tip:'Tecnica impecable'},
         {name:'Sled Push',sets:'3x20m',load:'20kg',tip:'Pasos cortos'},
         {name:'Sled Pull',sets:'3x20m',load:'20kg',tip:'Tirar con todo el cuerpo'},
-        {name:'Plancha',sets:'2x35"',load:'BW',tip:'-1 serie respecto S2'},
+        {name:'Plancha',sets:'2x30"',load:'BW',tip:'Gluteo activo'},
       ]},
       {key:'D2',title:'Z2 Suave DESCARGA',avId:'run',rpe:'RPE 3-4',nota:'Reducir duracion. Ritmo libre. El objetivo es recuperar.',blocks:[
         {name:'Carrera Z2 continua',sets:"25'",load:'Libre',tip:'-10min respecto S2'},
@@ -612,6 +604,7 @@ function buildCard(day,container){
     '</div>'
   ) : '';
 
+  const sessionTitle = allData[athlete]?.customTitles?.[`W${week}_${day.key}`] || day.title;
   card.innerHTML=
     // HEADER — icono clickable para marcar completada
     '<div style="padding:14px 16px;display:flex;align-items:center;gap:12px;">'+
@@ -627,7 +620,10 @@ function buildCard(day,container){
     (log.completed?'<span class="s-badge" style="background:'+color+'22;color:'+color+'">Completada</span>':'')+
     (log.rpe?'<span class="s-badge" style="background:'+RC[log.rpe]+'22;color:'+RC[log.rpe]+'">RPE '+log.rpe+'</span>':'')+
     '</div>'+
-    '<div class="s-title">'+day.title+'</div>'+
+    '<div style="display:flex;align-items:center;gap:6px;">'+
+    '<div class="s-title">'+sessionTitle+'</div>'+
+    '<button onclick="editSessionName(\''+day.key+'\',event)" style="background:transparent;border:none;color:var(--t3);font-size:11px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">✎</button>'+
+    '</div>'+
     '<div style="font-size:10px;color:var(--t3);margin-top:2px;font-weight:500;">RPE esperado: '+day.rpe+'</div>'+
     '</div>'+
     '<div class="chev" onclick="toggleCard(\''+day.key+'\',this)">&#8964;</div></div>'+
@@ -800,6 +796,38 @@ function exportWeek(){
     ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
     showToast('Copiado ✓ — pégalo en el chat');
   }
+}
+
+function editSessionName(dayKey, e){
+  e.stopPropagation();
+  const days=getDays();
+  const day=days.find(d=>d.key===dayKey);
+  const current=allData[athlete]?.customTitles?.[`W${week}_${dayKey}`]||day.title;
+  let el=document.getElementById('rename-prompt');
+  if(!el){el=document.createElement('div');el.id='rename-prompt';
+    el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:0.5px solid var(--bd);padding:1.25rem 1.5rem;z-index:300;max-width:480px;margin:0 auto;border-radius:16px 16px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.15);';
+    document.body.appendChild(el);
+  }
+  el.innerHTML=
+    '<p style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:12px;">Renombrar sesión</p>'+
+    '<input id="rename-input" value="'+current+'" style="width:100%;background:var(--bg2);border:0.5px solid var(--bd2);border-radius:var(--r-md);padding:10px 12px;color:var(--t1);font-size:14px;font-family:inherit;outline:none;margin-bottom:12px;">'+
+    '<div style="display:flex;gap:8px;">'+
+      '<button onclick="document.getElementById(\'rename-prompt\').remove()" style="flex:1;padding:10px;border-radius:var(--r-md);border:0.5px solid var(--bd);background:var(--bg2);color:var(--t2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Cancelar</button>'+
+      '<button onclick="saveSessionName(\''+dayKey+'\')" style="flex:1;padding:10px;border-radius:var(--r-md);border:0.5px solid var(--ac);background:transparent;color:var(--ac);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Guardar</button>'+
+    '</div>';
+  el.style.display='block';
+  setTimeout(()=>document.getElementById('rename-input')?.focus(),100);
+}
+
+function saveSessionName(dayKey){
+  const val=document.getElementById('rename-input')?.value?.trim();
+  if(!val)return;
+  allData[athlete]=allData[athlete]||{};
+  allData[athlete].customTitles=allData[athlete].customTitles||{};
+  allData[athlete].customTitles[`W${week}_${dayKey}`]=val;
+  save();
+  document.getElementById('rename-prompt')?.remove();
+  renderWeek();
 }
 
 function showToast(msg){
