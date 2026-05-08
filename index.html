@@ -563,7 +563,7 @@ function renderWeek(){
   const done = days.filter(d=>getLog(d.key).completed).length;
   const isAuto = week === getCurrentWeek();
   document.getElementById('week-lbl').textContent='SEMANA '+week+(isAuto?' · HOY':'');
-  document.getElementById('week-meta').textContent=getWeekDates(week)+' · '+done+'/4 sesiones';
+  document.getElementById('week-meta').textContent=getWeekDates(week)+' · '+done+'/'+days.length+' sesiones';
   document.getElementById('bar-fill').style.width=(done/days.length*100)+'%';
   document.getElementById('week-note').value=allData[athlete]?.weekNotes?.['W'+week]||'';
   const list=document.getElementById('sessions-list');
@@ -615,10 +615,10 @@ function buildCard(day,container){
   card.innerHTML=
     // HEADER — icono clickable para marcar completada
     '<div style="padding:14px 16px;display:flex;align-items:center;gap:12px;">'+
-    '<div onclick="handleIconClick(\''+day.key+'\',event)" style="width:40px;height:40px;border-radius:10px;'+(log.completed?'background:'+color+'22;border:1.5px solid '+color+';':'background:var(--bg2);border:0.5px solid var(--bd);')+'display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s;">'+
+    '<div onclick="handleIconClick(\''+day.key+'\',event)" style="width:40px;height:40px;border-radius:50%;'+(log.completed?'background:'+color+'18;border:2px solid '+color+';':'background:transparent;border:1.5px solid var(--bd2);')+'display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .2s;">'+
     (log.completed
       ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
-      : svgIcon(av.path,'var(--t3)',18,18)
+      : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
     )+
     '</div>'+
     '<div style="flex:1;min-width:0;" onclick="toggleCard(\''+day.key+'\',this)">'+
