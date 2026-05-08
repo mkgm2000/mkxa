@@ -145,6 +145,24 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 </head>
 <body>
 
+<!-- MODAL SESION COMPLETADA -->
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:flex-end;justify-content:center;" onclick="closeModal(event)">
+  <div id="modal-sheet" onclick="event.stopPropagation()" style="background:var(--bg);border-radius:20px 20px 0 0;padding:1.5rem;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <div>
+        <p style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ac)" id="modal-day-label">D1</p>
+        <p style="font-size:16px;font-weight:700;color:var(--t1)" id="modal-day-title">Fuerza</p>
+      </div>
+      <button onclick="closeModal()" style="width:32px;height:32px;border-radius:50%;border:0.5px solid var(--bd);background:var(--bg2);color:var(--t2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <p style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">RPE real</p>
+    <div id="modal-rpe-row" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px;"></div>
+    <p style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">Sensaciones · Cargas reales · Notas</p>
+    <textarea id="modal-notes" rows="4" placeholder="Ej: Sentadilla 32.5kg bien · Series más fáciles de lo esperado · Buenas sensaciones generales..." style="width:100%;background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r-md);padding:10px;color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;min-height:90px;"></textarea>
+    <button id="modal-save-btn" onclick="saveModal()" style="width:100%;margin-top:12px;padding:11px;border-radius:var(--r-md);border:0.5px solid var(--ac);background:transparent;color:var(--ac);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;">Guardar registro</button>
+  </div>
+</div>
+
 <!-- AVATAR OVERLAY -->
 <div class="av-overlay" id="av-overlay" onclick="closeAv(event)">
   <div class="av-sheet" onclick="event.stopPropagation()">
@@ -220,7 +238,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
     </div>
     <div class="nav-tabs">
       <button class="nav-tab active" id="btn-plan" onclick="switchTab('plan')">Plan</button>
-      <button class="nav-tab" id="btn-prog" onclick="switchTab('prog')">Progresion</button>
+      <button class="nav-tab" id="btn-prog" onclick="switchTab('prog')">Progresión</button>
     </div>
   </div>
 
@@ -284,91 +302,154 @@ function getCurrentWeek(){
 }
 
 const PLAN = {
-  1: [
-    {key:'D1',title:'Fuerza + Trineo',avId:'lift',rpe:'RPE 6-7',nota:'Prioridad tecnica. Cargas conservadoras. Aprender el movimiento.',blocks:[
-      {name:'Sentadilla',sets:'4x8',load:{MK:'30kg',Xabi:'Tecnica BW / 20kg'},tip:'Amplitud completa, rodilla sigue pie'},
-      {name:'RDL / Peso Muerto',sets:'4x8',load:{MK:'40kg',Xabi:'30kg'},tip:'Espalda neutra, empuje de caderas'},
-      {name:'Press Banca',sets:'4x10',load:{MK:'25kg',Xabi:'60kg'},tip:'Recorrido completo, codos 45°'},
-      {name:'Dominadas asistidas',sets:'3x6',load:{MK:'Banda M',Xabi:'Banda M/G'},tip:'Escapulas activas'},
-      {name:'Sled Push',sets:'4x20m',load:{MK:'20kg',Xabi:'30kg'},tip:'Pasos cortos, cadera baja'},
-      {name:'Sled Pull',sets:'4x20m',load:{MK:'20kg',Xabi:'30kg'},tip:'Tirar con todo el cuerpo'},
-      {name:'Plancha',sets:'3x30"',load:{MK:'BW',Xabi:'BW'},tip:'Gluteo activo, no hundir cadera'},
-    ]},
-    {key:'D2',title:'Z2 Suave',avId:'run',rpe:'RPE 4-5',nota:'Conversacional. Nariz si es posible. Construir base aerobica.',blocks:[
-      {name:'Carrera Z2 continua',sets:"30'",load:{MK:'~6:30/km',Xabi:'~7:15/km'},tip:'FC <75% FCmax'},
-      {name:'Movilidad post',sets:"10'",load:{MK:'Cadera + tobillo',Xabi:'Cadera + tobillo'},tip:'Psoas, gluteo, soleo'},
-    ]},
-    {key:'D3',title:'HYROX Tecnico',avId:'fire',rpe:'RPE 5-6',nota:'Aprender movimientos HYROX. Sin agobio de tiempo. Tecnica > velocidad.',blocks:[
-      {name:'Ski Erg',sets:'4x250m',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'Cadencia alta, brazos rectos'},
-      {name:'Remo',sets:'4x250m',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'Tiron de espalda, no brazos'},
-      {name:'Wall Balls',sets:'4x10',load:{MK:'6kg',Xabi:'9kg'},tip:'Squat profundo + extension total'},
-      {name:'Farmer Carry',sets:'3x40m',load:{MK:'2x10kg',Xabi:'2x16kg'},tip:'Hombros atras, no inclinarse'},
-      {name:'Burpee Broad Jump',sets:'3x8',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'Salto hacia delante, no vertical'},
-    ]},
-    {key:'D4',title:'Series Carrera',avId:'bolt',rpe:'RPE 6-7',nota:'Primera toma de contacto con series. Ritmo comodo, no al limite.',blocks:[
-      {name:'Calentamiento',sets:"10'",load:{MK:'Trote suave',Xabi:'Trote suave'},tip:'3x100m progresivos al final'},
-      {name:'Series 400m',sets:'5x400m',load:{MK:'2:10-2:15',Xabi:'2:30-2:40'},tip:'Rec 90" caminando entre series'},
-      {name:'Vuelta a la calma',sets:"5'",load:{MK:'Trote suave',Xabi:'Trote suave'},tip:'Estiramientos dinamicos'},
-    ]},
-  ],
-  2: [
-    {key:'D1',title:'Fuerza + Trineo',avId:'lift',rpe:'RPE 6-7',nota:'+5% cargas si tecnica fue buena S1. Añadir 1 serie en sentadilla.',blocks:[
-      {name:'Sentadilla',sets:'5x6',load:{MK:'32kg',Xabi:'25kg'},tip:'Mas series, misma tecnica S1'},
-      {name:'RDL / Peso Muerto',sets:'4x8',load:{MK:'42.5kg',Xabi:'35kg'},tip:'Si bisagra controlada, subir carga'},
-      {name:'Press Banca',sets:'4x10',load:{MK:'27.5kg',Xabi:'62.5kg'},tip:'Mismo recorrido S1'},
-      {name:'Dominadas asistidas',sets:'3x8',load:{MK:'Banda M',Xabi:'Banda M'},tip:'+2 reps respecto S1'},
-      {name:'Sled Push',sets:'5x20m',load:{MK:'20kg',Xabi:'35kg'},tip:'+1 serie, mismo peso'},
-      {name:'Sled Pull',sets:'5x20m',load:{MK:'20kg',Xabi:'35kg'},tip:'+1 serie'},
-      {name:'Plancha',sets:'3x35"',load:{MK:'BW',Xabi:'BW'},tip:'+5" respecto S1'},
-    ]},
-    {key:'D2',title:'Z2 Suave',avId:'run',rpe:'RPE 4-5',nota:'+5 minutos de duracion. Mismo ritmo o mas lento si hace falta.',blocks:[
-      {name:'Carrera Z2 continua',sets:"35'",load:{MK:'~6:20/km',Xabi:'~7:10/km'},tip:'+5min respecto S1'},
-      {name:'Movilidad post',sets:"10'",load:{MK:'Cadera + tobillo',Xabi:'Cadera + tobillo'},tip:'Psoas, gluteo, soleo'},
-    ]},
-    {key:'D3',title:'HYROX Tecnico',avId:'fire',rpe:'RPE 6',nota:'Introducir concepto de transicion entre estaciones. Sin cronometro.',blocks:[
-      {name:'Ski Erg',sets:'4x250m',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'Mantener cadencia uniforme'},
-      {name:'Remo',sets:'4x250m',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'Mejorar ratio tiron/recuperacion'},
-      {name:'Wall Balls',sets:'4x12',load:{MK:'6kg',Xabi:'9kg'},tip:'+2 reps respecto S1'},
-      {name:'Farmer Carry',sets:'3x40m',load:{MK:'2x12kg',Xabi:'2x18kg'},tip:'+2kg si postura fue bien'},
-      {name:'Burpee Broad Jump',sets:'3x10',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'+2 reps, ritmo constante'},
-    ]},
-    {key:'D4',title:'Series Carrera',avId:'bolt',rpe:'RPE 6-7',nota:'+1 serie respecto S1. Mismos ritmos o ligeramente mas rapidos.',blocks:[
-      {name:'Calentamiento',sets:"10'",load:{MK:'Trote suave',Xabi:'Trote suave'},tip:'3x100m progresivos'},
-      {name:'Series 400m',sets:'6x400m',load:{MK:'2:08-2:13',Xabi:'2:28-2:38'},tip:'+1 serie respecto S1'},
-      {name:'Vuelta a la calma',sets:"5'",load:{MK:'Trote suave',Xabi:'Trote suave'},tip:'Estiramientos dinamicos'},
-    ]},
-  ],
-  3: [
-    {key:'D1',title:'Fuerza + Trineo — Descarga',avId:'lift',rpe:'RPE 5-6',nota:'Semana de descarga. Mismas cargas S2 pero -30% volumen. El cuerpo consolida.',blocks:[
-      {name:'Sentadilla',sets:'3x5',load:{MK:'32kg',Xabi:'25kg'},tip:'Calidad maxima, menos volumen'},
-      {name:'RDL / Peso Muerto',sets:'3x6',load:{MK:'42.5kg',Xabi:'35kg'},tip:'Foco en tecnica perfecta'},
-      {name:'Press Banca',sets:'3x8',load:{MK:'27.5kg',Xabi:'62.5kg'},tip:'-1 serie respecto S2'},
-      {name:'Dominadas asistidas',sets:'2x6',load:{MK:'Banda M',Xabi:'Banda M'},tip:'-1 serie respecto S2'},
-      {name:'Sled Push',sets:'3x20m',load:{MK:'20kg',Xabi:'35kg'},tip:'-2 series respecto S2'},
-      {name:'Sled Pull',sets:'3x20m',load:{MK:'20kg',Xabi:'35kg'},tip:'-2 series respecto S2'},
-      {name:'Plancha',sets:'2x35"',load:{MK:'BW',Xabi:'BW'},tip:'-1 serie respecto S2'},
-    ]},
-    {key:'D2',title:'Z2 Suave — Descarga',avId:'run',rpe:'RPE 3-4',nota:'Reducir duracion. Ritmo libre, que apetezca. El objetivo es recuperar.',blocks:[
-      {name:'Carrera Z2 continua',sets:"25'",load:{MK:'Libre',Xabi:'Libre'},tip:'-10min respecto S2, por sensaciones'},
-      {name:'Movilidad post',sets:"15'",load:{MK:'Full body',Xabi:'Full body'},tip:'Mas tiempo en descarga'},
-    ]},
-    {key:'D3',title:'HYROX Tecnico — Descarga',avId:'fire',rpe:'RPE 4-5',nota:'Revisar tecnica aprendida. Menos volumen, mas atencion al detalle.',blocks:[
-      {name:'Ski Erg',sets:'3x250m',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'-1 serie, maxima calidad'},
-      {name:'Remo',sets:'3x250m',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'-1 serie, foco en eficiencia'},
-      {name:'Wall Balls',sets:'3x10',load:{MK:'6kg',Xabi:'9kg'},tip:'Menos volumen, tecnica perfecta'},
-      {name:'Farmer Carry',sets:'2x40m',load:{MK:'2x12kg',Xabi:'2x18kg'},tip:'-1 serie'},
-      {name:'Burpee Broad Jump',sets:'2x8',load:{MK:'Tecnica',Xabi:'Tecnica'},tip:'-1 serie'},
-    ]},
-    {key:'D4',title:'Series Carrera — Descarga',avId:'bolt',rpe:'RPE 5',nota:'Menos series, ritmo libre. Disfrutar la carrera sin presion.',blocks:[
-      {name:'Calentamiento',sets:"10'",load:{MK:'Trote suave',Xabi:'Trote suave'},tip:'Sin acelerones'},
-      {name:'Series 400m',sets:'4x400m',load:{MK:'Libre',Xabi:'Libre'},tip:'-2 series, ritmo comodo'},
-      {name:'Vuelta a la calma',sets:"10'",load:{MK:'Trote muy suave',Xabi:'Trote muy suave'},tip:'Mas tiempo de cierre'},
-    ]},
-  ],
+  1: {
+    MK: [
+      {key:'D1',title:'Fuerza Gimnasio',avId:'lift',rpe:'RPE 6-7',nota:'Tecnica prioritaria. Cargas conservadoras.',blocks:[
+        {name:'Sentadilla',sets:'4x8',load:'30.0kg',tip:'Amplitud completa, rodilla sigue pie'},
+        {name:'RDL',sets:'4x8',load:'40.0kg',tip:'Espalda neutra, empuje de caderas'},
+        {name:'Press Banca',sets:'4x10',load:'17.5kg',tip:'Recorrido completo, codos 45°'},
+        {name:'Dominadas asistidas',sets:'3x6',load:'Banda M',tip:'Escapulas activas'},
+        {name:'Sled Push',sets:'4x20m',load:'20kg',tip:'Pasos cortos, cadera baja'},
+        {name:'Sled Pull',sets:'4x20m',load:'20kg',tip:'Tirar con todo el cuerpo'},
+        {name:'Plancha',sets:'3x30"',load:'BW',tip:'Gluteo activo'},
+      ]},
+      {key:'D2',title:'Z2 Suave',avId:'run',rpe:'RPE 4-5',nota:'Conversacional. Nariz si es posible.',blocks:[
+        {name:'Carrera Z2 continua',sets:"30'",load:'6:20-6:35/km',tip:'FC <75% FCmax'},
+        {name:'Movilidad post',sets:"10'",load:'Cadera + tobillo',tip:'Psoas, gluteo, soleo'},
+      ]},
+      {key:'D4',title:'Series Carrera',avId:'bolt',rpe:'RPE 6-7',nota:'1a toma de contacto. Ritmo comodo.',blocks:[
+        {name:'Calentamiento',sets:"10'",load:'Trote suave',tip:'3x100m progresivos al final'},
+        {name:'Series 400m',sets:'5x400m',load:'2:08-2:14',tip:'Rec 90" caminando'},
+        {name:'Vuelta a la calma',sets:"5'",load:'Trote suave',tip:'Estiramientos dinamicos'},
+      ]},
+    ],
+    Xabi: [
+      {key:'D1',title:'Fuerza Casa',avId:'lift',rpe:'RPE 6-7',nota:'Mancuerna ajustable + barra dominadas. Sin trineo.',blocks:[
+        {name:'Sentadilla Bulgara',sets:'3x8 c/pierna',load:'8kg',tip:'Pie trasero elevado, rodilla no pasa puntera'},
+        {name:'RDL una pierna',sets:'3x8 c/pierna',load:'12kg',tip:'Bisagra de cadera, espalda neutra'},
+        {name:'Hip Thrust',sets:'3x12',load:'16kg',tip:'Gluteo apretado arriba'},
+        {name:'Press Mancuerna',sets:'4x10',load:'10kg',tip:'Recorrido completo, codos 45°'},
+        {name:'Remo Mancuerna',sets:'4x10 c/brazo',load:'14kg',tip:'Codo hacia atras, no rotar cadera'},
+        {name:'Dominadas',sets:'3x6',load:'BW',tip:'Escapulas activas'},
+        {name:'Flexiones',sets:'3x10',load:'BW',tip:'Cuerpo recto, codos 45°'},
+        {name:'Plancha',sets:'3x30"',load:'BW',tip:'Gluteo activo'},
+      ]},
+      {key:'D2',title:'Z2 Suave',avId:'run',rpe:'RPE 4-5',nota:'Conversacional. Nariz si es posible.',blocks:[
+        {name:'Carrera Z2 continua',sets:"30'",load:'7:00-7:15/km',tip:'FC <75% FCmax'},
+        {name:'Movilidad post',sets:"10'",load:'Cadera + tobillo',tip:'Psoas, gluteo, soleo'},
+      ]},
+      {key:'D4',title:'Series Carrera',avId:'bolt',rpe:'RPE 6-7',nota:'1a toma de contacto. Ritmo comodo.',blocks:[
+        {name:'Calentamiento',sets:"10'",load:'Trote suave',tip:'3x100m progresivos al final'},
+        {name:'Series 400m',sets:'5x400m',load:'2:25-2:35',tip:'Rec 90" caminando'},
+        {name:'Vuelta a la calma',sets:"5'",load:'Trote suave',tip:'Estiramientos dinamicos'},
+      ]},
+    ],
+  },
+  2: {
+    MK: [
+      {key:'D1',title:'Fuerza Gimnasio',avId:'lift',rpe:'RPE 6-7',nota:'+5% cargas. +1 serie fuerza.',blocks:[
+        {name:'Sentadilla',sets:'5x6',load:'32.5kg',tip:'+1 serie. Misma tecnica S1'},
+        {name:'RDL',sets:'4x8',load:'42.5kg',tip:'+5% carga respecto S1'},
+        {name:'Press Banca',sets:'4x10',load:'17.5kg',tip:'Mismo recorrido S1'},
+        {name:'Dominadas asistidas',sets:'3x8',load:'Banda M',tip:'+2 reps respecto S1'},
+        {name:'Sled Push',sets:'5x20m',load:'20kg',tip:'+1 serie respecto S1'},
+        {name:'Sled Pull',sets:'5x20m',load:'20kg',tip:'+1 serie respecto S1'},
+        {name:'Plancha',sets:'3x35"',load:'BW',tip:'+5" respecto S1'},
+      ]},
+      {key:'D2',title:'Z2 Suave',avId:'run',rpe:'RPE 4-5',nota:'+5 minutos. Mismo ritmo o mas lento.',blocks:[
+        {name:'Carrera Z2 continua',sets:"35'",load:'6:20-6:35/km',tip:'+5min respecto S1'},
+        {name:'Movilidad post',sets:"10'",load:'Cadera + tobillo',tip:'Psoas, gluteo, soleo'},
+      ]},
+      {key:'D4',title:'Series Carrera',avId:'bolt',rpe:'RPE 6-7',nota:'+1 serie. Ritmos ligeramente mas rapidos.',blocks:[
+        {name:'Calentamiento',sets:"10'",load:'Trote suave',tip:'3x100m progresivos'},
+        {name:'Series 400m',sets:'6x400m',load:'2:08-2:14',tip:'+1 serie. Rec 90" caminando'},
+        {name:'Vuelta a la calma',sets:"5'",load:'Trote suave',tip:'Estiramientos dinamicos'},
+      ]},
+    ],
+    Xabi: [
+      {key:'D1',title:'Fuerza Casa',avId:'lift',rpe:'RPE 6-7',nota:'+5% cargas donde aplique.',blocks:[
+        {name:'Sentadilla Bulgara',sets:'3x8 c/pierna',load:'10kg',tip:'+2kg respecto S1'},
+        {name:'RDL una pierna',sets:'3x8 c/pierna',load:'14kg',tip:'+2kg respecto S1'},
+        {name:'Hip Thrust',sets:'3x12',load:'18kg',tip:'+2kg respecto S1'},
+        {name:'Press Mancuerna',sets:'4x10',load:'12kg',tip:'+2kg respecto S1'},
+        {name:'Remo Mancuerna',sets:'4x10 c/brazo',load:'16kg',tip:'+2kg respecto S1'},
+        {name:'Dominadas',sets:'3x8',load:'BW',tip:'+2 reps respecto S1'},
+        {name:'Flexiones',sets:'3x12',load:'BW',tip:'+2 reps respecto S1'},
+        {name:'Plancha',sets:'3x35"',load:'BW',tip:'+5" respecto S1'},
+      ]},
+      {key:'D2',title:'Z2 Suave',avId:'run',rpe:'RPE 4-5',nota:'+5 minutos. Mismo ritmo o mas lento.',blocks:[
+        {name:'Carrera Z2 continua',sets:"35'",load:'7:00-7:15/km',tip:'+5min respecto S1'},
+        {name:'Movilidad post',sets:"10'",load:'Cadera + tobillo',tip:'Psoas, gluteo, soleo'},
+      ]},
+      {key:'D4',title:'Series Carrera',avId:'bolt',rpe:'RPE 6-7',nota:'+1 serie. Ritmos ligeramente mas rapidos.',blocks:[
+        {name:'Calentamiento',sets:"10'",load:'Trote suave',tip:'3x100m progresivos'},
+        {name:'Series 400m',sets:'6x400m',load:'2:25-2:35',tip:'+1 serie. Rec 90" caminando'},
+        {name:'Vuelta a la calma',sets:"5'",load:'Trote suave',tip:'Estiramientos dinamicos'},
+      ]},
+    ],
+  },
+  3: {
+    MK: [
+      {key:'D1',title:'Fuerza + Trineo DESCARGA',avId:'lift',rpe:'RPE 5-6',nota:'DESCARGA. -30% volumen. Xabi: 1er dia con trineo.',blocks:[
+        {name:'Sentadilla',sets:'3x5',load:'32.5kg',tip:'Calidad maxima, menos volumen'},
+        {name:'RDL',sets:'3x6',load:'42.5kg',tip:'Tecnica perfecta'},
+        {name:'Press Banca',sets:'3x8',load:'17.5kg',tip:'-1 serie respecto S2'},
+        {name:'Dominadas asistidas',sets:'2x6',load:'Banda M',tip:'-1 serie respecto S2'},
+        {name:'Sled Push',sets:'3x20m',load:'20kg',tip:'Pasos cortos'},
+        {name:'Sled Pull',sets:'3x20m',load:'20kg',tip:'Tirar con todo el cuerpo'},
+        {name:'Plancha',sets:'2x35"',load:'BW',tip:'-1 serie respecto S2'},
+      ]},
+      {key:'D2',title:'Z2 Suave DESCARGA',avId:'run',rpe:'RPE 3-4',nota:'Reducir duracion. Ritmo libre. El objetivo es recuperar.',blocks:[
+        {name:'Carrera Z2 continua',sets:"25'",load:'Libre',tip:'-10min respecto S2'},
+        {name:'Movilidad post',sets:"15'",load:'Full body',tip:'Mas tiempo en descarga'},
+      ]},
+      {key:'D3',title:'HYROX Tecnico 1a Sesion',avId:'fire',rpe:'RPE 5',nota:'1a sesion HYROX juntos. Tecnica pura, sin agobio.',blocks:[
+        {name:'Ski Erg',sets:'3x250m',load:'Tecnica',tip:'Cadencia alta, brazos rectos'},
+        {name:'Remo',sets:'3x250m',load:'Tecnica',tip:'Tiron de espalda, no brazos'},
+        {name:'Wall Balls',sets:'3x10',load:'6kg',tip:'Squat profundo + extension total'},
+        {name:'Farmer Carry',sets:'3x40m',load:'2x12kg',tip:'Hombros atras, no inclinarse'},
+        {name:'Burpee Broad Jump',sets:'2x8',load:'Tecnica',tip:'Salto hacia delante'},
+      ]},
+      {key:'D4',title:'Series Carrera DESCARGA',avId:'bolt',rpe:'RPE 5',nota:'Menos series, ritmo libre. Sin presion.',blocks:[
+        {name:'Calentamiento',sets:"10'",load:'Trote suave',tip:'Sin acelerones'},
+        {name:'Series 400m',sets:'4x400m',load:'Libre',tip:'-2 series. Ritmo comodo'},
+        {name:'Vuelta a la calma',sets:"10'",load:'Trote muy suave',tip:'Mas tiempo de cierre'},
+      ]},
+    ],
+    Xabi: [
+      {key:'D1',title:'Fuerza + Trineo DESCARGA',avId:'lift',rpe:'RPE 5-6',nota:'DESCARGA. -30% volumen. Xabi: 1er dia con trineo.',blocks:[
+        {name:'Sentadilla',sets:'3x5',load:'35.0kg',tip:'Calidad maxima, menos volumen'},
+        {name:'RDL',sets:'3x6',load:'47.5kg',tip:'Tecnica perfecta'},
+        {name:'Press Banca',sets:'3x8',load:'50.0kg',tip:'-1 serie respecto S2'},
+        {name:'Dominadas',sets:'2x6',load:'BW',tip:'-1 serie respecto S2'},
+        {name:'Sled Push',sets:'3x20m',load:'30kg',tip:'1er dia con trineo: pasos cortos'},
+        {name:'Sled Pull',sets:'3x20m',load:'30kg',tip:'1er dia con trineo'},
+        {name:'Plancha',sets:'2x35"',load:'BW',tip:'-1 serie respecto S2'},
+      ]},
+      {key:'D2',title:'Z2 Suave DESCARGA',avId:'run',rpe:'RPE 3-4',nota:'Reducir duracion. Ritmo libre. El objetivo es recuperar.',blocks:[
+        {name:'Carrera Z2 continua',sets:"25'",load:'Libre',tip:'-10min respecto S2'},
+        {name:'Movilidad post',sets:"15'",load:'Full body',tip:'Mas tiempo en descarga'},
+      ]},
+      {key:'D3',title:'HYROX Tecnico 1a Sesion',avId:'fire',rpe:'RPE 5',nota:'1a sesion HYROX juntos. Tecnica pura, sin agobio.',blocks:[
+        {name:'Ski Erg',sets:'3x250m',load:'Tecnica',tip:'Cadencia alta, brazos rectos'},
+        {name:'Remo',sets:'3x250m',load:'Tecnica',tip:'Tiron de espalda, no brazos'},
+        {name:'Wall Balls',sets:'3x10',load:'9kg',tip:'Squat profundo + extension total'},
+        {name:'Farmer Carry',sets:'3x40m',load:'2x18kg',tip:'Hombros atras, no inclinarse'},
+        {name:'Burpee Broad Jump',sets:'2x8',load:'Tecnica',tip:'Salto hacia delante'},
+      ]},
+      {key:'D4',title:'Series Carrera DESCARGA',avId:'bolt',rpe:'RPE 5',nota:'Menos series, ritmo libre. Sin presion.',blocks:[
+        {name:'Calentamiento',sets:"10'",load:'Trote suave',tip:'Sin acelerones'},
+        {name:'Series 400m',sets:'4x400m',load:'Libre',tip:'-2 series. Ritmo comodo'},
+        {name:'Vuelta a la calma',sets:"10'",load:'Trote muy suave',tip:'Mas tiempo de cierre'},
+      ]},
+    ],
+  },
 };
 
 function getDays(){
-  return PLAN[week] || PLAN[1];
+  const weekPlan = PLAN[week];
+  if(!weekPlan) return PLAN[Math.min(week, Object.keys(PLAN).length)][athlete] || PLAN[1].MK;
+  return weekPlan[athlete] || weekPlan['MK'];
 }
 
 const RC={1:'#22c55e',2:'#22c55e',3:'#4ade80',4:'#84cc16',5:'#eab308',6:'#f97316',7:'#f97316',8:'#ef4444',9:'#dc2626',10:'#991b1b'};
@@ -488,30 +569,80 @@ function renderWeek(){
   const list=document.getElementById('sessions-list');
   list.innerHTML='';days.forEach(day=>buildCard(day,list));
 }
+// ── DESCANSOS ENTRE SERIES ───────────────────────────────────
+function getRestTime(name, sets){
+  const n = name.toLowerCase();
+  if(n.includes('plancha')||n.includes('hollow')||n.includes('pallof')) return '45-60\"';
+  if(n.includes('sled')) return '90\"';
+  if(n.includes('farmer')||n.includes('carry')) return '60-90\"';
+  if(n.includes('series')||n.includes('400m')||n.includes('800m')||n.includes('1000m')) return '90" caminando';
+  if(n.includes('calentamiento')||n.includes('vuelta')||n.includes('movilidad')||n.includes('carrera z2')||n.includes('z2')) return '—';
+  if(n.includes('burpee')) return '60\"';
+  if(n.includes('wall ball')) return '45-60\"';
+  if(n.includes('dominadas')||n.includes('flexiones')) return '90\"';
+  // Fuerza: estimar por sets string
+  if(sets){
+    const m = sets.match(/x(\d+)/);
+    if(m){
+      const reps = parseInt(m[1]);
+      if(reps <= 3) return '3-4\'';
+      if(reps <= 5) return '2-3\'';
+      if(reps <= 8) return '90-120\"';
+      return '60-90\"';
+    }
+  }
+  return '90\"';
+}
+
 function buildCard(day,container){
   const log=getLog(day.key),color=ac();
   const av=getAv(day.avId);
-  const iconColor=log.completed?color:'var(--t3)';
   const card=document.createElement('div');
   card.className='s-card'+(log.completed?' done':'');
+
+  // Resumen de registro si completada
+  const regSummary = log.completed ? (
+    '<div style="padding:10px 16px;border-top:0.5px solid var(--bd);background:'+color+'08;">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:'+(log.notes?'6px':'0')+'">'+
+    '<span style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;">Registro</span>'+
+    (log.rpe?'<span style="font-size:11px;font-weight:700;color:'+RC[log.rpe]+';background:'+RC[log.rpe]+'18;padding:2px 8px;border-radius:999px;">RPE '+log.rpe+'</span>':'')+
+    '<button onclick="openModal(\''+day.key+'\',event)" style="margin-left:auto;font-size:11px;color:var(--t3);background:transparent;border:0.5px solid var(--bd);border-radius:6px;padding:3px 8px;cursor:pointer;font-family:inherit;">Editar</button>'+
+    '</div>'+
+    (log.notes?'<p style="font-size:12px;color:var(--t2);line-height:1.4;">'+log.notes+'</p>':'')+
+    '</div>'
+  ) : '';
+
   card.innerHTML=
-    '<div class="s-hdr" onclick="toggleCard(\''+day.key+'\',this)">'+
-    '<div class="s-icon">'+svgIcon(av.path,iconColor,18,18)+'</div>'+
-    '<div class="s-labels">'+
-    '<div class="s-tag-row"><span class="s-day">'+day.key+'</span>'+
+    // HEADER — icono clickable para marcar completada
+    '<div style="padding:14px 16px;display:flex;align-items:center;gap:12px;">'+
+    '<div onclick="handleIconClick(\''+day.key+'\',event)" style="width:40px;height:40px;border-radius:10px;'+(log.completed?'background:'+color+'22;border:1.5px solid '+color+';':'background:var(--bg2);border:0.5px solid var(--bd);')+'display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s;">'+
+    (log.completed
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+      : svgIcon(av.path,'var(--t3)',18,18)
+    )+
+    '</div>'+
+    '<div style="flex:1;min-width:0;" onclick="toggleCard(\''+day.key+'\',this)">'+
+    '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">'+
+    '<span class="s-day">'+day.key+'</span>'+
     (log.completed?'<span class="s-badge" style="background:'+color+'22;color:'+color+'">Completada</span>':'')+
     (log.rpe?'<span class="s-badge" style="background:'+RC[log.rpe]+'22;color:'+RC[log.rpe]+'">RPE '+log.rpe+'</span>':'')+
-    '</div><div class="s-title">'+day.title+'</div></div>'+
-    '<div class="chev">&#8964;</div></div>'+
+    '</div>'+
+    '<div class="s-title">'+day.title+'</div>'+
+    '<div style="font-size:10px;color:var(--t3);margin-top:2px;font-weight:500;">RPE esperado: '+day.rpe+'</div>'+
+    '</div>'+
+    '<div class="chev" onclick="toggleCard(\''+day.key+'\',this)">&#8964;</div></div>'+
+
+    // DETALLE
     '<div class="s-detail" id="det-'+day.key+'">'+
     '<div class="blocks">'+
     day.blocks.map((b,bi)=>{
-      const bl=typeof b.load==='object'?b.load[athlete]:b.load;
       const customKey=athlete+'_'+day.key+'_'+bi;
       const custom=allData[athlete]?.customBlocks?.[customKey]||{};
       const name=custom.name||b.name;
-      const load=custom.load!==undefined?custom.load:bl;
+      const load=custom.load!==undefined?custom.load:b.load;
       const sets=custom.sets!==undefined?custom.sets:b.sets;
+      const rest=getRestTime(name,sets);
+      const loadStr=(load?load:'')+(rest&&rest!=='—'?' · Descanso: '+rest:'');
       return '<div class="b-row" onclick="editBlock(\''+day.key+'\','+bi+',this)">'+
         '<div class="b-dot"></div>'+
         '<div style="flex:1">'+
@@ -519,7 +650,7 @@ function buildCard(day,container){
             '<span class="b-name">'+name+'</span>'+
             (sets?'<span class="b-sets">'+sets+'</span>':'')+
           '</div>'+
-          (load?'<div class="b-load">'+load+'</div>':'')+
+          (loadStr?'<div class="b-load">'+loadStr+'</div>':'')+
         '</div>'+
         '<div class="b-edit-icon">&#9998;</div>'+
       '</div>'+
@@ -535,35 +666,105 @@ function buildCard(day,container){
         '</div>'+
       '</div>';
     }).join('')+
-    '</div><div class="log-area">'+
-    '<p class="log-lbl">Registrar</p>'+
-    '<div class="done-row" onclick="toggleDone(\''+day.key+'\')"><div class="chkbox'+(log.completed?' on':'')+'" id="chk-'+day.key+'">'+(log.completed?'&#10003;':'')+'</div><span class="done-txt">Sesion completada</span></div>'+
-    '<p class="rpe-lbl">RPE — esfuerzo percibido</p>'+
-    '<div class="rpe-row" id="rpe-'+day.key+'">'+
-    [1,2,3,4,5,6,7,8,9,10].map(n=>'<button class="rpe-btn'+(log.rpe===n?' sel':'')+'" style="'+(log.rpe===n?'background:'+RC[n]+';border-color:'+RC[n]+';color:#fff':'')+'" onclick="setRPE(\''+day.key+'\','+n+')">'+n+'</button>').join('')+
-    '</div><textarea class="log-ta" id="notes-'+day.key+'" rows="2" placeholder="Sensaciones, cargas reales...">'+(log.notes||'')+'</textarea>'+
-    '<button class="save-btn" id="sbtn-'+day.key+'" onclick="saveSess(\''+day.key+'\')">Guardar</button>'+
-    '</div></div>';
+    '</div>'+
+    regSummary+
+    '</div>';
+
   container.appendChild(card);
 }
-function toggleCard(k,h){
-  const d=document.getElementById('det-'+k),c=h.querySelector('.chev'),o=d.classList.contains('open');
-  d.classList.toggle('open',!o);c.classList.toggle('open',!o);
+
+function handleIconClick(dayKey, e){
+  e.stopPropagation();
+  const log = getLog(dayKey);
+  if(!log.completed){
+    setLog(dayKey,{completed:true});
+    renderWeek();
+    setTimeout(()=>openModal(dayKey), 50);
+  } else {
+    showUncheckPrompt(dayKey);
+  }
 }
-function toggleDone(k){setLog(k,{completed:!getLog(k).completed});renderWeek()}
-function setRPE(k,n){
-  setLog(k,{rpe:n});
-  document.querySelectorAll('#rpe-'+k+' .rpe-btn').forEach((b,i)=>{
-    const v=i+1;b.classList.toggle('sel',v===n);
-    b.style.background=v===n?RC[n]:'';b.style.borderColor=v===n?RC[n]:'';b.style.color=v===n?'#fff':'';
+
+function showUncheckPrompt(dayKey){
+  let el = document.getElementById('uncheck-prompt');
+  if(!el){ el=document.createElement('div'); el.id='uncheck-prompt';
+    el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:0.5px solid var(--bd);padding:1.25rem 1.5rem;z-index:300;max-width:480px;margin:0 auto;border-radius:16px 16px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.15);';
+    document.body.appendChild(el);
+  }
+  el.innerHTML=
+    '<p style="font-size:14px;font-weight:600;color:var(--t1);margin-bottom:4px;">¿Qué quieres hacer?</p>'+
+    '<p style="font-size:12px;color:var(--t3);margin-bottom:16px;">Sesión marcada como completada</p>'+
+    '<div style="display:flex;gap:8px;">'+
+      '<button onclick="document.getElementById(\'uncheck-prompt\').remove();openModal(\''+dayKey+'\')" style="flex:1;padding:11px;border-radius:var(--r-md);border:0.5px solid var(--bd);background:var(--bg2);color:var(--t2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Editar registro</button>'+
+      '<button onclick="doUncheck(\''+dayKey+'\')" style="flex:1;padding:11px;border-radius:var(--r-md);border:0.5px solid #ef444444;background:transparent;color:#ef4444;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Quitar check</button>'+
+    '</div>'+
+    '<button onclick="document.getElementById(\'uncheck-prompt\').remove()" style="width:100%;margin-top:8px;padding:10px;border-radius:var(--r-md);border:0.5px solid var(--bd);background:transparent;color:var(--t3);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">Cancelar</button>';
+  el.style.display='block';
+}
+
+function doUncheck(dayKey){
+  const el=document.getElementById('uncheck-prompt');
+  if(el) el.remove();
+  setLog(dayKey,{completed:false,rpe:null,notes:''});
+  renderWeek();
+}
+
+let activeModalDay = null;
+function openModal(dayKey, e){
+  if(e) e.stopPropagation();
+  activeModalDay = dayKey;
+  const log = getLog(dayKey);
+  const days = getDays();
+  const day = days.find(d=>d.key===dayKey);
+  const color = ac();
+
+  document.getElementById('modal-day-label').textContent = dayKey;
+  document.getElementById('modal-day-label').style.color = color;
+  document.getElementById('modal-day-title').textContent = day?.title||dayKey;
+  document.getElementById('modal-notes').value = log.notes||'';
+
+  const rpeRow = document.getElementById('modal-rpe-row');
+  rpeRow.innerHTML = [1,2,3,4,5,6,7,8,9,10].map(n=>
+    '<button onclick="selectModalRPE('+n+')" style="width:30px;height:30px;border-radius:50%;border:'+(log.rpe===n?'2px solid '+RC[n]:'0.5px solid var(--bd2)')+';background:'+(log.rpe===n?RC[n]:'var(--bg)') +';color:'+(log.rpe===n?'#fff':'var(--t3)')+';font-size:11px;font-weight:700;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center;font-family:inherit;">'+n+'</button>'
+  ).join('');
+
+  const overlay = document.getElementById('modal-overlay');
+  overlay.style.display='flex';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.getElementById('modal-sheet').style.transform='translateY(0)';
+  }));
+}
+function closeModal(e){
+  if(!e||e.target===document.getElementById('modal-overlay'))
+    document.getElementById('modal-overlay').style.display='none';
+}
+function selectModalRPE(n){
+  const log=getLog(activeModalDay);
+  setLog(activeModalDay,{rpe:n});
+  const btns=document.getElementById('modal-rpe-row').querySelectorAll('button');
+  btns.forEach((b,i)=>{
+    const v=i+1;
+    b.style.background=v===n?RC[n]:'var(--bg)';
+    b.style.borderColor=v===n?RC[n]:'var(--bd2)';
+    b.style.border=(v===n?'2':'0.5')+'px solid '+(v===n?RC[n]:'var(--bd2)');
+    b.style.color=v===n?'#fff':'var(--t3)';
   });
 }
-function saveSess(k){
-  setLog(k,{notes:document.getElementById('notes-'+k)?.value||''});
-  const btn=document.getElementById('sbtn-'+k);
-  btn.classList.add('saved');btn.textContent='Guardado';
-  setTimeout(()=>{btn.classList.remove('saved');btn.textContent='Guardar'},2000);
+function saveModal(){
+  const notes=document.getElementById('modal-notes').value;
+  setLog(activeModalDay,{notes});
+  document.getElementById('modal-overlay').style.display='none';
   renderWeek();
+  showToast('Registro guardado ✓');
+}
+function toggleCard(k,h){
+  const card=h.closest?h.closest('.s-card'):h.parentElement;
+  const d=document.getElementById('det-'+k);
+  if(!d) return;
+  const chevs=card.querySelectorAll('.chev');
+  const o=d.classList.contains('open');
+  d.classList.toggle('open',!o);
+  chevs.forEach(c=>c.classList.toggle('open',!o));
 }
 function saveWeekNote(){
   const v=document.getElementById('week-note').value;
