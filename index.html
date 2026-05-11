@@ -791,24 +791,30 @@ function saveWeekNote(){
 }
 
 function exportWeek(){
-  const days=getDays();
   const lines=[];
   lines.push('═══════════════════════════════');
-  lines.push('MKXA · SEMANA '+week+' · '+athlete);
-  lines.push('Fechas: '+getWeekDates(week));
+  lines.push('MKXA · SEMANA '+week+' · '+getWeekDates(week));
   lines.push('═══════════════════════════════');
-  days.forEach(day=>{
-    const log=getLog(day.key);
+
+  ['MK','Xabi'].forEach(a=>{
+    const savedAthlete = athlete;
+    athlete = a;
+    const days = getDays();
     lines.push('');
-    lines.push('▸ '+day.key+' — '+day.title);
-    lines.push('  Completada: '+(log.completed?'Sí':'No'));
-    lines.push('  RPE: '+(log.rpe||'—'));
-    lines.push('  Notas: '+(log.notes||'—'));
+    lines.push('── '+a+' ──────────────────────────');
+    days.forEach(day=>{
+      const log = getLog(day.key);
+      lines.push('▸ '+day.key+' — '+day.title);
+      lines.push('  Completada: '+(log.completed?'Sí':'No'));
+      lines.push('  RPE: '+(log.rpe||'—'));
+      lines.push('  Notas: '+(log.notes||'—'));
+    });
+    const wn = allData[a]?.weekNotes?.['W'+week]||'—';
+    lines.push('  Nota general: '+wn);
+    athlete = savedAthlete;
   });
-  const wn=allData[athlete]?.weekNotes?.['W'+week]||'—';
+
   lines.push('');
-  lines.push('───────────────────────────────');
-  lines.push('Nota general: '+wn);
   lines.push('═══════════════════════════════');
   const text=lines.join('\n');
   if(navigator.clipboard){
