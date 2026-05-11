@@ -249,7 +249,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
         <p class="bebas week-lbl" id="week-lbl">SEMANA 1</p>
         <p class="week-meta" id="week-meta">0/4 sesiones</p>
       </div>
-      <button class="week-arrow" onclick="changeWeek(1)">&#8250;</button>
+      <button id="week-fwd" class="week-arrow" onclick="changeWeek(1)">&#8250;</button>
     </div>
     <div class="bar-wrap"><div class="bar-fill" id="bar-fill" style="width:0%"></div></div>
     <div class="sessions" id="sessions-list"></div>
@@ -304,7 +304,7 @@ function getCurrentWeek(){
 const PLAN = {
   1: {
     MK: [
-      {key:'D1',title:'Fuerza Gimnasio',avId:'lift',rpe:'RPE 6-7',nota:'Tecnica prioritaria. Cargas conservadoras.',blocks:[
+      {key:'D1',title:'Fuerza',avId:'lift',rpe:'RPE 6-7',nota:'Tecnica prioritaria. Cargas conservadoras.',blocks:[
         {name:'Sentadilla',sets:'4x8',load:'30.0kg',tip:'Amplitud completa, rodilla sigue pie'},
         {name:'RDL',sets:'4x8',load:'40.0kg',tip:'Espalda neutra, empuje de caderas'},
         {name:'Press Banca',sets:'4x10',load:'17.5kg',tip:'Recorrido completo, codos 45°'},
@@ -316,6 +316,15 @@ const PLAN = {
         {name:'Carrera Z2 continua',sets:"30'",load:'6:20-6:35/km',tip:'FC <75% FCmax'},
         {name:'Movilidad post',sets:"10'",load:'Cadera + tobillo',tip:'Psoas, gluteo, soleo'},
       ]},
+      {key:'D3',title:'HYROX Tecnico',avId:'fire',rpe:'RPE 5-6',nota:'1a sesion HYROX. Tecnica pura, sin agobio de tiempo.',blocks:[
+        {name:'Ski Erg',sets:'3x250m',load:'Tecnica',tip:'Cadencia alta, brazos rectos'},
+        {name:'Remo',sets:'3x250m',load:'Tecnica',tip:'Tiron de espalda, no brazos'},
+        {name:'Wall Balls',sets:'3x10',load:'6kg',tip:'Squat profundo + extension total'},
+        {name:'Farmer Carry',sets:'3x40m',load:'2x12kg',tip:'Hombros atras, no inclinarse'},
+        {name:'Sled Push',sets:'3x20m',load:'Ligero',tip:'Pasos cortos, cadera baja'},
+        {name:'Sled Pull',sets:'3x20m',load:'Ligero',tip:'Tirar con todo el cuerpo'},
+        {name:'Burpee Broad Jump',sets:'2x8',load:'Tecnica',tip:'Salto hacia delante'},
+      ]},
       {key:'D4',title:'Series Carrera',avId:'bolt',rpe:'RPE 6-7',nota:'1a toma de contacto. Ritmo comodo.',blocks:[
         {name:'Calentamiento',sets:"10'",load:'Trote suave',tip:'3x100m progresivos al final'},
         {name:'Series 400m',sets:'5x400m',load:'2:08-2:14',tip:'Rec 90" caminando'},
@@ -323,19 +332,25 @@ const PLAN = {
       ]},
     ],
     Xabi: [
-      {key:'D1',title:'Fuerza Casa',avId:'lift',rpe:'RPE 6-7',nota:'Mancuerna ajustable + barra dominadas. Sin trineo.',blocks:[
+      {key:'D1',title:'Fuerza',avId:'lift',rpe:'RPE 6-7',nota:'Mancuerna ajustable + barra dominadas.',blocks:[
         {name:'Sentadilla Bulgara',sets:'3x8 c/pierna',load:'8kg',tip:'Pie trasero elevado, rodilla no pasa puntera'},
-        {name:'RDL una pierna',sets:'3x8 c/pierna',load:'12kg',tip:'Bisagra de cadera, espalda neutra'},
         {name:'Hip Thrust',sets:'3x12',load:'16kg',tip:'Gluteo apretado arriba'},
         {name:'Press Mancuerna',sets:'4x10',load:'10kg',tip:'Recorrido completo, codos 45°'},
-        {name:'Remo Mancuerna',sets:'4x10 c/brazo',load:'14kg',tip:'Codo hacia atras, no rotar cadera'},
         {name:'Dominadas',sets:'3x6',load:'BW',tip:'Escapulas activas'},
-        {name:'Flexiones',sets:'3x10',load:'BW',tip:'Cuerpo recto, codos 45°'},
         {name:'Plancha',sets:'3x30"',load:'BW',tip:'Gluteo activo'},
       ]},
       {key:'D2',title:'Z2 Suave',avId:'run',rpe:'RPE 4-5',nota:'Conversacional. Nariz si es posible.',blocks:[
         {name:'Carrera Z2 continua',sets:"30'",load:'7:00-7:15/km',tip:'FC <75% FCmax'},
         {name:'Movilidad post',sets:"10'",load:'Cadera + tobillo',tip:'Psoas, gluteo, soleo'},
+      ]},
+      {key:'D3',title:'HYROX Tecnico',avId:'fire',rpe:'RPE 5-6',nota:'1a sesion HYROX. Tecnica pura, sin agobio de tiempo.',blocks:[
+        {name:'Ski Erg',sets:'3x250m',load:'Tecnica',tip:'Cadencia alta, brazos rectos'},
+        {name:'Remo',sets:'3x250m',load:'Tecnica',tip:'Tiron de espalda, no brazos'},
+        {name:'Wall Balls',sets:'3x10',load:'9kg',tip:'Squat profundo + extension total'},
+        {name:'Farmer Carry',sets:'3x40m',load:'2x18kg',tip:'Hombros atras, no inclinarse'},
+        {name:'Sled Push',sets:'3x20m',load:'Ligero',tip:'Pasos cortos, cadera baja'},
+        {name:'Sled Pull',sets:'3x20m',load:'Ligero',tip:'Tirar con todo el cuerpo'},
+        {name:'Burpee Broad Jump',sets:'2x8',load:'Tecnica',tip:'Salto hacia delante'},
       ]},
       {key:'D4',title:'Series Carrera',avId:'bolt',rpe:'RPE 6-7',nota:'1a toma de contacto. Ritmo comodo.',blocks:[
         {name:'Calentamiento',sets:"10'",load:'Trote suave',tip:'3x100m progresivos al final'},
@@ -346,7 +361,7 @@ const PLAN = {
   },
   2: {
     MK: [
-      {key:'D1',title:'Fuerza Gimnasio',avId:'lift',rpe:'RPE 6-7',nota:'+5% cargas. Alternamos patron respecto S1.',blocks:[
+      {key:'D1',title:'Fuerza',avId:'lift',rpe:'RPE 6-7',nota:'+5% cargas. Alternamos patron respecto S1.',blocks:[
         {name:'RDL',sets:'4x8',load:'42.5kg',tip:'Espalda neutra, empuje de caderas'},
         {name:'Dominadas asistidas',sets:'3x8',load:'Banda M',tip:'+2 reps respecto S1'},
         {name:'Sled Push',sets:'4x20m',load:'20kg',tip:'Pasos cortos, cadera baja'},
@@ -364,7 +379,7 @@ const PLAN = {
       ]},
     ],
     Xabi: [
-      {key:'D1',title:'Fuerza Casa',avId:'lift',rpe:'RPE 6-7',nota:'+5% cargas. Alternamos patron respecto S1.',blocks:[
+      {key:'D1',title:'Fuerza',avId:'lift',rpe:'RPE 6-7',nota:'+5% cargas. Alternamos patron respecto S1.',blocks:[
         {name:'RDL una pierna',sets:'3x8 c/pierna',load:'14kg',tip:'Bisagra de cadera, espalda neutra'},
         {name:'Remo Mancuerna',sets:'4x10 c/brazo',load:'16kg',tip:'Codo hacia atras, no rotar cadera'},
         {name:'Dominadas',sets:'3x8',load:'BW',tip:'+2 reps respecto S1'},
@@ -533,7 +548,11 @@ function switchTab(t){
   });
   if(t==='prog')renderProg();
 }
-function changeWeek(d){week=Math.max(1,week+d);renderWeek()}
+function changeWeek(d){
+  const cur = getCurrentWeek();
+  week = Math.max(1, Math.min(cur, week + d));
+  renderWeek();
+}
 function getLog(day){return allData[athlete]?.logs?.['W'+week]?.[day]||{}}
 function setLog(day,data){
   allData[athlete]=allData[athlete]||{};
@@ -558,6 +577,9 @@ function renderWeek(){
   document.getElementById('week-meta').textContent=getWeekDates(week)+' · '+done+'/'+days.length+' sesiones';
   document.getElementById('bar-fill').style.width=(done/days.length*100)+'%';
   document.getElementById('week-note').value=allData[athlete]?.weekNotes?.['W'+week]||'';
+  // Ocultar flecha derecha si estamos en la semana actual
+  const fwdBtn = document.getElementById('week-fwd');
+  if(fwdBtn) fwdBtn.style.visibility = isAuto ? 'hidden' : 'visible';
   const list=document.getElementById('sessions-list');
   list.innerHTML='';days.forEach(day=>buildCard(day,list));
 }
