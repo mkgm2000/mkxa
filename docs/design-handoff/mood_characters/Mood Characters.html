@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Mood Characters · animated</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet" />
+<style>
+  /* ------------------------------------------------------------------ */
+  /* Tokens                                                              */
+  /* ------------------------------------------------------------------ */
+  :root {
+    --bg-page: #eef2f4;
+    --ink: #1b1d1f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 20% -10%, #f6f8fa, transparent 60%),
+      radial-gradient(1000px 700px at 110% 110%, #e6ecef, transparent 60%),
+      var(--bg-page);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 64px 40px 96px;
+  }
+  header {
+    max-width: 1320px;
+    margin: 0 auto 56px;
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-size: 40px;
+    font-weight: 800;
+    margin: 0 0 8px;
+    letter-spacing: -0.025em;
+  }
+  header p {
+    margin: 0;
+    color: #6b7178;
+    font-size: 16px;
+    max-width: 560px;
+    line-height: 1.5;
+  }
+  .legend {
+    font-size: 13px;
+    color: #8d949c;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+  }
+  .legend .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #1b1d1f;
+    margin-right: 6px;
+    vertical-align: middle;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 0.35; transform: scale(1); }
+    50%     { opacity: 1;    transform: scale(1.25); }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Grid + Card                                                         */
+  /* ------------------------------------------------------------------ */
+  .grid {
+    max-width: 1320px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 22px;
+  }
+  .card {
+    aspect-ratio: 1 / 1.08;
+    border-radius: 36px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 28px 22px 26px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.55) inset,
+      0 24px 50px -28px rgba(20,24,30,0.28);
+    isolation: isolate;
+  }
+  /* Soft top highlight + bottom shading on every card */
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(140% 70% at 50% 115%, rgba(0,0,0,0.12), transparent 60%),
+      radial-gradient(120% 80% at 50% -25%, rgba(255,255,255,0.65), transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  /* Very subtle grain so the gradients don't look flat */
+  .card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(0,0,0,0.025) 1px, transparent 1px);
+    background-size: 3px 3px;
+    mix-blend-mode: multiply;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .stage {
+    position: relative;
+    width: 82%;
+    aspect-ratio: 1 / 1;
+    margin: 8% 0 auto;
+    z-index: 1;
+  }
+  .floor {
+    position: absolute;
+    left: 14%;
+    right: 14%;
+    bottom: 6%;
+    height: 16px;
+    background: radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.35), rgba(0,0,0,0) 70%);
+    filter: blur(2px);
+    transform-origin: center;
+    animation: floor-pulse 3.4s ease-in-out infinite;
+  }
+  .blob {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 88%;
+    animation: float 3.4s ease-in-out infinite;
+  }
+  .blob svg {
+    width: 100%; height: 100%;
+    overflow: visible;
+    transform-origin: 50% 88%;
+    animation: breathe 3.4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-10px); }
+  }
+  @keyframes breathe {
+    0%,100% { transform: scale(1, 1); }
+    50%     { transform: scale(1.035, 0.965); }
+  }
+  @keyframes floor-pulse {
+    0%,100% { transform: scaleX(1);    opacity: 0.9; }
+    50%     { transform: scaleX(0.72); opacity: 0.55; }
+  }
+
+  .label {
+    position: relative;
+    z-index: 1;
+    font-size: 19px;
+    font-weight: 700;
+    color: #1b1d1f;
+    letter-spacing: -0.012em;
+  }
+  .sub {
+    position: relative;
+    z-index: 1;
+    font-size: 13px;
+    color: rgba(27,29,31,0.55);
+    margin-top: 2px;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Per-mood backgrounds                                                */
+  /* ------------------------------------------------------------------ */
+  .bg-happy   { background: linear-gradient(170deg, #fff4d8 0%, #ffd987 100%); }
+  .bg-joyful  { background: linear-gradient(170deg, #d6f5ea 0%, #8de2c9 100%); }
+  .bg-annoyed { background: linear-gradient(170deg, #ece0ff 0%, #c4a3ff 100%); }
+  .bg-worried { background: linear-gradient(170deg, #fff1d6 0%, #ffd07a 100%); }
+  .bg-stressed{ background: linear-gradient(170deg, #ffe0e1 0%, #ff9ca0 100%); }
+  .bg-sad     { background: linear-gradient(170deg, #e3ecff 0%, #a3bcff 100%); }
+  .bg-angry   { background: linear-gradient(170deg, #ffdcdc 0%, #ff7e7e 100%); }
+  .bg-love    { background: linear-gradient(170deg, #ffe2ec 0%, #ffa3bc 100%); }
+  .bg-sleepy  { background: linear-gradient(170deg, #ece4ff 0%, #b9a3e8 100%); }
+  .bg-neutral { background: linear-gradient(170deg, #f0eee9 0%, #d6cfc1 100%); }
+
+  /* ------------------------------------------------------------------ */
+  /* Mood-specific blob animations                                       */
+  /* ------------------------------------------------------------------ */
+  /* HAPPY — bouncy */
+  .m-happy .blob { animation: float-happy 1.8s ease-in-out infinite; }
+  .m-happy .blob svg { animation: breathe 1.8s ease-in-out infinite; }
+  .m-happy .floor { animation: floor-pulse 1.8s ease-in-out infinite; }
+  @keyframes float-happy {
+    0%,100% { transform: translateY(0)    scale(1, 1); }
+    45%     { transform: translateY(-18px) scale(0.98, 1.03); }
+    60%     { transform: translateY(0)    scale(1.06, 0.92); }
+    75%     { transform: translateY(-4px) scale(1, 1); }
+  }
+
+  /* JOYFUL — excited hop + wiggle */
+  .m-joyful .blob { animation: float-joy 2.2s ease-in-out infinite; }
+  .m-joyful .blob svg { animation: breathe 2.2s ease-in-out infinite; }
+  @keyframes float-joy {
+    0%,100% { transform: translateY(0)     rotate(0deg); }
+    25%     { transform: translateY(-22px) rotate(-3deg); }
+    50%     { transform: translateY(0)     rotate(0deg)  scale(1.05, 0.93); }
+    75%     { transform: translateY(-12px) rotate(3deg); }
+  }
+
+  /* ANNOYED — occasional eye-roll/twitch (mostly still) */
+  .m-annoyed .blob { animation: float 6s ease-in-out infinite; }
+  .m-annoyed .blob svg { animation: breathe 6s ease-in-out infinite; }
+  .m-annoyed .eye-roll { transform-origin: center; animation: eye-roll 5s ease-in-out infinite; transform-box: fill-box; }
+  @keyframes eye-roll {
+    0%, 70%, 100% { transform: translate(0,0); }
+    78%           { transform: translate(2px, -3px); }
+    86%           { transform: translate(-2px, -3px); }
+    92%           { transform: translate(0, 0); }
+  }
+
+  /* WORRIED — slow side-to-side sway, wavy mouth jitter */
+  .m-worried .blob { animation: sway 3.2s ease-in-out infinite; }
+  .m-worried .blob svg { animation: breathe 3.2s ease-in-out infinite; }
+  @keyframes sway {
+    0%,100% { transform: translateX(0) translateY(0) rotate(-2deg); }
+    50%     { transform: translateX(0) translateY(-4px) rotate(2deg); }
+  }
+  .m-worried .worry-mouth {
+    animation: mouth-quiver 0.9s ease-in-out infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  @keyframes mouth-quiver {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(1.5px) scaleX(1.02); }
+  }
+
+  /* DIZZY — slight wobble + spinning spirals */
+  .m-dizzy .blob { animation: wobble 2.4s ease-in-out infinite; }
+  .m-dizzy .blob svg { animation: breathe 2.4s ease-in-out infinite; }
+  @keyframes wobble {
+    0%,100% { transform: rotate(-4deg) translateY(0); }
+    50%     { transform: rotate(4deg)  translateY(-6px); }
+  }
+  .m-dizzy .spiral-l, .m-dizzy .spiral-r {
+    transform-origin: center;
+    transform-box: fill-box;
+    animation: spin 2.5s linear infinite;
+  }
+  .m-dizzy .spiral-r { animation-direction: reverse; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* SAD — slow droop + falling tear */
+  .m-sad .blob { animation: droop 4.2s ease-in-out infinite; }
+  .m-sad .blob svg { animation: breathe 4.2s ease-in-out infinite; }
+  @keyframes droop {
+    0%,100% { transform: translateY(0)   scale(1, 1); }
+    50%     { transform: translateY(4px) scale(1.02, 0.97); }
+  }
+  .m-sad .tear {
+    animation: tear-fall 2.6s ease-in infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  @keyframes tear-fall {
+    0%       { transform: translate(0, 0)  scale(0.6); opacity: 0; }
+    15%      { opacity: 1; transform: translate(0, 0) scale(1); }
+    85%      { opacity: 1; transform: translate(2px, 60px) scale(1); }
+    100%     { opacity: 0; transform: translate(2px, 70px) scale(0.7); }
+  }
+
+  /* ANGRY — vibrate */
+  .m-angry .blob { animation: angry-shake 0.18s linear infinite; }
+  .m-angry .blob svg { animation: breathe 2.6s ease-in-out infinite; }
+  @keyframes angry-shake {
+    0%,100% { transform: translate(0,0)   rotate(0deg); }
+    25%     { transform: translate(-1.5px,1px) rotate(-1deg); }
+    50%     { transform: translate(1.5px,-1px) rotate(1deg); }
+    75%     { transform: translate(-1px,1.5px) rotate(-0.5deg); }
+  }
+
+  /* LOVE — gentle pulse */
+  .m-love .blob { animation: love-pulse 1.6s ease-in-out infinite; }
+  .m-love .blob svg { animation: breathe 1.6s ease-in-out infinite; }
+  @keyframes love-pulse {
+    0%,100% { transform: scale(1,1)    translateY(0); }
+    50%     { transform: scale(1.05,1.05) translateY(-4px); }
+  }
+  .m-love .heart-eye {
+    transform-origin: center;
+    transform-box: fill-box;
+    animation: heart-thump 1.6s ease-in-out infinite;
+  }
+  @keyframes heart-thump {
+    0%,100% { transform: scale(1); }
+    40%     { transform: scale(1.18); }
+    60%     { transform: scale(0.92); }
+  }
+
+  /* SLEEPY — very slow */
+  .m-sleepy .blob { animation: float 5.5s ease-in-out infinite; }
+  .m-sleepy .blob svg { animation: breathe 5.5s ease-in-out infinite; }
+
+  /* NEUTRAL — base idle, already applied */
+
+  /* ------------------------------------------------------------------ */
+  /* Ambient particles                                                   */
+  /* ------------------------------------------------------------------ */
+  .ambient {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .ambient i {
+    position: absolute;
+    display: block;
+  }
+
+  /* Sparkles (happy, joyful, love) */
+  .sparkle {
+    width: 10px; height: 10px;
+    background:
+      linear-gradient(currentColor, currentColor) center/100% 2px no-repeat,
+      linear-gradient(currentColor, currentColor) center/2px 100% no-repeat;
+    color: rgba(255,255,255,0.9);
+    transform: rotate(45deg);
+    animation: sparkle 2.4s ease-in-out infinite;
+    opacity: 0;
+  }
+  @keyframes sparkle {
+    0%, 100% { opacity: 0; transform: rotate(45deg) scale(0.4); }
+    50%      { opacity: 1; transform: rotate(45deg) scale(1); }
+  }
+
+  /* Hearts (love) */
+  .heart {
+    width: 14px; height: 14px;
+    color: #ff5a7e;
+    opacity: 0;
+    animation: heart-float 3.6s ease-in infinite;
+  }
+  .heart::before, .heart::after {
+    content: "";
+    position: absolute;
+    width: 8px; height: 12px;
+    background: currentColor;
+    border-radius: 8px 8px 0 0;
+    top: 0; left: 3px;
+    transform: rotate(-45deg);
+    transform-origin: 0 100%;
+  }
+  .heart::after { transform: rotate(45deg); transform-origin: 100% 100%; left: -1px; }
+  @keyframes heart-float {
+    0%   { opacity: 0; transform: translateY(0)    scale(0.6); }
+    20%  { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-90px) scale(1.1); }
+  }
+
+  /* Z's (sleepy) */
+  .zee {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 800;
+    color: rgba(27,29,31,0.7);
+    opacity: 0;
+    animation: zee-rise 3.6s ease-out infinite;
+  }
+  @keyframes zee-rise {
+    0%   { opacity: 0; transform: translate(0, 0) rotate(-6deg) scale(0.6); }
+    20%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(20px, -80px) rotate(8deg) scale(1.2); }
+  }
+
+  /* Steam puffs (angry) */
+  .steam {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.7);
+    opacity: 0;
+    animation: steam-rise 2.2s ease-out infinite;
+    filter: blur(1px);
+  }
+  @keyframes steam-rise {
+    0%   { opacity: 0; transform: translateY(0)   scale(0.5); }
+    20%  { opacity: 0.9; }
+    100% { opacity: 0; transform: translateY(-60px) scale(1.4); }
+  }
+
+  /* Sweat drop (worried) */
+  .sweat {
+    width: 10px; height: 14px;
+    background: #8dd0ff;
+    border: 1px solid #5fb2ec;
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    transform: rotate(-8deg);
+    opacity: 0;
+    animation: sweat-drip 2.8s ease-in infinite;
+  }
+  @keyframes sweat-drip {
+    0%   { opacity: 0; transform: translateY(-4px) rotate(-8deg) scale(0.6); }
+    15%  { opacity: 1; transform: translateY(0)    rotate(-8deg) scale(1); }
+    85%  { opacity: 1; transform: translateY(40px) rotate(-8deg) scale(1); }
+    100% { opacity: 0; transform: translateY(46px) rotate(-8deg) scale(0.7); }
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Mood Characters</h1>
+    <p>Personajes "blob" con animación idle (respiración + flotación), animaciones temáticas por estado, y partículas ambientales.</p>
+  </div>
+  <div class="legend"><span class="dot"></span>Animaciones en bucle · pasa el ratón sobre una tarjeta para verlas mejor</div>
+</header>
+
+<div class="grid">
+
+  <!-- ================ 1. HAPPY ================ -->
+  <div class="card bg-happy m-happy">
+    <div class="ambient">
+      <i class="sparkle" style="top:18%; left:22%; animation-delay:0s;"></i>
+      <i class="sparkle" style="top:14%; right:26%; animation-delay:0.7s;"></i>
+      <i class="sparkle" style="top:30%; right:14%; animation-delay:1.4s;"></i>
+    </div>
+    <div class="stage">
+      <div class="floor"></div>
+      <div class="blob">
+        <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bodyHappy" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#ffe4a8"/>
+              <stop offset="55%" stop-color="#fbc25a"/>
+              <stop offset="100%" stop-color="#d88a1c"/>
+            </linearGradient>
+            <radialGradient id="hiHappy" cx="50%" cy="22%" r="55%">
+              <stop offset="0%" stop-color="#fff8e0" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#fff8e0" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="shadeHappy" cx="50%" cy="90%" r="60%">
+              <stop offset="0%" stop-color="#a35c0a" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#a35c0a" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <path d="M110 14 C 58 14, 20 56, 20 114 C 20 162, 56 198, 110 198 C 164 198, 200 162, 200 114 C 200 56, 162 14, 110 14 Z" fill="url(#bodyHappy)"/>
+          <ellipse cx="110" cy="58" rx="68" ry="42" fill="url(#hiHappy)"/>
+          <ellipse cx="110" cy="170" rx="80" ry="28" fill="url(#shadeHappy)"/>
+          <ellipse cx="55"  cy="128" rx="12" ry="7.5" fill="#f29a72" opacity="0.6"/>
+          <ellipse cx="165" cy="128" rx="12" ry="7.5" fill="#f29a72" opacity="0.6"/>
+          <path d="M66 110 Q 80 90, 94 110" fill="none" stroke="#1b1d1f" stroke-width="6.5" stroke-linecap="round"/>
+          <path d="M126 110 Q 140 90, 154 110" fill="none" stroke="#1b1d1f" stroke-width="6.5" stroke-linecap="round"/>
+          <path d="M68 134 Q 110 184, 152 134" fill="none" stroke="#1b1d1f" stroke-width="7.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="label">Happy</div>
+    <div class="sub">Feliz</div>
+  </div>
+
+  <!-- ================ 2. JOYFUL ================ -->
+  <div class="card bg-joyful m-joyful">
+    <div class="ambient">
+      <i class="sparkle" style="top:12%; left:18%; color:#fff; animation-delay:0.3s;"></i>
+      <i class="sparkle" style="top:22%; right:18%; color:#fff; animation-delay:1s;"></i>
+      <i class="sparkle" style="top:40%; left:10%; color:#fff; animation-delay:1.7s;"></i>
+    </div>
+    <div class="stage">
+      <div class="floor"></div>
+      <div class="blob">
+        <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bodyJoy" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#b8f0dd"/>
+              <stop offset="55%" stop-color="#54c6a6"/>
+              <stop offset="100%" stop-color="#218e72"/>
+            </linearGradient>
+            <radialGradient id="hiJoy" cx="50%" cy="22%" r="55%">
+              <stop offset="0%" stop-color="#e6fbf2" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#e6fbf2" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="shadeJoy" cx="50%" cy="90%" r="60%">
+              <stop offset="0%" stop-color="#0e604c" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#0e604c" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <path d="M110 14 C 58 14, 20 56, 20 114 C 20 162, 56 198, 110 198 C 164 198, 200 162, 200 114 C 200 56, 162 14, 110 14 Z" fill="url(#bodyJoy)"/>
+          <ellipse cx="110" cy="58" rx="68" ry="42" fill="url(#hiJoy)"/>
+          <ellipse cx="110" cy="170" rx="80" ry="28" fill="url(#shadeJoy)"/>
+
+          <!-- soft cheeks -->
+          <ellipse cx="55"  cy="130" rx="12" ry="7" fill="#1f7a63" opacity="0.35"/>
+          <ellipse cx="165" cy="130" rx="12" ry="7" fill="#1f7a63" opacity="0.35"/>
+
+          <!-- simple round eyes -->
+          <ellipse cx="82"  cy="108" rx="6" ry="7" fill="#1b1d1f"/>
+          <ellipse cx="138" cy="108" rx="6" ry="7" fill="#1b1d1f"/>
+
+          <!-- simple smile -->
+          <path d="M70 136 Q 110 178, 150 136" fill="none" stroke="#1b1d1f" stroke-width="7" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="label">Joyful</div>
+    <div class="sub">Alegre</div>
+  </div>
+
+  <!-- ================ 3. ANNOYED ================ -->
+  <div class="card bg-annoyed m-annoyed">
+    <div class="stage">
+      <div class="floor"></div>
+      <div class="blob">
+        <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bodyAnn" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#d6bfff"/>
+              <stop offset="55%" stop-color="#9577f0"/>
+              <stop offset="100%" stop-color="#6244b6"/>
+            </linearGradient>
+            <radialGradient id="hiAnn" cx="50%" cy="22%" r="55%">
+              <stop offset="0%" stop-color="#f3eaff" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#f3eaff" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="shadeAnn" cx="50%" cy="90%" r="60%">
+              <stop offset="0%" stop-color="#382379" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#382379" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <path d="M110 14 C 58 14, 20 56, 20 114 C 20 162, 56 198, 110 198 C 164 198, 200 162, 200 114 C 200 56, 162 14, 110 14 Z" fill="url(#bodyAnn)"/>
+          <ellipse cx="110" cy="58" rx="68" ry="42" fill="url(#hiAnn)"/>
+          <ellipse cx="110" cy="170" rx="80" ry="28" fill="url(#shadeAnn)"/>
+          <g class="eye-roll">
+            <path d="M64 102 Q 80 96, 96 102 L 96 112 Q 80 117, 64 112 Z" fill="#ffffff"/>
+            <path d="M64 102 Q 80 96, 96 102" fill="none" stroke="#1b1d1f" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="80" cy="109" r="3.6" fill="#1b1d1f"/>
+            <path d="M124 102 Q 140 96, 156 102 L 156 112 Q 140 117, 124 112 Z" fill="#ffffff"/>
+            <path d="M124 102 Q 140 96, 156 102" fill="none" stroke="#1b1d1f" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="140" cy="109" r="3.6" fill="#1b1d1f"/>
+          </g>
+          <path d="M86 150 L 134 150" fill="none" stroke="#1b1d1f" stroke-width="6.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="label">Annoyed</div>
+    <div class="sub">Molesto</div>
+  </div>
+
+  <!-- ================ 4. WORRIED ================ -->
+  <div class="card bg-worried m-worried">
+    <div class="ambient">
+      <i class="sweat" style="top:30%; right:18%; animation-delay:0.6s;"></i>
+    </div>
+    <div class="stage">
+      <div class="floor"></div>
+      <div class="blob">
+        <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bodyWor" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#ffe6b0"/>
+              <stop offset="55%" stop-color="#fac466"/>
+              <stop offset="100%" stop-color="#cb8519"/>
+            </linearGradient>
+            <radialGradient id="hiWor" cx="50%" cy="22%" r="55%">
+              <stop offset="0%" stop-color="#fff8e0" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#fff8e0" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="shadeWor" cx="50%" cy="90%" r="60%">
+              <stop offset="0%" stop-color="#a35c0a" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#a35c0a" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <path d="M110 14 C 58 14, 20 56, 20 114 C 20 162, 56 198, 110 198 C 164 198, 200 162, 200 114 C 200 56, 162 14, 110 14 Z" fill="url(#bodyWor)"/>
+          <ellipse cx="110" cy="58" rx="68" ry="42" fill="url(#hiWor)"/>
+          <ellipse cx="110" cy="170" rx="80" ry="28" fill="url(#shadeWor)"/>
+          <path d="M60 96 Q 75 84, 94 92" fill="none" stroke="#1b1d1f" stroke-width="5.2" stroke-linecap="round"/>
+          <path d="M160 96 Q 145 84, 126 92" fill="none" stroke="#1b1d1f" stroke-width="5.2" stroke-linecap="round"/>
+          <ellipse cx="80"  cy="114" rx="5.5" ry="6.5" fill="#1b1d1f"/>
+          <ellipse cx="140" cy="114" rx="5.5" ry="6.5" fill="#1b1d1f"/>
+          <path class="worry-mouth" d="M80 152 Q 90 142, 100 152 T 120 152 T 140 152"
+                fill="none" stroke="#1b1d1f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="label">Worried</div>
+    <div class="sub">Preocupado</div>
+  </div>
+
+  <!-- ================ 5. DIZZY ================ -->
+  <div class="card bg-stressed m-dizzy">
+    <div class="stage">
+      <div class="floor"></div>
+      <div class="blob">
+        <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bodyStr" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#ffc4c6"/>
+              <stop offset="55%" stop-color="#f47179"/>
+              <stop offset="100%" stop-color="#a13540"/>
+            </linearGradient>
+            <radialGradient id="hiStr" cx="50%" cy="22%" r="55%">
+              <stop offset="0%" stop-color="#ffeaec" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#ffeaec" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="shadeStr" cx="50%" cy="90%" r="60%">
+              <stop offset="0%" stop-color="#7a1d27" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#7a1d27" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <path d="M110 14 C 58 14, 20 56, 20 114 C 20 162, 56 198, 110 198 C 164 198, 200 162, 200 114 C 200 56, 162 14, 110 14 Z" fill="url(#bodyStr)"/>
+          <ellipse cx="110" cy="58" rx="68" ry="42" fill="url(#hiStr)"/>
+          <ellipse cx="110" cy="170" rx="80" ry="28" fill="url(#shadeStr)"/>
+          <g fill="none" stroke="#ffffff" stroke-width="3.6" stroke-linecap="round">
+            <path class="spiral-l" d="M80 110 m -10 0 a 10 10 0 1 1 20 0 a 7 7 0 1 1 -14 0 a 4 4 0 1 1 8 0"/>
+            <path class="spiral-r" d="M140 110 m -10 0 a 10 10 0 1 1 20 0 a 7 7 0 1 1 -14 0 a 4 4 0 1 1 8 0"/>
+          </g>
+          <path d="M90 150 L 130 150" fill="none" stroke="#1b1d1f" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="label">Dizzy</div>
+    <div class="sub">Mareado / estresado</div>
+  </div>
+
+  <!-- ================ 6. SAD ================ -->
+  <div class="card bg-sad m-sad">
+    <div class="stage">
+      <div class="floor"></div>
+      <div class="blob">
+        <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bodySad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#c4d3ff"/>
+              <stop offset="55%" stop-color="#7891f0"/>
+              <stop offset="100%" stop-color="#3e57bf"/>
+            </linearGradient>
+            <radialGradient id="hiSad" cx="50%" cy="22%" r="55%">
+              <stop offset="0%" stop-color="#eaf0ff" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#eaf0ff" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="shadeSad" cx="50%" cy="90%" r="60%">
+              <stop offset="0%" stop-color="#1e2f7c" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#1e2f7c" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <path d="M110 14 C 58 14, 20 56, 20 114 C 20 162, 56 198, 110 198 C 164 198, 200 162, 200 114 C 200 56, 162 14, 110 14 Z" fill="url(#bodySad)"/>
+          <ellipse cx="110" cy="58" rx="68" ry="42" fill="url(#hiSad)"/>
+          <ellipse cx="110" cy="170" rx="80" ry="28" fill="url(#shadeSad)"/>
+          <path d="M60 92 Q 78 100, 92 96" fill="none" stroke="#1b1d1f" stroke-width="5.2" stroke-linecap="round"/>
+          <path d="M160 92 Q 142 100, 128 96" fill="none" stroke="#1b1d1f" stroke-width="5.2" stroke-linecap="round"/>
+          <path d="M68 118 Q 80 108, 92 118" fill="none" stroke="#1b1d1f" stroke-width="6" stroke-linecap="round"/>
+          <path d="M128 118 Q 140 108, 152 118" fill="none" stroke="#1b1d1f" stroke-width="6" stroke-linecap="round"/>
+          <path d="M82 162 Q 110 134, 138 162" fill="none" stroke="#1b1d1f" stroke-width="6" stroke-linecap="round"/>
+          <path class="tear" d="M152 122 Q 158 134, 152 140 Q 146 134, 152 122 Z" fill="#8dd0ff" stroke="#5fb2ec" stroke-width="1.6"/>
+        </svg>
+      </div>
+    </div>
+    <div class="label">Sad</div>
+    <div class="sub">Triste</div>
+  </div>
+
+  <!-- ================ 7. ANGRY ================ -->
+  <div class="card bg-angry m-angry">
+    <div class="ambient">
+      <i class="steam" style="top:18%; left:24%; animation-delay:0s;"></i>
+      <i class="steam" style="top:14%; right:24%; animation-delay:0.7s;"></i>
+      <i class="steam" style="top:22%; left:30%; animation-delay:1.4s;"></i>
+    </div>
+    <div class="stage">
+      <div class="floor"></div>
+      <div class="blob">
+        <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bodyAng" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#ffbbbb"/>
+              <stop offset="55%" stop-color="#ee5e5e"/>
+              <stop offset="100%" stop-color="#982929"/>
+            </linearGradient>
+            <radialGradient id="hiAng" cx="50%" cy="22%" r="55%">
+              <stop offset="0%" stop-color="#ffe4e4" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#ffe4e4" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="shadeAng" cx="50%" cy="90%" r="60%">
+              <stop offset="0%" stop-color="#6c1313" stop-opacity="0.45"/>
+              <stop offset="100%" stop-color="#6c1313" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <path d="M110 14 C 58 14, 20 56, 20 114 C 20 162, 56 198, 110 198 C 164 198, 200 162, 200 114 C 200 56, 162 14, 110 14 Z" fill="url(#bodyAng)"/>
+          <ellipse cx="110" cy="58" rx="68" ry="42" fill="url(#hiAng)"/>
+          <ellipse cx="110" cy="170" rx="80" ry="28" fill="url(#shadeAng)"/>
+          <path d="M60 88 L 96 102" fill="none" stroke="#1b1d1f" stroke-width="7" stroke-linecap="round"/>
+          <path d="M160 88 L 124 102" fill="none" stroke="#1b1d1f" stroke-width="7" stroke-linecap="round"/>
+          <ellipse cx="80"  cy="118" rx="5.5" ry="6.5" fill="#1b1d1f"/>
+          <ellipse cx="140" cy="118" rx="5.5" ry="6.5" fill="#1b1d1f"/>
+          <path d="M82 162 Q 110 138, 138 162" fill="none" stroke="#1b1d1f" stroke-width="6.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="label">Angry</div>
+    <div class="sub">Enfadado</div>
+  </div>
+
+  <!-- ================ 8. IN LOVE ================ -->
+  <div class="card bg-love m-love">
+    <div class="ambient">
+      <i class="heart" style="top:60%; left:24%; animation-delay:0s;"></i>
+      <i class="heart" style="top:60%; right:24%; animation-delay:1.2s;"></i>
+      <i class="heart" style="top:60%; left:46%; animation-delay:2.4s;"></i>
+    </div>
+    <div class="stage">
+      <div class="floor"></div>
+      <div class="blob">
+        <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bodyLove" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#ffd0db"/>
+              <stop offset="55%" stop-color="#ff80a0"/>
+              <stop offset="100%" stop-color="#b6315a"/>
+            </linearGradient>
+            <radialGradient id="hiLove" cx="50%" cy="22%" r="55%">
+              <stop offset="0%" stop-color="#ffeaf0" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#ffeaf0" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="shadeLove" cx="50%" cy="90%" r="60%">
+              <stop offset="0%" stop-color="#7a1538" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#7a1538" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <path d="M110 14 C 58 14, 20 56, 20 114 C 20 162, 56 198, 110 198 C 164 198, 200 162, 200 114 C 200 56, 162 14, 110 14 Z" fill="url(#bodyLove)"/>
+          <ellipse cx="110" cy="58" rx="68" ry="42" fill="url(#hiLove)"/>
+          <ellipse cx="110" cy="170" rx="80" ry="28" fill="url(#shadeLove)"/>
+          <g fill="#e23a5a">
+            <path class="heart-eye" d="M80 100 C 72 92, 60 96, 60 106 C 60 116, 72 122, 80 130 C 88 122, 100 116, 100 106 C 100 96, 88 92, 80 100 Z"/>
+            <path class="heart-eye" d="M140 100 C 132 92, 120 96, 120 106 C 120 116, 132 122, 140 130 C 148 122, 160 116, 160 106 C 160 96, 148 92, 140 100 Z"/>
+          </g>
+          <path d="M90 152 Q 110 170, 130 152" fill="none" stroke="#1b1d1f" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="label">In love</div>
+    <div class="sub">Enamorado</div>
+  </div>
+
+  <!-- ================ 9. SLEEPY ================ -->
+  <div class="card bg-sleepy m-sleepy">
+    <div class="ambient">
+      <i class="zee" style="top:40%; right:24%; font-size:18px; animation-delay:0s;">z</i>
+      <i class="zee" style="top:36%; right:30%; font-size:24px; animation-delay:1.2s;">Z</i>
+      <i class="zee" style="top:30%; right:20%; font-size:30px; animation-delay:2.4s;">Z</i>
+    </div>
+    <div class="stage">
+      <div class="floor"></div>
+      <div class="blob">
+        <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bodySlp" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#e0d2ff"/>
+              <stop offset="55%" stop-color="#a48be0"/>
+              <stop offset="100%" stop-color="#5b449a"/>
+            </linearGradient>
+            <radialGradient id="hiSlp" cx="50%" cy="22%" r="55%">
+              <stop offset="0%" stop-color="#f3eaff" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#f3eaff" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="shadeSlp" cx="50%" cy="90%" r="60%">
+              <stop offset="0%" stop-color="#311a66" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#311a66" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <path d="M110 14 C 58 14, 20 56, 20 114 C 20 162, 56 198, 110 198 C 164 198, 200 162, 200 114 C 200 56, 162 14, 110 14 Z" fill="url(#bodySlp)"/>
+          <ellipse cx="110" cy="58" rx="68" ry="42" fill="url(#hiSlp)"/>
+          <ellipse cx="110" cy="170" rx="80" ry="28" fill="url(#shadeSlp)"/>
+          <path d="M66 110 Q 80 122, 94 110" fill="none" stroke="#1b1d1f" stroke-width="6" stroke-linecap="round"/>
+          <path d="M126 110 Q 140 122, 154 110" fill="none" stroke="#1b1d1f" stroke-width="6" stroke-linecap="round"/>
+          <ellipse cx="110" cy="150" rx="9" ry="6" fill="#1b1d1f"/>
+        </svg>
+      </div>
+    </div>
+    <div class="label">Sleepy</div>
+    <div class="sub">Dormido</div>
+  </div>
+
+  <!-- ================ 10. NEUTRAL ================ -->
+  <div class="card bg-neutral">
+    <div class="stage">
+      <div class="floor"></div>
+      <div class="blob">
+        <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bodyNeu" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#f2eadb"/>
+              <stop offset="55%" stop-color="#cdbe9d"/>
+              <stop offset="100%" stop-color="#7d6d4d"/>
+            </linearGradient>
+            <radialGradient id="hiNeu" cx="50%" cy="22%" r="55%">
+              <stop offset="0%" stop-color="#fbf5e6" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#fbf5e6" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="shadeNeu" cx="50%" cy="90%" r="60%">
+              <stop offset="0%" stop-color="#4a3e22" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#4a3e22" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <path d="M110 14 C 58 14, 20 56, 20 114 C 20 162, 56 198, 110 198 C 164 198, 200 162, 200 114 C 200 56, 162 14, 110 14 Z" fill="url(#bodyNeu)"/>
+          <ellipse cx="110" cy="58" rx="68" ry="42" fill="url(#hiNeu)"/>
+          <ellipse cx="110" cy="170" rx="80" ry="28" fill="url(#shadeNeu)"/>
+          <ellipse cx="80"  cy="114" rx="5.5" ry="6.5" fill="#1b1d1f"/>
+          <ellipse cx="140" cy="114" rx="5.5" ry="6.5" fill="#1b1d1f"/>
+          <path d="M86 152 L 134 152" fill="none" stroke="#1b1d1f" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="label">Neutral</div>
+    <div class="sub">Neutral</div>
+  </div>
+
+</div>
+
+</body>
+</html>
