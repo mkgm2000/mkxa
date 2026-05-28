@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
+import { AthleteProvider } from '@/lib/athlete-context';
 
 const monaSans = localFont({
   src: [
@@ -21,7 +22,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={monaSans.variable}>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        <AthleteProvider>{children}</AthleteProvider>
+      </body>
     </html>
   );
 }

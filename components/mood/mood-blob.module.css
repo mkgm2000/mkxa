@@ -287,13 +287,5 @@
   100% { opacity: 0; transform: translateY(46px) rotate(-8deg) scale(0.7); }
 }
 
-/* ─── Respect reduced motion ────────────────────────────────────────── */
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-  }
-}
+/* Reduced-motion guard is defined in app/globals.css to comply with CSS
+ * module purity rules (universal selectors are not allowed in modules). */
