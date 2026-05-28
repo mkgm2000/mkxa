@@ -1,0 +1,299 @@
+/* Mood Blob module — keyframes and animation utility classes ported 1:1
+ * from docs/design-handoff/mood_characters/Mood Characters.html.
+ * Page-level rules (body, html, header, .grid, .card, .label, .sub) are
+ * intentionally stripped — those concerns live elsewhere in the app.
+ */
+
+.stage {
+  position: relative;
+  z-index: 1;
+}
+
+.floor {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: 6%;
+  height: 16px;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.35), rgba(0,0,0,0) 70%);
+  filter: blur(2px);
+  transform-origin: center;
+  animation: floor-pulse 3.4s ease-in-out infinite;
+}
+
+.blob {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 88%;
+  animation: float 3.4s ease-in-out infinite;
+}
+
+.blob svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform-origin: 50% 88%;
+  animation: breathe 3.4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1, 1); }
+  50%      { transform: scale(1.035, 0.965); }
+}
+
+@keyframes floor-pulse {
+  0%, 100% { transform: scaleX(1);    opacity: 0.9;  }
+  50%      { transform: scaleX(0.72); opacity: 0.55; }
+}
+
+/* ─── Per-mood animations ───────────────────────────────────────────── */
+
+/* HAPPY — bouncy */
+.m-happy .blob       { animation: float-happy 1.8s ease-in-out infinite; }
+.m-happy .blob svg   { animation: breathe     1.8s ease-in-out infinite; }
+.m-happy .floor      { animation: floor-pulse 1.8s ease-in-out infinite; }
+@keyframes float-happy {
+  0%, 100% { transform: translateY(0)    scale(1, 1);      }
+  45%      { transform: translateY(-18px) scale(0.98, 1.03); }
+  60%      { transform: translateY(0)    scale(1.06, 0.92); }
+  75%      { transform: translateY(-4px) scale(1, 1);      }
+}
+
+/* JOYFUL — excited hop + wiggle */
+.m-joyful .blob     { animation: float-joy 2.2s ease-in-out infinite; }
+.m-joyful .blob svg { animation: breathe   2.2s ease-in-out infinite; }
+@keyframes float-joy {
+  0%, 100% { transform: translateY(0)     rotate(0deg); }
+  25%      { transform: translateY(-22px) rotate(-3deg); }
+  50%      { transform: translateY(0)     rotate(0deg) scale(1.05, 0.93); }
+  75%      { transform: translateY(-12px) rotate(3deg); }
+}
+
+/* ANNOYED — occasional eye-roll/twitch */
+.m-annoyed .blob     { animation: float 6s ease-in-out infinite; }
+.m-annoyed .blob svg { animation: breathe 6s ease-in-out infinite; }
+.m-annoyed .eyeRoll {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: eye-roll 5s ease-in-out infinite;
+}
+@keyframes eye-roll {
+  0%, 70%, 100% { transform: translate(0, 0); }
+  78%           { transform: translate(2px, -3px); }
+  86%           { transform: translate(-2px, -3px); }
+  92%           { transform: translate(0, 0); }
+}
+
+/* WORRIED — slow sway + wavy mouth jitter */
+.m-worried .blob     { animation: sway 3.2s ease-in-out infinite; }
+.m-worried .blob svg { animation: breathe 3.2s ease-in-out infinite; }
+@keyframes sway {
+  0%, 100% { transform: translateX(0) translateY(0)    rotate(-2deg); }
+  50%      { transform: translateX(0) translateY(-4px) rotate(2deg);  }
+}
+.m-worried .worryMouth {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: mouth-quiver 0.9s ease-in-out infinite;
+}
+@keyframes mouth-quiver {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(1.5px) scaleX(1.02); }
+}
+
+/* DIZZY — wobble + spinning spirals */
+.m-dizzy .blob     { animation: wobble 2.4s ease-in-out infinite; }
+.m-dizzy .blob svg { animation: breathe 2.4s ease-in-out infinite; }
+@keyframes wobble {
+  0%, 100% { transform: rotate(-4deg) translateY(0); }
+  50%      { transform: rotate(4deg)  translateY(-6px); }
+}
+.m-dizzy .spiralL,
+.m-dizzy .spiralR {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: spin 2.5s linear infinite;
+}
+.m-dizzy .spiralR { animation-direction: reverse; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* SAD — droop + falling tear */
+.m-sad .blob     { animation: droop 4.2s ease-in-out infinite; }
+.m-sad .blob svg { animation: breathe 4.2s ease-in-out infinite; }
+@keyframes droop {
+  0%, 100% { transform: translateY(0)   scale(1, 1);    }
+  50%      { transform: translateY(4px) scale(1.02, 0.97); }
+}
+.m-sad .tear {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: tear-fall 2.6s ease-in infinite;
+}
+@keyframes tear-fall {
+  0%   { opacity: 0; transform: translate(0, 0)    scale(0.6); }
+  15%  { opacity: 1; transform: translate(0, 0)    scale(1);   }
+  85%  { opacity: 1; transform: translate(2px, 60px) scale(1); }
+  100% { opacity: 0; transform: translate(2px, 70px) scale(0.7); }
+}
+
+/* ANGRY — vibrate */
+.m-angry .blob     { animation: angry-shake 0.18s linear infinite; }
+.m-angry .blob svg { animation: breathe 2.6s ease-in-out infinite; }
+@keyframes angry-shake {
+  0%, 100% { transform: translate(0, 0)       rotate(0deg); }
+  25%      { transform: translate(-1.5px, 1px) rotate(-1deg); }
+  50%      { transform: translate(1.5px, -1px) rotate(1deg);  }
+  75%      { transform: translate(-1px, 1.5px) rotate(-0.5deg); }
+}
+
+/* LOVE — gentle pulse + heart thump */
+.m-love .blob     { animation: love-pulse 1.6s ease-in-out infinite; }
+.m-love .blob svg { animation: breathe 1.6s ease-in-out infinite; }
+@keyframes love-pulse {
+  0%, 100% { transform: scale(1, 1)         translateY(0); }
+  50%      { transform: scale(1.05, 1.05)   translateY(-4px); }
+}
+.m-love .heartEye {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: heart-thump 1.6s ease-in-out infinite;
+}
+@keyframes heart-thump {
+  0%, 100% { transform: scale(1);    }
+  40%      { transform: scale(1.18); }
+  60%      { transform: scale(0.92); }
+}
+
+/* SLEEPY — very slow */
+.m-sleepy .blob     { animation: float 5.5s ease-in-out infinite; }
+.m-sleepy .blob svg { animation: breathe 5.5s ease-in-out infinite; }
+
+/* NEUTRAL — base idle, already applied */
+
+/* ─── Ambient particles ─────────────────────────────────────────────── */
+
+.ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sparkle {
+  position: absolute;
+  display: block;
+  width: 10px;
+  height: 10px;
+  background:
+    linear-gradient(currentColor, currentColor) center/100% 2px no-repeat,
+    linear-gradient(currentColor, currentColor) center/2px 100% no-repeat;
+  color: rgba(255, 255, 255, 0.9);
+  transform: rotate(45deg);
+  animation: sparkle 2.4s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: rotate(45deg) scale(0.4); }
+  50%      { opacity: 1; transform: rotate(45deg) scale(1);   }
+}
+
+.heart {
+  position: absolute;
+  display: block;
+  width: 14px;
+  height: 14px;
+  color: #ff5a7e;
+  opacity: 0;
+  animation: heart-float 3.6s ease-in infinite;
+}
+.heart::before,
+.heart::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 12px;
+  background: currentColor;
+  border-radius: 8px 8px 0 0;
+  top: 0;
+  left: 3px;
+  transform: rotate(-45deg);
+  transform-origin: 0 100%;
+}
+.heart::after {
+  transform: rotate(45deg);
+  transform-origin: 100% 100%;
+  left: -1px;
+}
+@keyframes heart-float {
+  0%   { opacity: 0; transform: translateY(0)     scale(0.6); }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-90px) scale(1.1); }
+}
+
+.zee {
+  position: absolute;
+  display: block;
+  font-family: var(--font-mona), system-ui, sans-serif;
+  font-weight: 800;
+  color: rgba(27, 29, 31, 0.7);
+  opacity: 0;
+  animation: zee-rise 3.6s ease-out infinite;
+}
+.zee::before { content: 'z'; }
+@keyframes zee-rise {
+  0%   { opacity: 0; transform: translate(0, 0)    rotate(-6deg) scale(0.6); }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(20px, -80px) rotate(8deg) scale(1.2); }
+}
+
+.steam {
+  position: absolute;
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  opacity: 0;
+  animation: steam-rise 2.2s ease-out infinite;
+  filter: blur(1px);
+}
+@keyframes steam-rise {
+  0%   { opacity: 0;   transform: translateY(0)     scale(0.5); }
+  20%  { opacity: 0.9; }
+  100% { opacity: 0;   transform: translateY(-60px) scale(1.4); }
+}
+
+.sweat {
+  position: absolute;
+  display: block;
+  width: 10px;
+  height: 14px;
+  background: #8dd0ff;
+  border: 1px solid #5fb2ec;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  transform: rotate(-8deg);
+  opacity: 0;
+  animation: sweat-drip 2.8s ease-in infinite;
+}
+@keyframes sweat-drip {
+  0%   { opacity: 0; transform: translateY(-4px) rotate(-8deg) scale(0.6); }
+  15%  { opacity: 1; transform: translateY(0)    rotate(-8deg) scale(1);   }
+  85%  { opacity: 1; transform: translateY(40px) rotate(-8deg) scale(1);   }
+  100% { opacity: 0; transform: translateY(46px) rotate(-8deg) scale(0.7); }
+}
+
+/* ─── Respect reduced motion ────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
