@@ -63,3 +63,15 @@ describe('getWeekDates', () => {
     expect(s).toContain('–');
   });
 });
+
+import { getDays as getDaysOverride, type Day as OverrideDay } from '@/lib/plan-hyrox';
+
+describe('getDays override', () => {
+  it('returns the override when one is provided', () => {
+    const ov: OverrideDay[] = [
+      { key: 'D1', title: 'Custom', rpe: 'RPE X', blocks: [{ name: 'x', sets: '1x1', load: '1' }] },
+    ];
+    const out = getDaysOverride(1, 'MK', ov);
+    expect(out).toBe(ov);
+  });
+});

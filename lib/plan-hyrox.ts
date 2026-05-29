@@ -245,13 +245,18 @@ export function getCurrentWeek(now: Date = new Date()): number {
 }
 
 /** Days array for a given week + athlete, with safe fallback. */
-export function getDays(week: number, athlete: Athlete | null): Day[] {
-  const a: Athlete = athlete ?? 'MK';
+export function getDays(
+  week: number,
+  athlete: Athlete | null,
+  override?: Day[],
+): Day[] {
+  if (override && override.length > 0) return override;
   const p = PLAN[week];
-  if (p) return p[a] ?? p.MK;
-  // unknown future week: clamp to latest defined.
-  const last = PLAN[MAX_WEEK];
-  return last[a] ?? last.MK;
+  if (!p) {
+    const fallback = PLAN[Math.min(week, MAX_WEEK)];
+    return fallback[athlete ?? 'MK'] ?? fallback.MK;
+  }
+  return p[athlete ?? 'MK'] ?? p.MK;
 }
 
 /** Display label "DD mmm – DD mmm" for week. */
