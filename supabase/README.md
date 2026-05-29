@@ -11,3 +11,4 @@ Track applied migrations in this table by appending to the log below.
 ## Applied log
 
 - `20260528120000_mood_logs.sql` — pending
+- `20260528120100_expenses_and_storage.sql` — pending (creates `expenses` table with `set_updated_at()` trigger and private `receipts` storage bucket; open RLS)
