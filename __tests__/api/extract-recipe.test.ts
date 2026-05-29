@@ -61,8 +61,14 @@ describe('POST /api/meals/extract-recipe', () => {
   });
 
   it('forwards image when image_base64 is present', async () => {
-    await POST(makeReq({ image_base64: 'AAA', media_type: 'image/png', caption_text: 'x' }));
-    const arg = create.mock.calls[0][0];
+    await POST(makeReq({
+      image_base64: 'AAAAAAAAAAAAAAAAAAAA', // ≥10 chars to pass new validation
+      media_type: 'image/png',
+      caption_text: 'x',
+    }));
+    const call = create.mock.calls[0];
+    if (!call) throw new Error('anthropic create was not called');
+    const arg = call[0];
     const content = arg.messages[0].content;
     expect(content[0].type).toBe('image');
     expect(content[0].source.media_type).toBe('image/png');

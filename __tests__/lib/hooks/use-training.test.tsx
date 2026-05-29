@@ -61,7 +61,9 @@ describe('useTraining', () => {
       screen.getByText('save').click();
     });
     expect(upsert).toHaveBeenCalledTimes(1);
-    const arg = upsert.mock.calls[0][0] as Record<string, unknown>;
+    const call = upsert.mock.calls[0];
+    if (!call) throw new Error('upsert was not called');
+    const arg = call[0] as Record<string, unknown>;
     expect(arg.athlete).toBe('MK');
     expect(arg.week).toBe(1);
     expect(arg.day_key).toBe('D1');

@@ -6,11 +6,15 @@ import { RECIPE_SYSTEM_PROMPT } from '@/lib/anthropic/recipe-prompts';
 
 export const runtime = 'nodejs';
 
+// Image base64 cap matches the 5MB upload limit (5_242_880 bytes
+// becomes ~7M base64 characters; 8_000_000 is a safe ceiling).
+const MAX_IMAGE_B64 = 8_000_000;
+
 const RequestSchema = z.object({
-  image_base64: z.string().optional(),
+  image_base64: z.string().min(10).max(MAX_IMAGE_B64).optional(),
   media_type: z.enum(['image/jpeg', 'image/png', 'image/webp']).optional(),
-  caption_text: z.string().optional(),
-  source_url: z.string().optional(),
+  caption_text: z.string().max(10_000).optional(),
+  source_url: z.string().url().max(2048).optional(),
 });
 
 const AISLE_ENUM = z.enum([
@@ -85,8 +89,9 @@ export async function POST(req: Request) {
     const first = res.content.find((b) => b.type === 'text');
     raw = first && 'text' in first ? first.text : '';
   } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Anthropic error';
-    return jsonError(`Anthropic: ${msg}`, 502);
+    // Log full error server-side, return generic message to client.
+    console.error('[extract-recipe] anthropic error', err);
+    return jsonError('Análisis de receta falló', 502);
   }
 
   let parsedJson: unknown;
@@ -98,7 +103,8 @@ export async function POST(req: Request) {
 
   const checked = RecipeJsonSchema.safeParse(parsedJson);
   if (!checked.success) {
-    return NextResponse.json({ error: 'Schema mismatch', issues: checked.error.issues, raw: parsedJson }, { status: 502 });
+    console.error('[extract-recipe] schema mismatch', checked.error.issues, parsedJson);
+    return jsonError('Modelo devolvió formato inesperado', 502);
   }
 
   return NextResponse.json(checked.data);

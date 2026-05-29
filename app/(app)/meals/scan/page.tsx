@@ -26,10 +26,16 @@ export default function MealsScanPage() {
       });
       if (!res.ok) { setError(await res.text()); return; }
       const data = await res.json() as ExtractedRecipe;
+      // Persist the screenshot as a data URL on the recipe row. Pragmatic
+      // for the prototype; a Storage bucket is the right home long-term.
+      const image_url =
+        input.image_base64 && input.media_type
+          ? `data:${input.media_type};base64,${input.image_base64}`
+          : null;
       setExtracted({
         ...data,
         source_url: input.url ?? null,
-        image_url: null,
+        image_url,
       });
     } finally {
       setBusy(false);

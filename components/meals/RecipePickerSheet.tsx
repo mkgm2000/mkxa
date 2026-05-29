@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { Recipe } from '@/lib/meals/recipes';
 
@@ -20,6 +20,13 @@ export function RecipePickerSheet({ open, recipes, onClose, onPick }: RecipePick
       r.title.toLowerCase().includes(term) ||
       r.tags.some((t) => t.toLowerCase().includes(term)));
   }, [q, recipes]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
 
   if (!open) return null;
 

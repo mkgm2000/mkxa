@@ -22,7 +22,7 @@ export function InlineSaveText() {
   if (status === 'saved') {
     return (
       <p className="flex items-center gap-1 text-xs text-ink-muted">
-        Guardado <Check size={12} aria-hidden />
+        Guardado <Check size={12} strokeWidth={1.5} aria-hidden />
       </p>
     );
   }

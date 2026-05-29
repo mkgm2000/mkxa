@@ -7,8 +7,11 @@ import { CATEGORIES } from '@/lib/expenses';
 
 export const runtime = 'nodejs';
 
+// Matches the 5MB client-side limit; base64 grows ~33% so 8M is safe.
+const MAX_IMAGE_B64 = 8_000_000;
+
 const RequestSchema = z.object({
-  image_base64: z.string().min(10),
+  image_base64: z.string().min(10).max(MAX_IMAGE_B64),
   media_type: z.enum(['image/jpeg', 'image/png', 'image/webp']),
 });
 

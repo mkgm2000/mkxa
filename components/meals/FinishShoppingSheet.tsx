@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { PaidBySelect } from '@/components/controls/PaidBySelect';
 import type { PaidBy } from '@/lib/expenses';
@@ -16,6 +16,13 @@ export function FinishShoppingSheet({ open, onClose, onFinish }: FinishShoppingS
   const [paidBy, setPaidBy] = useState<PaidBy>('Compartido');
   const [merchant, setMerchant] = useState('');
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
 
   if (!open) return null;
 

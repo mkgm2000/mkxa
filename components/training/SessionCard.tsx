@@ -54,7 +54,7 @@ export function SessionCard({
           )}
         >
           {completed ? (
-            <Check size={18} strokeWidth={2.25} style={{ color: DONE_COLOR }} aria-hidden />
+            <Check size={18} strokeWidth={1.5} style={{ color: DONE_COLOR }} aria-hidden />
           ) : (
             <Check size={14} strokeWidth={1.5} className="text-ink-muted" aria-hidden />
           )}

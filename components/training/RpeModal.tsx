@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import clsx from 'clsx';
 import { RC } from '@/lib/training-colors';
@@ -19,8 +20,14 @@ export interface RpeModalProps {
 const RPE_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 export function RpeModal(props: RpeModalProps) {
-  if (!props.open) return null;
-  const { dayKey, title, rpe, notes, onSelectRpe, onChangeNotes, onSave, onClose } = props;
+  const { dayKey, title, rpe, notes, onSelectRpe, onChangeNotes, onSave, onClose, open } = props;
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+  if (!open) return null;
 
   return (
     <div

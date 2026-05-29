@@ -6,12 +6,14 @@ import { AthleteCard } from '@/components/profile/AthleteCard';
 import { MoodHistoryChart } from '@/components/profile/MoodHistoryChart';
 import { ExploreCards } from '@/components/profile/ExploreCards';
 import { useAthlete } from '@/lib/athlete-context';
+import { useMoodToday } from '@/lib/hooks/use-mood-today';
 import { supabaseClient } from '@/lib/supabase/client';
 import { saveState } from '@/lib/save-state';
 import { todayISO } from '@/lib/date';
 
 export default function ProfilePage() {
   const athlete = useAthlete();
+  const { mood } = useMoodToday(athlete);
   const [resetting, setResetting] = useState(false);
 
   async function resetMoodToday() {
@@ -31,7 +33,7 @@ export default function ProfilePage() {
   if (!athlete) return null;
 
   return (
-    <MoodGradientBg mood="love">
+    <MoodGradientBg mood={mood?.mood ?? 'love'}>
       <main className="flex flex-col gap-5 pt-2 pb-6">
         <header className="px-5 pt-6">
           <h1 className="font-sans text-[36px] font-extrabold leading-[1.05] tracking-tightest text-ink">
