@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import { GreetingHeader } from '@/components/home/GreetingHeader';
 import { WeekMoodDotsRow } from '@/components/home/WeekMoodDotsRow';
+import { WidgetMoodChart } from '@/components/home/WidgetMoodChart';
+import { WidgetExpenseMonth } from '@/components/home/WidgetExpenseMonth';
+import { WidgetTrainingStreak } from '@/components/home/WidgetTrainingStreak';
+import { CardNextSession } from '@/components/home/CardNextSession';
 import { SegmentedDayWeekMonth, type Range } from '@/components/controls/SegmentedDayWeekMonth';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
 import { useAthlete } from '@/lib/athlete-context';
@@ -35,14 +39,13 @@ export default function HomePage() {
         />
       </section>
 
-      <section className="mx-5 mt-2 rounded-card bg-white p-5 shadow-card">
-        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
-          Próximo paso
-        </p>
-        <p className="mt-1 font-sans text-base font-bold text-ink">
-          Las funciones de Training, Comidas y Gastos llegan en siguientes planes.
-        </p>
+      <section className="grid grid-cols-2 gap-3 px-5">
+        <WidgetMoodChart weekStartISO={weekStartISO} logsByDate={logsByDate} />
+        <WidgetExpenseMonth />
       </section>
+
+      <CardNextSession />
+      <WidgetTrainingStreak />
     </main>
   );
 }
