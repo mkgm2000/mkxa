@@ -1,53 +1,57 @@
 'use client';
 
-import { useMemo } from 'react';
-import { weekDays } from '@/lib/date';
-import { getMoodTokens, MOODS, type Mood } from '@/lib/moods';
+import Link from 'next/link';
+import clsx from 'clsx';
+import { weekDays, todayISO as computeTodayISO } from '@/lib/date';
+import { getMoodTokens, type Mood } from '@/lib/moods';
+
+const LABELS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
 interface Props {
   weekStartISO: string;
+  todayISO?: string;
   logsByDate: Record<string, Mood>;
 }
 
-const ORDER: Record<Mood, number> = MOODS.reduce((acc, m, idx) => {
-  acc[m] = idx; return acc;
-}, {} as Record<Mood, number>);
-
-export function WidgetMoodChart({ weekStartISO, logsByDate }: Props) {
+export function WidgetMoodChart({ weekStartISO, todayISO, logsByDate }: Props) {
   const days = weekDays(weekStartISO);
-  const data = days.map((d) => {
-    const m = logsByDate[d];
-    return { d, m, score: m ? ORDER[m] : null };
-  });
-
-  const points = useMemo(() => {
-    const pts = data
-      .map((p, i) => ({ x: (i / 6) * 100, y: p.score == null ? null : (1 - p.score / (MOODS.length - 1)) * 100 }))
-      .filter((p): p is { x: number; y: number } => p.y !== null);
-    if (pts.length === 0) return '';
-    return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
-  }, [data]);
+  const resolvedTodayISO = todayISO ?? computeTodayISO();
+  const today = logsByDate[resolvedTodayISO];
+  const todayLabel = today ? getMoodTokens(today).label : '—';
 
   return (
-    <div className="rounded-card bg-white p-4 shadow-card">
+    <Link
+      href="/profile"
+      className="block rounded-card bg-white p-4 shadow-card transition-transform duration-150 active:scale-[0.99]"
+    >
       <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
         Mood semana
       </p>
-      <div className="mt-3 h-12 w-full">
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
-          {points && (
-            <path d={points} fill="none" stroke="#1b1d1f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-          )}
-          {data.map((p, i) => {
-            if (p.m == null) return null;
-            const x = (i / 6) * 100;
-            const y = (1 - ORDER[p.m] / (MOODS.length - 1)) * 100;
-            return (
-              <circle key={i} cx={x} cy={y} r={3} fill={getMoodTokens(p.m).bodyMid} vectorEffect="non-scaling-stroke" />
-            );
-          })}
-        </svg>
+
+      <div className="mt-3 grid grid-cols-7 gap-1.5">
+        {days.map((iso, i) => {
+          const m = logsByDate[iso];
+          const isToday = iso === resolvedTodayISO;
+          return (
+            <div key={iso} className="flex flex-col items-center gap-1">
+              <span className="text-[9px] font-bold text-ink-muted">{LABELS[i]}</span>
+              <span
+                className={clsx(
+                  'h-6 w-6 rounded-full',
+                  !m && 'border border-ink-soft',
+                  isToday && 'ring-2 ring-ink ring-offset-1 ring-offset-white',
+                )}
+                style={{ backgroundColor: m ? getMoodTokens(m).bodyMid : 'transparent' }}
+                aria-label={m ? `${LABELS[i]} ${getMoodTokens(m).label}` : `${LABELS[i]} sin registro`}
+              />
+            </div>
+          );
+        })}
       </div>
-    </div>
+
+      <p className="mt-3 text-[12px] text-ink-muted">
+        Hoy: <span className="font-medium text-ink">{todayLabel}</span>
+      </p>
+    </Link>
   );
 }
