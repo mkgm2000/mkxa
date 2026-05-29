@@ -93,9 +93,6 @@ export async function POST(req: NextRequest) {
     const msg = err instanceof Error ? err.message : String(err);
     const status = (err as { status?: number })?.status;
     console.error('[ocr-receipt] status=', status, 'msg=', msg);
-    return NextResponse.json(
-      { error: 'OCR failed', detail: msg.slice(0, 300), status: status ?? null },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'OCR failed' }, { status: 500 });
   }
 }
