@@ -11,8 +11,9 @@ import { SessionCard } from '@/components/training/SessionCard';
 import { RpeModal } from '@/components/training/RpeModal';
 import { useAthlete } from '@/lib/athlete-context';
 import { useTraining } from '@/lib/hooks/use-training';
+import { useConfirmedWeek } from '@/lib/hooks/use-confirmed-week';
 import { getCurrentWeek, getDays, getWeekDates, MAX_WEEK } from '@/lib/plan-hyrox';
-import type { DayKey } from '@/lib/plan-hyrox';
+import type { Day, DayKey } from '@/lib/plan-hyrox';
 
 export default function TrainingPage() {
   const router = useRouter();
@@ -21,7 +22,19 @@ export default function TrainingPage() {
   const [week, setWeek] = useState<number>(currentWeek);
 
   const { byKey, setLog, setWeekNote } = useTraining(athlete, week);
-  const days = useMemo(() => getDays(week, athlete), [week, athlete]);
+  const { plan: confirmedPlan } = useConfirmedWeek(athlete, week);
+  const days = useMemo(() => {
+    // Strip rationale from confirmed plan to match the Day[] render contract.
+    const override: Day[] | undefined = confirmedPlan
+      ? confirmedPlan.days.map((day) => {
+          // Strip rationale from confirmed plan to match the Day[] render contract.
+          const { rationale: _rationale, ...rest } = day;
+          void _rationale;
+          return rest as Day;
+        })
+      : undefined;
+    return getDays(week, athlete, override);
+  }, [week, athlete, confirmedPlan]);
   const done = useMemo(() => days.filter((d) => byKey[d.key]?.completed).length, [days, byKey]);
 
   // RPE modal state
@@ -137,6 +150,18 @@ export default function TrainingPage() {
           />
         ))}
       </section>
+
+      {(() => {
+        const next = Math.min(23, Math.max(week + 1, getCurrentWeek() + 1));
+        return (
+          <Link
+            href={`/training/adjust?week=${next}`}
+            className="mx-4 my-3 flex items-center justify-center gap-2 rounded-action border border-ink-soft py-3 text-[14px] font-medium text-ink"
+          >
+            Ajustar próxima semana
+          </Link>
+        );
+      })()}
 
       <section className="px-5">
         <label className="block">
