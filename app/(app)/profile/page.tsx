@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { RotateCcw, ExternalLink, ChevronRight } from 'lucide-react';
 import { MoodGradientBg } from '@/components/mood/MoodGradientBg';
 import { AthleteCard } from '@/components/profile/AthleteCard';
 import { MoodHistoryChart } from '@/components/profile/MoodHistoryChart';
@@ -53,22 +54,29 @@ export default function ProfilePage() {
           <ExploreCards />
         </section>
 
-        <section className="mx-5 mt-2 rounded-card bg-white p-5 shadow-card">
-          <h2 className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">Ajustes</h2>
-          <button
-            type="button"
-            onClick={resetMoodToday}
-            disabled={resetting}
-            className="mt-3 w-full rounded-action border border-ink-soft py-3 text-left text-[14px] font-medium text-ink disabled:opacity-40"
-          >
-            Reiniciar mood de hoy
-          </button>
-          <a
-            href="/legacy/index.html"
-            className="mt-2 block w-full rounded-action border border-ink-soft py-3 text-center text-[14px] font-medium text-ink-muted"
-          >
-            Abrir versión legacy
-          </a>
+        <section className="mx-5 mt-2">
+          <h2 className="mb-2 px-1 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">Ajustes</h2>
+          <div className="overflow-hidden rounded-card bg-white shadow-card">
+            <button
+              type="button"
+              onClick={resetMoodToday}
+              disabled={resetting}
+              className="flex w-full items-center gap-3 px-4 py-4 text-left transition-transform duration-150 active:scale-[0.99] disabled:opacity-40"
+            >
+              <RotateCcw size={18} strokeWidth={1.5} className="text-danger" aria-hidden />
+              <span className="flex-1 text-[14px] font-medium text-danger">Reiniciar mood de hoy</span>
+              <ChevronRight size={14} strokeWidth={1.5} className="text-ink-muted" aria-hidden />
+            </button>
+            <div className="mx-4 h-px bg-ink-soft" aria-hidden />
+            <a
+              href="/legacy/index.html"
+              className="flex w-full items-center gap-3 px-4 py-4 text-left transition-transform duration-150 active:scale-[0.99]"
+            >
+              <ExternalLink size={18} strokeWidth={1.5} className="text-ink" aria-hidden />
+              <span className="flex-1 text-[14px] font-medium text-ink">Abrir versión legacy</span>
+              <ChevronRight size={14} strokeWidth={1.5} className="text-ink-muted" aria-hidden />
+            </a>
+          </div>
         </section>
       </main>
     </MoodGradientBg>
