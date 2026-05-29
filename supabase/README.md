@@ -1,16 +1,21 @@
 # Supabase migrations
 
-The MKXA Supabase project (`jxyqbtttgpdokotmbeud`) lives outside the MCP-connected account, so migrations cannot be applied automatically by Claude. Apply each new migration manually after merging.
+The MKXA Supabase project (`jxyqbtttgpdokotmbeud`) lives outside the MCP-connected account. Migrations are applied via the Supabase CLI using a personal access token of the project owner.
 
 ## How to apply
 
-Open the [Supabase dashboard SQL editor](https://supabase.com/dashboard/project/jxyqbtttgpdokotmbeud/sql/new) and paste the SQL from the next pending migration in `supabase/migrations/`. Run it; verify success in the response panel.
+From the project root:
 
-Track applied migrations in this table by appending to the log below.
+```bash
+SUPABASE_ACCESS_TOKEN=<owner PAT> supabase link --project-ref jxyqbtttgpdokotmbeud
+SUPABASE_ACCESS_TOKEN=<owner PAT> supabase db push --include-all
+```
+
+Or paste each SQL file from `supabase/migrations/` into the [dashboard SQL editor](https://supabase.com/dashboard/project/jxyqbtttgpdokotmbeud/sql/new).
 
 ## Applied log
 
-- `20260528120000_mood_logs.sql` — pending
-- `20260528120100_expenses_and_storage.sql` — pending (creates `expenses` table with `set_updated_at()` trigger and private `receipts` storage bucket; open RLS)
-- `20260528120200_meals.sql` — pending (recipes, recipe_ingredients, recipe_steps, meal_plan tables)
-- `20260528120300_shopping_and_pantry.sql` — pending (pantry_items, shopping_list tables)
+- `20260528120000_mood_logs.sql` — applied 2026-05-29
+- `20260528120100_expenses_and_storage.sql` — applied 2026-05-29 (creates `expenses` + `receipts` storage bucket)
+- `20260528120200_meals.sql` — applied 2026-05-29 (recipes, recipe_ingredients, recipe_steps, meal_plan)
+- `20260528120300_shopping_and_pantry.sql` — applied 2026-05-29 (pantry_items, shopping_list)
