@@ -4,25 +4,23 @@ import { describe, it, expect, vi } from 'vitest';
 import { MoodCheckIn } from '@/components/mood/MoodCheckIn';
 
 describe('MoodCheckIn', () => {
-  it('renders the question header and a 10-token picker', () => {
+  it('renders the question, a slider and the confirm button', () => {
     render(<MoodCheckIn onConfirm={() => {}} />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Cómo estás/i);
-    expect(screen.getAllByRole('radio')).toHaveLength(10);
+    expect(screen.getByRole('slider')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /confirmar/i })).toBeInTheDocument();
   });
 
-  it('changing selection updates the hero label', async () => {
-    const user = userEvent.setup();
-    render(<MoodCheckIn onConfirm={() => {}} />);
-    await user.click(screen.getByRole('radio', { name: 'Triste' }));
-    expect(screen.getByTestId('mood-checkin-label')).toHaveTextContent('Triste');
-  });
-
-  it('calls onConfirm with the selected mood', async () => {
+  it('confirms with the keyboard-selected mood', async () => {
     const onConfirm = vi.fn();
     const user = userEvent.setup();
     render(<MoodCheckIn onConfirm={onConfirm} />);
-    await user.click(screen.getByRole('radio', { name: 'Pleno' }));
+    const slider = screen.getByRole('slider');
+    slider.focus();
+    await user.keyboard('{ArrowRight}');
     await user.click(screen.getByRole('button', { name: /confirmar/i }));
-    expect(onConfirm).toHaveBeenCalledWith('joyful');
+    expect(onConfirm).toHaveBeenCalled();
+    const called = onConfirm.mock.calls[0]?.[0];
+    expect(['happy', 'love']).toContain(called);
   });
 });

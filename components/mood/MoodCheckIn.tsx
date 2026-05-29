@@ -2,12 +2,11 @@
 
 import { useState } from 'react';
 import { Check } from 'lucide-react';
-import { MoodBlob } from './MoodBlob';
+import { MoodSlider } from './MoodSlider';
 import { MoodGradientBg } from './MoodGradientBg';
-import { MoodTokenStrip } from './MoodTokenStrip';
 import { WaveDecoration } from './WaveDecoration';
 import { HeaderActionButton } from '@/components/nav/HeaderActionButton';
-import { getMoodTokens, type Mood } from '@/lib/moods';
+import { type Mood } from '@/lib/moods';
 
 export interface MoodCheckInProps {
   initial?: Mood;
@@ -16,7 +15,6 @@ export interface MoodCheckInProps {
 
 export function MoodCheckIn({ initial = 'happy', onConfirm }: MoodCheckInProps) {
   const [mood, setMood] = useState<Mood>(initial);
-  const label = getMoodTokens(mood).label;
 
   return (
     <MoodGradientBg mood={mood} className="flex flex-col">
@@ -37,22 +35,12 @@ export function MoodCheckIn({ initial = 'happy', onConfirm }: MoodCheckInProps) 
           ¿Cómo estás<br />realmente hoy?
         </h1>
 
-        <div className="flex flex-1 items-center justify-center">
-          <MoodBlob mood={mood} size={280} animate withFloor withParticles />
-        </div>
-
         <WaveDecoration className="h-12 w-full max-w-[360px]" />
+
+        <MoodSlider value={mood} onChange={setMood} />
       </section>
 
-      <footer
-        className="flex flex-col items-center gap-2 px-2 pb-8"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)' }}
-      >
-        <MoodTokenStrip value={mood} onChange={setMood} />
-        <p data-testid="mood-checkin-label" className="text-base font-bold text-ink">
-          {label}
-        </p>
-      </footer>
+      <div className="h-8" />
     </MoodGradientBg>
   );
 }
