@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { MoodSlider } from './MoodSlider';
 import { MoodGradientBg } from './MoodGradientBg';
-import { WaveDecoration } from './WaveDecoration';
 import { HeaderActionButton } from '@/components/nav/HeaderActionButton';
 import { type Mood } from '@/lib/moods';
 
@@ -35,9 +34,7 @@ export function MoodCheckIn({ initial = 'happy', onConfirm }: MoodCheckInProps) 
           ¿Cómo estás<br />realmente hoy?
         </h1>
 
-        <WaveDecoration className="h-12 w-full max-w-[360px]" />
-
-        <MoodSlider value={mood} onChange={setMood} />
+<MoodSlider value={mood} onChange={setMood} />
       </section>
 
       <div className="h-8" />
