@@ -1,0 +1,65 @@
+'use client';
+
+import { useMemo } from 'react';
+import { ShoppingSectionHeader } from './ShoppingSectionHeader';
+import { ShoppingItemRow } from './ShoppingItemRow';
+import { AddItemRow } from './AddItemRow';
+import { type Aisle, type ShoppingItem, aisleOrder } from '@/lib/meals/recipes';
+
+interface ShoppingListProps {
+  items: ShoppingItem[];
+  onToggle: (id: string) => void;
+  onAddManual: (input: { name: string; quantity: number | null; unit: string | null; aisle: Aisle }) => Promise<void> | void;
+  recipeNamesById?: Record<string, string>;
+}
+
+export function ShoppingList({ items, onToggle, onAddManual, recipeNamesById }: ShoppingListProps) {
+  const sections = useMemo(() => {
+    const map = new Map<Aisle, ShoppingItem[]>();
+    for (const it of items) {
+      const arr = map.get(it.aisle) ?? [];
+      arr.push(it);
+      map.set(it.aisle, arr);
+    }
+    return Array.from(map.entries())
+      .sort(([a], [b]) => aisleOrder[a] - aisleOrder[b])
+      .map(([aisle, list]) => ({
+        aisle,
+        items: list.sort((a, b) => a.position - b.position),
+      }));
+  }, [items]);
+
+  const checked = items.filter((i) => i.checked).length;
+  const total = items.length;
+  const pct = total === 0 ? 0 : Math.round((checked / total) * 100);
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="px-2">
+        <div className="mb-1 flex items-baseline justify-between">
+          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">Progreso</p>
+          <p className="text-[12px] font-bold tabular-nums text-ink-muted">{checked} / {total}</p>
+        </div>
+        <div className="h-[2px] w-full overflow-hidden rounded-full bg-ink-soft" aria-hidden>
+          <div className="h-full bg-ink transition-[width] duration-300" style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+      <div className="px-2 pt-3">
+        <AddItemRow onAdd={onAddManual} />
+      </div>
+      {sections.map(({ aisle, items: rows }) => (
+        <div key={aisle}>
+          <ShoppingSectionHeader aisle={aisle} />
+          <div className="flex flex-col gap-1.5 px-2">
+            {rows.map((it) => (
+              <ShoppingItemRow key={it.id} item={it} onToggle={onToggle} recipeNamesById={recipeNamesById} />
+            ))}
+          </div>
+        </div>
+      ))}
+      {sections.length === 0 && (
+        <p className="px-2 pt-4 text-center text-[13px] text-ink-muted">Lista vacía. Genera desde el plan o añade items.</p>
+      )}
+    </div>
+  );
+}
