@@ -30,15 +30,12 @@ export function WidgetExpenseMonth() {
   const { from, to, label } = useMemo(monthRange, []);
   const { totalByCategory, total } = useExpenses({ from, to });
 
-  const top = useMemo(() => {
+  const ranked = useMemo(() => {
     const entries = Object.entries(totalByCategory) as [Category, number | undefined][];
     return entries
-      .filter((e): e is [Category, number] => typeof e[1] === 'number')
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3);
+      .filter((e): e is [Category, number] => typeof e[1] === 'number' && e[1] > 0)
+      .sort((a, b) => b[1] - a[1]);
   }, [totalByCategory]);
-
-  const max = top[0]?.[1] ?? 0;
 
   return (
     <Link
@@ -53,21 +50,47 @@ export function WidgetExpenseMonth() {
       </p>
       <p className="mt-0.5 text-[11px] capitalize text-ink-muted">{label}</p>
 
-      {top.length > 0 && (
-        <ul className="mt-3 flex h-12 items-end gap-2">
-          {top.map(([cat, val]) => (
-            <li key={cat} className="flex flex-1 flex-col items-center gap-1">
+      {ranked.length > 0 && total > 0 && (
+        <>
+          <div
+            className="mt-3 flex h-3 w-full overflow-hidden rounded-full bg-ink-soft/30"
+            role="img"
+            aria-label="Desglose por categoría"
+          >
+            {ranked.map(([cat, val]) => (
               <span
-                className="w-full rounded-md"
-                style={{ height: max ? `${(val / max) * 32 + 4}px` : 4, backgroundColor: CAT_COLORS[cat] }}
+                key={cat}
+                className="h-full"
+                style={{
+                  width: `${(val / total) * 100}%`,
+                  backgroundColor: CAT_COLORS[cat],
+                }}
                 aria-hidden
               />
-              <span className="truncate text-[9px] font-medium text-ink-muted">
-                {categoryLabel(cat).slice(0, 5)}
-              </span>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </div>
+
+          <ul className="mt-3 flex flex-col gap-1.5">
+            {ranked.slice(0, 4).map(([cat, val]) => (
+              <li key={cat} className="flex items-center gap-2 text-[12px]">
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: CAT_COLORS[cat] }}
+                  aria-hidden
+                />
+                <span className="flex-1 truncate font-medium text-ink">
+                  {categoryLabel(cat)}
+                </span>
+                <span className="tabular-nums font-medium text-ink-muted">
+                  €{val.toFixed(2)}
+                </span>
+                <span className="w-9 text-right tabular-nums text-[11px] text-ink-muted">
+                  {Math.round((val / total) * 100)}%
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </Link>
   );
