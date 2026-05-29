@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import clsx from 'clsx';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
 import { RecipeCard } from '@/components/meals/RecipeCard';
@@ -14,7 +14,8 @@ import { ShoppingList } from '@/components/meals/ShoppingList';
 import { FinishShoppingSheet } from '@/components/meals/FinishShoppingSheet';
 import { PantryList } from '@/components/meals/PantryList';
 import { MealPassesSection } from '@/components/meals/MealPassesSection';
-import { useRecipes } from '@/lib/hooks/use-recipes';
+import { useRecipes, deleteRecipe } from '@/lib/hooks/use-recipes';
+import type { Recipe } from '@/lib/meals/recipes';
 import { useMealPlan, currentWeekStart } from '@/lib/hooks/use-meal-plan';
 import { useShoppingList } from '@/lib/hooks/use-shopping-list';
 import { usePantry } from '@/lib/hooks/use-pantry';
@@ -55,11 +56,13 @@ export default function MealsHubPage() {
     router.replace(`/meals${qs ? `?${qs}` : ''}`, { scroll: false });
   }
 
-  const { recipes } = useRecipes();
+  const { recipes, refresh: refreshRecipes } = useRecipes();
   const { plan, upsertSlot, clearSlot, refresh: refreshPlan } = useMealPlan(weekStart);
   const { items: shoppingItems, toggleChecked, addManual, finish } = useShoppingList(weekStart);
   const { items: pantryItems, toggleInStock, addItem: addPantry } = usePantry();
 
+  const [editingRecipes, setEditingRecipes] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<Recipe | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState<{ day: MealDay; slot: MealSlot } | null>(null);
   const [finishOpen, setFinishOpen] = useState(false);
@@ -157,13 +160,56 @@ export default function MealsHubPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {recipes.map((r) => (
-                <Link key={r.id} href={`/meals/recipes/${r.id}`} className="block">
-                  <RecipeCard recipe={r} />
-                </Link>
-              ))}
-            </div>
+            <>
+              <div className="flex items-center justify-between px-1">
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
+                  {recipes.length} {recipes.length === 1 ? 'receta' : 'recetas'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setEditingRecipes((v) => !v)}
+                  className={clsx(
+                    'rounded-full px-3 py-1 text-[12px] font-bold transition-colors',
+                    editingRecipes ? 'bg-ink text-white' : 'bg-white text-ink shadow-action',
+                  )}
+                >
+                  {editingRecipes ? 'Listo' : 'Editar'}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {recipes.map((r, idx) => (
+                  <div
+                    key={r.id}
+                    className={clsx(
+                      'relative',
+                      editingRecipes && (idx % 2 === 0 ? 'animate-wobble-l' : 'animate-wobble-r'),
+                    )}
+                    style={editingRecipes ? { animationDelay: `${(idx % 4) * 70}ms` } : undefined}
+                  >
+                    {editingRecipes && (
+                      <button
+                        type="button"
+                        aria-label={`Eliminar ${r.title}`}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPendingDelete(r); }}
+                        className="absolute -right-2 -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-danger text-white shadow-action active:scale-95"
+                      >
+                        <X size={14} strokeWidth={2.2} aria-hidden />
+                      </button>
+                    )}
+                    {editingRecipes ? (
+                      <div className="block">
+                        <RecipeCard recipe={r} />
+                      </div>
+                    ) : (
+                      <Link href={`/meals/recipes/${r.id}`} className="block">
+                        <RecipeCard recipe={r} />
+                      </Link>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}
@@ -195,6 +241,54 @@ export default function MealsHubPage() {
       )}
 
       {tab === 'pases' && <MealPassesSection />}
+
+      {pendingDelete && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 px-4 pb-8"
+          onClick={() => setPendingDelete(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-card bg-white p-5 shadow-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
+              Eliminar receta
+            </p>
+            <p className="mt-2 font-sans text-[18px] font-extrabold leading-tight text-ink">
+              ¿Borrar “{pendingDelete.title}”?
+            </p>
+            <p className="mt-1 text-[12px] text-ink-muted">
+              Se eliminan ingredientes, pasos y planes semanales asociados. Es definitivo.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPendingDelete(null)}
+                className="flex-1 rounded-action border border-ink-soft py-3 text-[13px] font-bold text-ink"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const target = pendingDelete;
+                  setPendingDelete(null);
+                  const res = await deleteRecipe(target.id);
+                  if ('ok' in res) {
+                    void refreshRecipes();
+                    void refreshPlan();
+                  }
+                }}
+                className="flex-1 rounded-action bg-danger py-3 text-[13px] font-bold text-white"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <RecipePickerSheet
         open={pickerOpen}

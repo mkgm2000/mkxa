@@ -5,6 +5,20 @@
 html, body { height: 100%; }
 body { color: #1b1d1f; }
 
+/* iOS Safari kept zooming when focusing inputs <16px and never auto-reset.
+   maximum-scale=1 in <viewport> handles it, but we also keep this rule as
+   belt-and-suspenders for any odd Android browser. */
+@keyframes wobble-l {
+  0%, 100% { transform: rotate(-0.8deg); }
+  50%      { transform: rotate(0.8deg); }
+}
+@keyframes wobble-r {
+  0%, 100% { transform: rotate(0.7deg); }
+  50%      { transform: rotate(-0.7deg); }
+}
+.animate-wobble-l { animation: wobble-l 0.28s ease-in-out infinite; transform-origin: center; }
+.animate-wobble-r { animation: wobble-r 0.32s ease-in-out infinite; transform-origin: center; }
+
 /* ---------- Meal Passes (ticket / coupon design) ---------- */
 .mp-stage {
   --mp-ink: #4a1f2a;

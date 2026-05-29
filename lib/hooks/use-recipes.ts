@@ -64,6 +64,19 @@ export function useRecipe(id: string | null) {
   return { recipe, loading, refresh };
 }
 
+export async function deleteRecipe(id: string): Promise<{ ok: true } | { error: string }> {
+  const supa = supabaseClient();
+  saveState.getState().set('saving');
+  // Cascade-safe: remove dependents first in case FK is RESTRICT.
+  await supa.from('recipe_ingredients').delete().eq('recipe_id', id);
+  await supa.from('recipe_steps').delete().eq('recipe_id', id);
+  await supa.from('meal_plan').delete().eq('recipe_id', id);
+  const { error } = await supa.from('recipes').delete().eq('id', id);
+  if (error) { saveState.getState().set('error'); return { error: error.message }; }
+  saveState.getState().set('saved');
+  return { ok: true };
+}
+
 export async function saveRecipe(input: NewRecipeInput): Promise<{ id: string } | { error: string }> {
   const supa = supabaseClient();
   saveState.getState().set('saving');
