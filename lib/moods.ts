@@ -5,6 +5,11 @@ export const MOODS = [
 
 export type Mood = (typeof MOODS)[number];
 
+export const MOOD_ORDER: readonly Mood[] = [
+  'joyful', 'happy', 'love', 'sleepy', 'neutral',
+  'annoyed', 'worried', 'sad', 'angry', 'dizzy',
+] as const;
+
 export function isMood(x: unknown): x is Mood {
   return typeof x === 'string' && (MOODS as readonly string[]).includes(x);
 }
