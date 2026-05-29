@@ -14,19 +14,48 @@ export interface ReceiptCaptureProps {
   onResult: (r: ReceiptCaptureResult) => void;
 }
 
-const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp'];
+// Accept anything image-like at the browser. We re-encode to JPEG before upload.
+// Includes HEIC/HEIF (iPhone default) which Safari iOS can decode into <img>.
+const ACCEPT_ATTR = 'image/*,.heic,.heif';
+const MAX_FILE_BYTES = 25 * 1024 * 1024;
+const MAX_EDGE_PX = 1600;
+const JPEG_QUALITY = 0.85;
 
-async function fileToBase64(file: File): Promise<{ base64: string; dataUrl: string }> {
+async function readDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(reader.error);
-    reader.onload = () => {
-      const dataUrl = String(reader.result);
-      const base64 = dataUrl.split(',')[1] ?? '';
-      resolve({ base64, dataUrl });
-    };
-    reader.readAsDataURL(file);
+    const r = new FileReader();
+    r.onerror = () => reject(r.error ?? new Error('read error'));
+    r.onload = () => resolve(String(r.result));
+    r.readAsDataURL(file);
   });
+}
+
+async function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('image decode error'));
+    img.src = src;
+  });
+}
+
+async function toJpeg(file: File): Promise<{ base64: string; dataUrl: string }> {
+  const srcUrl = await readDataUrl(file);
+  const img = await loadImage(srcUrl);
+  const longest = Math.max(img.naturalWidth, img.naturalHeight);
+  const scale = longest > MAX_EDGE_PX ? MAX_EDGE_PX / longest : 1;
+  const w = Math.max(1, Math.round(img.naturalWidth * scale));
+  const h = Math.max(1, Math.round(img.naturalHeight * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('no canvas ctx');
+  ctx.drawImage(img, 0, 0, w, h);
+  const dataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+  const base64 = dataUrl.split(',')[1] ?? '';
+  if (!base64) throw new Error('jpeg encode failed');
+  return { dataUrl, base64 };
 }
 
 export function ReceiptCapture({ onResult }: ReceiptCaptureProps) {
@@ -37,28 +66,43 @@ export function ReceiptCapture({ onResult }: ReceiptCaptureProps) {
 
   async function handleFile(file: File) {
     setError(null);
-    if (!ACCEPTED.includes(file.type)) {
-      setError('Formato no soportado. Usa JPG, PNG o WebP.');
+    const looksLikeImage =
+      file.type.startsWith('image/') ||
+      /\.(heic|heif|jpe?g|png|webp)$/i.test(file.name);
+    if (!looksLikeImage) {
+      setError('Formato no soportado. Sube una imagen.');
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Imagen demasiado grande (máx 5 MB).');
+    if (file.size > MAX_FILE_BYTES) {
+      setError('Imagen demasiado grande (máx 25 MB).');
       return;
     }
     setLoading(true);
     try {
-      const { base64, dataUrl } = await fileToBase64(file);
+      let payload: { base64: string; dataUrl: string };
+      try {
+        payload = await toJpeg(file);
+      } catch {
+        setError(
+          'Este navegador no puede leer el formato (¿HEIC en Android?). Prueba a sacar la foto en JPG o convierte la imagen.',
+        );
+        return;
+      }
       const res = await fetch('/api/ocr-receipt', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ image_base64: base64, media_type: file.type }),
+        body: JSON.stringify({ image_base64: payload.base64, media_type: 'image/jpeg' }),
       });
-      if (!res.ok) throw new Error('OCR failed');
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? `OCR ${res.status}`);
+      }
       const receipt = (await res.json()) as ReceiptData;
-      onResult({ receipt, fileDataUrl: dataUrl, mediaType: file.type });
+      onResult({ receipt, fileDataUrl: payload.dataUrl, mediaType: 'image/jpeg' });
     } catch (e) {
-      console.error(e);
-      setError('No se pudo leer la imagen. Inténtalo de nuevo.');
+      console.error('[ReceiptCapture]', e);
+      const msg = e instanceof Error ? e.message : 'desconocido';
+      setError(`No se pudo leer la imagen (${msg}). Inténtalo de nuevo.`);
     } finally {
       setLoading(false);
     }
@@ -94,13 +138,13 @@ export function ReceiptCapture({ onResult }: ReceiptCaptureProps) {
           {loading ? 'Leyendo factura…' : 'Toca para hacer foto o elegir de galería'}
         </p>
         <p className="text-xs text-ink-muted">
-          O arrastra una imagen aquí (JPG, PNG, WebP · máx 5 MB).
+          O arrastra una imagen aquí (JPG, PNG, HEIC, WebP).
         </p>
         <input
           ref={inputRef}
           aria-label="Subir factura"
           type="file"
-          accept={ACCEPTED.join(',')}
+          accept={ACCEPT_ATTR}
           onChange={onChange}
           disabled={loading}
           className="sr-only"
