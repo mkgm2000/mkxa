@@ -11,7 +11,7 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
   return (
     <main className="flex flex-col gap-4 px-1 pt-4 pb-6">
       <header className="flex items-center justify-between px-4">
-        <Link href="/meals/recipes" aria-label="Volver" className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-action">
+        <Link href="/meals?tab=recetas" aria-label="Volver" className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-action">
           <ChevronLeft size={20} strokeWidth={1.5} className="text-ink" aria-hidden />
         </Link>
         <h1 className="font-sans text-[20px] font-extrabold tracking-tightest text-ink">Receta</h1>

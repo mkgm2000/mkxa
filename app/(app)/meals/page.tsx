@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import clsx from 'clsx';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
@@ -29,10 +29,31 @@ const TABS: { value: Tab; label: string }[] = [
   { value: 'pases',    label: 'Pases'    },
 ];
 
+function isTab(v: string | null): v is Tab {
+  return v === 'semana' || v === 'recetas' || v === 'compra' || v === 'despensa' || v === 'pases';
+}
+
 export default function MealsHubPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>('semana');
+  const searchParams = useSearchParams();
+  const initialTab: Tab = isTab(searchParams.get('tab')) ? (searchParams.get('tab') as Tab) : 'semana';
+  const [tab, setTabState] = useState<Tab>(initialTab);
   const weekStart = useMemo(() => currentWeekStart(), []);
+
+  useEffect(() => {
+    const q = searchParams.get('tab');
+    if (isTab(q) && q !== tab) setTabState(q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  function setTab(next: Tab) {
+    setTabState(next);
+    const params = new URLSearchParams(Array.from(searchParams.entries()));
+    if (next === 'semana') params.delete('tab');
+    else params.set('tab', next);
+    const qs = params.toString();
+    router.replace(`/meals${qs ? `?${qs}` : ''}`, { scroll: false });
+  }
 
   const { recipes } = useRecipes();
   const { plan, upsertSlot, clearSlot, refresh: refreshPlan } = useMealPlan(weekStart);
