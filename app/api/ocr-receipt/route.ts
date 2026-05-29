@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import type Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { anthropic, ANTHROPIC_MODEL } from '@/lib/anthropic/client';
 import { RECEIPT_SYSTEM_PROMPT } from '@/lib/anthropic/prompts';
@@ -43,12 +44,14 @@ export async function POST(req: NextRequest) {
     const response = await client.messages.create({
       model: ANTHROPIC_MODEL,
       max_tokens: 1024,
+      // cache_control on system block requires the prompt-caching beta;
+      // SDK v0.27 has not widened TextBlockParam yet, so cast here.
       system: [
         {
           type: 'text',
           text: RECEIPT_SYSTEM_PROMPT,
           cache_control: { type: 'ephemeral' },
-        },
+        } as unknown as Anthropic.TextBlockParam,
       ],
       messages: [
         {
