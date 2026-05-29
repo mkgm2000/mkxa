@@ -90,7 +90,12 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json(safe.data);
   } catch (err) {
-    console.error('[ocr-receipt]', err);
-    return NextResponse.json({ error: 'OCR failed' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    const status = (err as { status?: number })?.status;
+    console.error('[ocr-receipt] status=', status, 'msg=', msg);
+    return NextResponse.json(
+      { error: 'OCR failed', detail: msg.slice(0, 300), status: status ?? null },
+      { status: 500 },
+    );
   }
 }
