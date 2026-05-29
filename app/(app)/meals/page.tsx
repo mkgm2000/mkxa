@@ -37,7 +37,7 @@ export default function MealsHubPage() {
   const { recipes } = useRecipes();
   const { plan, upsertSlot, clearSlot, refresh: refreshPlan } = useMealPlan(weekStart);
   const { items: shoppingItems, toggleChecked, addManual, finish } = useShoppingList(weekStart);
-  const { items: pantryItems, toggleInStock } = usePantry();
+  const { items: pantryItems, toggleInStock, addItem: addPantry } = usePantry();
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState<{ day: MealDay; slot: MealSlot } | null>(null);
@@ -69,7 +69,7 @@ export default function MealsHubPage() {
           </h1>
           <p className="mt-2 text-[13px] text-ink-muted">Semana del {weekStart}</p>
         </div>
-        <Link href="/meals/scan" aria-label="Añadir receta" className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-action transition-transform duration-150 active:scale-95">
+        <Link href="/meals/recipes/new" aria-label="Nueva receta" className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-action transition-transform duration-150 active:scale-95">
           <Plus size={20} strokeWidth={1.5} className="text-ink" aria-hidden />
         </Link>
       </header>
@@ -117,17 +117,33 @@ export default function MealsHubPage() {
       )}
 
       {tab === 'recetas' && (
-        <div className="grid grid-cols-2 gap-3 px-4">
-          {recipes.length === 0 && (
-            <p className="col-span-2 py-6 text-center text-[13px] text-ink-muted">
-              Sin recetas. Toca + para añadir desde TikTok.
-            </p>
+        <div className="flex flex-col gap-3 px-4">
+          {recipes.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 rounded-card border-2 border-dashed border-ink-soft bg-white/40 px-5 py-8 text-center">
+              <span className="text-[36px]" aria-hidden>🥘</span>
+              <p className="font-sans text-[15px] font-bold text-ink">Sin recetas aún</p>
+              <p className="text-[12px] text-ink-muted">
+                Empieza con una plantilla — pasta, pollo, ensalada… cambias lo que necesites.
+              </p>
+              <Link
+                href="/meals/recipes/new"
+                className="mt-2 rounded-action bg-ink px-5 py-2.5 text-[13px] font-bold text-white"
+              >
+                Elegir plantilla
+              </Link>
+              <Link href="/meals/scan" className="text-[12px] font-medium text-ink-muted underline">
+                o importar desde TikTok / web
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {recipes.map((r) => (
+                <Link key={r.id} href={`/meals/recipes/${r.id}`} className="block">
+                  <RecipeCard recipe={r} />
+                </Link>
+              ))}
+            </div>
           )}
-          {recipes.map((r) => (
-            <Link key={r.id} href={`/meals/recipes/${r.id}`} className="block">
-              <RecipeCard recipe={r} />
-            </Link>
-          ))}
         </div>
       )}
 
@@ -154,7 +170,7 @@ export default function MealsHubPage() {
       )}
 
       {tab === 'despensa' && (
-        <PantryList items={pantryItems} onToggle={toggleInStock} />
+        <PantryList items={pantryItems} onToggle={toggleInStock} onAdd={addPantry} />
       )}
 
       {tab === 'pases' && <MealPassesSection />}
