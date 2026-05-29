@@ -1,62 +1,96 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import clsx from 'clsx';
 import { supabaseClient } from '@/lib/supabase/client';
-import { MOODS, type Mood, getMoodTokens } from '@/lib/moods';
+import { getMoodTokens, type Mood } from '@/lib/moods';
 import type { Athlete } from '@/lib/athlete-context';
 
-const ORDER: Record<Mood, number> = MOODS.reduce((acc, m, idx) => { acc[m] = idx; return acc; }, {} as Record<Mood, number>);
+interface MoodRow { date: string; mood: Mood }
 
-interface Row { date: string; mood: Mood }
+function isoBack(n: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
+function dayNum(iso: string): string {
+  return iso.slice(-2);
+}
 
 export function MoodHistoryChart({ athlete }: { athlete: Athlete }) {
-  const [rows, setRows] = useState<Row[]>([]);
+  const [logsByDate, setLogsByDate] = useState<Record<string, Mood>>({});
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const since = new Date();
-      since.setDate(since.getDate() - 14);
-      const sinceISO = since.toISOString().slice(0, 10);
+      const since = isoBack(13);
       const { data } = await supabaseClient()
         .from('mood_logs')
         .select('date,mood')
         .eq('athlete', athlete)
-        .gte('date', sinceISO)
+        .gte('date', since)
         .order('date');
       if (cancelled || !data) return;
-      setRows(data as Row[]);
+      const map: Record<string, Mood> = {};
+      for (const r of data as MoodRow[]) map[r.date] = r.mood;
+      setLogsByDate(map);
     })();
     return () => { cancelled = true; };
   }, [athlete]);
 
-  if (rows.length === 0) {
+  const today = isoBack(0);
+  const days: string[] = Array.from({ length: 14 }, (_, i) => isoBack(13 - i));
+  const firstRow = days.slice(0, 7);
+  const secondRow = days.slice(7);
+  const logged = Object.keys(logsByDate).filter((d) => days.includes(d)).length;
+
+  function DayRow({ row }: { row: string[] }) {
     return (
-      <div className="mx-5 rounded-card bg-white p-5 shadow-card">
-        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">Histórico</p>
-        <p className="mt-2 text-[13px] text-ink-muted">Aún no hay suficientes registros.</p>
-      </div>
+      <>
+        <div className="grid grid-cols-7 gap-2 px-1">
+          {row.map((iso) => (
+            <span key={`l-${iso}`} className="text-center text-[9px] font-bold text-ink-muted">
+              {dayNum(iso)}
+            </span>
+          ))}
+        </div>
+        <div className="mt-1 grid grid-cols-7 gap-2 px-1">
+          {row.map((iso) => {
+            const m = logsByDate[iso];
+            const isToday = iso === today;
+            return (
+              <div key={iso} className="flex justify-center">
+                <span
+                  data-testid="mood-cell"
+                  className={clsx(
+                    'h-6 w-6 rounded-full',
+                    !m && 'border border-ink-soft',
+                    isToday && 'ring-2 ring-ink ring-offset-1 ring-offset-white',
+                  )}
+                  style={{ backgroundColor: m ? getMoodTokens(m).bodyMid : 'transparent' }}
+                  aria-label={m ? `${iso} ${getMoodTokens(m).label}` : `${iso} sin registro`}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </>
     );
   }
 
-  const points = rows.map((r, i) => {
-    const x = rows.length === 1 ? 50 : (i / (rows.length - 1)) * 100;
-    const y = (1 - ORDER[r.mood] / (MOODS.length - 1)) * 100;
-    return { x, y, mood: r.mood };
-  });
-  const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
-
   return (
-    <section className="mx-5 rounded-card bg-white p-5 shadow-card">
-      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">Mood últimas 2 semanas</p>
-      <div className="mt-3 h-24 w-full">
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
-          <path d={path} fill="none" stroke="#b587fb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-          {points.map((p, i) => (
-            <circle key={i} cx={p.x} cy={p.y} r={3} fill={getMoodTokens(p.mood).bodyMid} vectorEffect="non-scaling-stroke" />
-          ))}
-        </svg>
+    <section className="mx-5 rounded-card bg-white p-4 shadow-card">
+      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
+        Mood últimas 2 semanas
+      </p>
+      <div className="mt-3 flex flex-col gap-3">
+        <DayRow row={firstRow} />
+        <DayRow row={secondRow} />
       </div>
+      <p className="mt-3 text-[12px] text-ink-muted">
+        {logged} de 14 días con registro
+      </p>
     </section>
   );
 }
