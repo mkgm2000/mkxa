@@ -13,18 +13,20 @@ import { RecipePickerSheet } from '@/components/meals/RecipePickerSheet';
 import { ShoppingList } from '@/components/meals/ShoppingList';
 import { FinishShoppingSheet } from '@/components/meals/FinishShoppingSheet';
 import { PantryList } from '@/components/meals/PantryList';
+import { MealPassesSection } from '@/components/meals/MealPassesSection';
 import { useRecipes } from '@/lib/hooks/use-recipes';
 import { useMealPlan, currentWeekStart } from '@/lib/hooks/use-meal-plan';
 import { useShoppingList } from '@/lib/hooks/use-shopping-list';
 import { usePantry } from '@/lib/hooks/use-pantry';
 import type { MealDay, MealSlot } from '@/lib/meals/recipes';
 
-type Tab = 'semana' | 'recetas' | 'compra' | 'despensa';
+type Tab = 'semana' | 'recetas' | 'compra' | 'despensa' | 'pases';
 const TABS: { value: Tab; label: string }[] = [
   { value: 'semana',   label: 'Semana'   },
   { value: 'recetas',  label: 'Recetas'  },
   { value: 'compra',   label: 'Compra'   },
   { value: 'despensa', label: 'Despensa' },
+  { value: 'pases',    label: 'Pases'    },
 ];
 
 export default function MealsHubPage() {
@@ -75,10 +77,10 @@ export default function MealsHubPage() {
       <div className="px-5"><InlineSaveText /></div>
 
       <div className="px-5">
-        <div role="tablist" aria-label="Sección" className="relative grid grid-cols-4 rounded-full bg-white p-1.5 shadow-action">
+        <div role="tablist" aria-label="Sección" className="relative grid grid-cols-5 rounded-full bg-white p-1.5 shadow-action">
           <span
             aria-hidden
-            className="pointer-events-none absolute left-1.5 top-1.5 bottom-1.5 w-[calc((100%-12px)/4)] rounded-full bg-ink transition-transform duration-200 ease-out"
+            className="pointer-events-none absolute left-1.5 top-1.5 bottom-1.5 w-[calc((100%-12px)/5)] rounded-full bg-ink transition-transform duration-200 ease-out"
             style={{ transform: `translateX(${TABS.findIndex((t) => t.value === tab) * 100}%)` }}
           />
           {TABS.map((t) => {
@@ -154,6 +156,8 @@ export default function MealsHubPage() {
       {tab === 'despensa' && (
         <PantryList items={pantryItems} onToggle={toggleInStock} />
       )}
+
+      {tab === 'pases' && <MealPassesSection />}
 
       <RecipePickerSheet
         open={pickerOpen}

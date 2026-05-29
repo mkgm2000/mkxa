@@ -5,6 +5,109 @@
 html, body { height: 100%; }
 body { color: #1b1d1f; }
 
+/* ---------- Meal Passes (ticket / coupon design) ---------- */
+.mp-stage {
+  --mp-ink: #4a1f2a;
+  --mp-rust: #e0533b;
+  --mp-rust-deep: #c43e2c;
+  --mp-cream: #fdeed7;
+  --mp-stage: #f3e9d8;
+  background:
+    radial-gradient(900px 520px at 12% -8%, #fbf3e4, transparent 60%),
+    radial-gradient(820px 620px at 112% 112%, #ecdfc8, transparent 60%),
+    var(--mp-stage);
+  color: var(--mp-ink);
+  border-radius: 16px;
+  margin: 0 16px;
+}
+.mp-hd { margin-bottom: 8px; }
+.mp-eyebrow { font-size: 11px; letter-spacing: 0.26em; text-transform: uppercase; color: #b06a4e; font-weight: 600; }
+.mp-h1 { font-family: ui-serif, Georgia, 'Times New Roman', serif; font-weight: 500; font-size: 34px; line-height: 1.02; margin: 6px 0 4px; letter-spacing: 0.005em; color: var(--mp-ink); }
+.mp-h1 em { font-style: italic; color: var(--mp-rust); }
+.mp-month { font-size: 13px; color: #9a7a5e; letter-spacing: 0.04em; }
+
+.mp-counter {
+  display: flex; align-items: center; gap: 12px;
+  margin: 18px 0 24px; padding: 10px 18px;
+  background: rgba(255,255,255,0.6); border: 1px solid rgba(176,106,78,0.22);
+  border-radius: 999px; backdrop-filter: blur(4px);
+}
+.mp-counter-label { font-size: 12px; color: #8a5a44; letter-spacing: 0.02em; }
+.mp-counter-plates { display: flex; gap: 6px; }
+.mp-plate { width: 22px; height: 22px; }
+.mp-counter-num { font-family: ui-serif, Georgia, serif; font-size: 26px; line-height: 1; color: var(--mp-ink); }
+.mp-counter-num b { color: var(--mp-rust); }
+
+.mp-stack { display: flex; flex-direction: column; gap: 24px; width: 100%; align-items: center; }
+
+.mp {
+  position: relative; width: 100%; max-width: 460px; height: 180px;
+  display: flex; user-select: none; touch-action: pan-y;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  transition: opacity .4s, filter .4s;
+}
+.mp.is-used { opacity: 0.96; }
+.mp-body, .mp-stub { position: relative; height: 100%; filter: drop-shadow(0 10px 18px rgba(74,31,42,0.16)); }
+.mp-body {
+  flex: 1; border-radius: 18px 6px 6px 18px; padding: 16px 20px 14px;
+  display: flex; flex-direction: column; overflow: hidden;
+  background: radial-gradient(120% 140% at 0% 0%, #fffaf0, var(--mp-cream) 70%);
+  color: var(--mp-ink);
+}
+.mp-perfcol { position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent 0 22px, rgba(176,106,78,0.04) 22px 23px); }
+.mp-stub {
+  width: 124px; flex: 0 0 124px; border-radius: 6px 18px 18px 6px; padding: 14px 10px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 6px; touch-action: none;
+  background: linear-gradient(135deg, var(--mp-rust), var(--mp-rust-deep)); color: #fff3ea;
+}
+.mp-stub:active { cursor: grabbing; }
+
+.mp-kicker { display: flex; align-items: center; gap: 6px; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #b06a4e; }
+.mp-kicker b { margin-left: auto; color: var(--mp-ink); letter-spacing: 0.06em; }
+.mp-title { font-family: ui-serif, Georgia, serif; font-weight: 500; font-size: 26px; line-height: 0.98; margin: 6px 0 auto; }
+.mp-sub { font-size: 12px; color: #8a5a44; line-height: 1.4; max-width: 80%; }
+.mp-meta { margin-top: 8px; font-size: 10px; letter-spacing: 0.04em; color: #b06a4e; }
+
+.mp-stub-top { font-family: ui-serif, Georgia, serif; font-size: 20px; letter-spacing: 0.04em; }
+.mp-stub-top span { color: #ffd9cb; }
+.mp-stub-cta { font-weight: 700; font-size: 15px; letter-spacing: 0.05em; text-transform: uppercase; }
+.mp-grip { display: flex; flex-direction: column; gap: 4px; margin-top: 2px; opacity: 0.75; }
+.mp-grip i { width: 22px; height: 2px; border-radius: 2px; background: currentColor; display: block; }
+.mp-stub-check { font-size: 28px; line-height: 1; }
+.mp-stub-used { font-weight: 700; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; }
+
+.mp-perf { position: absolute; top: 10px; bottom: 10px; right: 124px; border-left: 2.5px dashed rgba(176,106,78,0.45); transition: opacity .2s; }
+.is-used .mp-perf { opacity: 0; }
+.mp-notch { position: absolute; width: 20px; height: 20px; border-radius: 50%; right: 114px; z-index: 3; transition: opacity .2s; }
+.mp-notch--t { top: -10px; } .mp-notch--b { bottom: -10px; }
+.is-used .mp-notch { opacity: 0; }
+
+.mp-hint {
+  position: absolute; right: 140px; top: 50%; transform: translateY(-50%);
+  font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #b06a4e;
+  pointer-events: none; transition: opacity .2s; animation: mp-nudge 1.6s ease-in-out infinite;
+}
+@keyframes mp-nudge { 0%,100% { transform: translateY(-50%) translateX(0); } 50% { transform: translateY(-50%) translateX(4px); } }
+
+.mp-log { margin-top: 6px; display: flex; align-items: baseline; gap: 8px; }
+.mp-log label { font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #b06a4e; }
+.mp-log input {
+  flex: 1; border: none; border-bottom: 1.5px dotted #c79a6e; background: transparent;
+  font-family: ui-monospace, monospace; font-size: 12.5px; color: var(--mp-ink); padding: 2px 0; outline: none;
+}
+.mp-log input::placeholder { color: #c0a487; }
+.mp-log .mp-date { font-size: 10px; color: #b06a4e; white-space: nowrap; }
+
+.mp-empty {
+  width: 100%; max-width: 460px; margin-top: 18px; text-align: center;
+  padding: 18px; border-radius: 16px; border: 1.5px dashed rgba(176,106,78,0.4);
+  background: rgba(255,255,255,0.5);
+}
+.mp-empty p { margin: 0; font-family: ui-serif, Georgia, serif; font-size: 20px; color: var(--mp-ink); }
+.mp-empty span { display: block; margin-top: 4px; font-size: 12.5px; color: #9a7a5e; }
+
 /* Honor user reduced-motion preference globally, kills all keyframe loops. */
 @media (prefers-reduced-motion: reduce) {
   *,
