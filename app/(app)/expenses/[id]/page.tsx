@@ -7,6 +7,7 @@ import { ChevronLeft, Trash2 } from 'lucide-react';
 import { CategorySelect } from '@/components/controls/CategorySelect';
 import { PaidBySelect } from '@/components/controls/PaidBySelect';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
+import { ReceiptItemsCard } from '@/components/expenses/ReceiptItemsCard';
 import { supabaseClient } from '@/lib/supabase/client';
 import { saveState } from '@/lib/save-state';
 import { formatEuros, type Category, type Expense, type PaidBy } from '@/lib/expenses';
@@ -181,6 +182,8 @@ export default function ExpenseDetailPage() {
           className="min-h-[44px] resize-none bg-transparent font-sans text-sm font-medium text-ink focus:outline-none"
         />
       </label>
+
+      <ReceiptItemsCard receipt={expense.receipt_data} />
 
       {expense.receipt_url && (
         <div className="overflow-hidden rounded-card bg-white shadow-card">

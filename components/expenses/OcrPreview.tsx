@@ -4,6 +4,7 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { CategorySelect } from '@/components/controls/CategorySelect';
 import { PaidBySelect } from '@/components/controls/PaidBySelect';
+import { ReceiptItemsCard } from '@/components/expenses/ReceiptItemsCard';
 import { useCreateExpense } from '@/lib/hooks/use-create-expense';
 import { useAthlete } from '@/lib/athlete-context';
 import { supabaseClient } from '@/lib/supabase/client';
@@ -175,45 +176,7 @@ export function OcrPreview({ receipt, fileDataUrl, mediaType }: OcrPreviewProps)
         <PaidBySelect value={paidBy} onChange={setPaidBy} />
       </div>
 
-      {receipt.items.length > 0 && (
-        <section className="rounded-card bg-white p-4 shadow-card">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">Artículos</p>
-          <ul className="divide-y divide-ink-soft/40">
-            {receipt.items.map((it, i) => (
-              <li key={i} className="flex items-baseline justify-between gap-3 py-2">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-sans text-sm font-medium text-ink">{it.name}</p>
-                  {(it.qty != null || it.unit_price != null) && (
-                    <p className="text-[11px] text-ink-muted">
-                      {it.qty != null ? `${it.qty} × ` : ''}
-                      {it.unit_price != null ? `${it.unit_price.toFixed(2)} €` : ''}
-                    </p>
-                  )}
-                </div>
-                <span className="font-sans text-sm font-bold text-ink">
-                  {it.line_total != null ? `${it.line_total.toFixed(2)} €` : '—'}
-                </span>
-              </li>
-            ))}
-          </ul>
-          {(receipt.subtotal != null || receipt.tax_amount != null || receipt.tax_included) && (
-            <div className="mt-3 border-t border-ink-soft/40 pt-2 text-[12px] text-ink-muted">
-              {receipt.subtotal != null && (
-                <div className="flex justify-between"><span>Base</span><span>{receipt.subtotal.toFixed(2)} €</span></div>
-              )}
-              {receipt.tax_amount != null && (
-                <div className="flex justify-between">
-                  <span>IVA{receipt.tax_rate != null ? ` (${receipt.tax_rate}%)` : ''}</span>
-                  <span>{receipt.tax_amount.toFixed(2)} €</span>
-                </div>
-              )}
-              {receipt.tax_amount == null && receipt.tax_included && (
-                <div className="flex justify-between"><span>IVA</span><span>incluido</span></div>
-              )}
-            </div>
-          )}
-        </section>
-      )}
+      <ReceiptItemsCard receipt={receipt} />
 
       <label className="flex flex-col gap-1.5 rounded-item bg-white p-3 shadow-item">
         <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">Nota</span>
