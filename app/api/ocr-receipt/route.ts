@@ -46,7 +46,8 @@ export async function POST(req: NextRequest) {
     const client = anthropic();
     const response = await client.messages.create({
       model: ANTHROPIC_MODEL,
-      max_tokens: 1024,
+      max_tokens: 2048,
+      temperature: 0,
       // cache_control on system block requires the prompt-caching beta;
       // SDK v0.27 has not widened TextBlockParam yet, so cast here.
       system: [
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
                 data: parsedReq.data.image_base64,
               },
             },
-            { type: 'text', text: 'Extrae los datos del ticket.' },
+            { type: 'text', text: 'Extrae los datos del ticket siguiendo el esquema y las reglas exactamente. Devuelve solo el JSON.' },
           ],
         },
       ],

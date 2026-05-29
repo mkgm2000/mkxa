@@ -91,7 +91,7 @@ export function ReceiptCapture({ onResult }: ReceiptCaptureProps) {
           <Camera size={24} strokeWidth={1.5} className="text-ink" aria-hidden />
         </span>
         <p className="font-sans text-base font-bold text-ink">
-          {loading ? 'Leyendo factura…' : 'Toca para hacer foto'}
+          {loading ? 'Leyendo factura…' : 'Toca para hacer foto o elegir de galería'}
         </p>
         <p className="text-xs text-ink-muted">
           O arrastra una imagen aquí (JPG, PNG, WebP · máx 5 MB).
@@ -101,7 +101,6 @@ export function ReceiptCapture({ onResult }: ReceiptCaptureProps) {
           aria-label="Subir factura"
           type="file"
           accept={ACCEPTED.join(',')}
-          capture="environment"
           onChange={onChange}
           disabled={loading}
           className="sr-only"
