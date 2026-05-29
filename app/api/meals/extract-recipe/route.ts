@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import type Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { anthropic, ANTHROPIC_MODEL } from '@/lib/anthropic/client';
 import { RECIPE_SYSTEM_PROMPT } from '@/lib/anthropic/recipe-prompts';
@@ -71,11 +72,13 @@ export async function POST(req: Request) {
     const res = await anthropic().messages.create({
       model: ANTHROPIC_MODEL,
       max_tokens: 1500,
+      // cache_control belongs to the prompt-caching beta; SDK v0.27 has
+      // not widened TextBlockParam yet, so cast through unknown.
       system: [{
         type: 'text',
         text: RECIPE_SYSTEM_PROMPT,
         cache_control: { type: 'ephemeral' },
-      }],
+      } as unknown as Anthropic.TextBlockParam],
       // Cast to unknown to keep this compatible across SDK minor versions.
       messages: [{ role: 'user', content: content as unknown as never }],
     });
