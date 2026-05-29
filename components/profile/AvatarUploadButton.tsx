@@ -122,7 +122,6 @@ export function AvatarUploadButton({
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="user"
         className="hidden"
         onChange={(e) => handle(e.target.files?.[0] ?? null)}
       />
