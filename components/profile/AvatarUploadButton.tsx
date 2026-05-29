@@ -15,8 +15,6 @@ interface AvatarUploadButtonProps {
   className?: string;
 }
 
-const MAX_BYTES = 2 * 1024 * 1024;
-
 async function cropToJpegBlob(file: File, size = 256, quality = 0.85): Promise<Blob> {
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const r = new FileReader();
@@ -57,10 +55,6 @@ export function AvatarUploadButton({
   async function handle(file: File | null) {
     setError(null);
     if (!file) return;
-    if (file.size > MAX_BYTES) {
-      setError('La imagen supera los 2 MB.');
-      return;
-    }
     if (!file.type.startsWith('image/')) {
       setError('Solo se aceptan archivos de imagen.');
       return;
