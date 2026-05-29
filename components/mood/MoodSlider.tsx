@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { MoodBlob } from './MoodBlob';
 import { MOOD_ORDER, getMoodTokens, type Mood } from '@/lib/moods';
-import { lerpHex } from '@/lib/color';
 
 interface MoodSliderProps {
   value: Mood;
@@ -25,19 +24,6 @@ function trackGradient(): string {
     return `${getMoodTokens(m).bodyMid} ${pct.toFixed(1)}%`;
   }).join(', ');
   return `linear-gradient(to right, ${stops})`;
-}
-
-function interpolatedBg(pos: number): string {
-  const exact = pos * (N - 1);
-  const idx = Math.min(N - 2, Math.floor(exact));
-  const t = exact - idx;
-  const a = MOOD_ORDER[idx];
-  const b = MOOD_ORDER[idx + 1];
-  const ta = getMoodTokens(a);
-  const tb = getMoodTokens(b);
-  const from = lerpHex(ta.cardFrom, tb.cardFrom, t);
-  const to = lerpHex(ta.cardTo, tb.cardTo, t);
-  return `linear-gradient(170deg, ${from} 0%, ${to} 100%)`;
 }
 
 export function MoodSlider({ value, onChange, className }: MoodSliderProps) {
@@ -90,7 +76,6 @@ export function MoodSlider({ value, onChange, className }: MoodSliderProps) {
   return (
     <section
       className={clsx('flex flex-col items-center gap-4', className)}
-      style={{ backgroundImage: interpolatedBg(pos) }}
     >
       <MoodBlob mood={mood} size={280} animate withFloor withParticles />
 
