@@ -1,5 +1,8 @@
-import { Bell } from 'lucide-react';
-import { HeaderActionButton } from '@/components/nav/HeaderActionButton';
+'use client';
+
+import Link from 'next/link';
+import { AvatarCircle } from '@/components/profile/AvatarCircle';
+import { useAthleteProfile } from '@/lib/hooks/use-athlete-profile';
 import { getMoodTokens, type Mood } from '@/lib/moods';
 import type { Athlete } from '@/lib/athlete-context';
 
@@ -10,6 +13,7 @@ export interface GreetingHeaderProps {
 }
 
 export function GreetingHeader({ athlete, now = new Date(), todayMood }: GreetingHeaderProps) {
+  const { profile } = useAthleteProfile(athlete);
   const h = now.getHours();
   const part =
     h < 12 ? 'Buenos días' :
@@ -26,7 +30,9 @@ export function GreetingHeader({ athlete, now = new Date(), todayMood }: Greetin
           Has registrado: <span className="font-medium text-ink">{moodLabel}</span>
         </p>
       </div>
-      <HeaderActionButton icon={Bell} label="Notificaciones" dot />
+      <Link href="/profile" aria-label="Ir al perfil">
+        <AvatarCircle athlete={athlete} src={profile?.avatar_url ?? null} size={40} />
+      </Link>
     </header>
   );
 }
