@@ -16,13 +16,21 @@ const RequestSchema = z.object({
 });
 
 const ReceiptSchema = z.object({
+  illegible: z.boolean().default(false),
+  illegible_reason: z.string().nullable().default(null),
   total: z.number().nullable(),
+  subtotal: z.number().nullable().default(null),
+  tax_amount: z.number().nullable().default(null),
+  tax_rate: z.number().nullable().default(null),
+  tax_included: z.boolean().nullable().default(null),
   date: z.string().nullable(),
   merchant: z.string().nullable(),
   category_suggested: z.enum(CATEGORIES).nullable(),
   items: z.array(z.object({
     name: z.string(),
-    price: z.number().nullable(),
+    qty: z.number().nullable().default(null),
+    unit_price: z.number().nullable().default(null),
+    line_total: z.number().nullable().default(null),
   })).default([]),
   confidence: z.number().min(0).max(1).nullable(),
 });
@@ -87,6 +95,15 @@ export async function POST(req: NextRequest) {
     const safe = ReceiptSchema.safeParse(parsed);
     if (!safe.success) {
       return NextResponse.json({ error: 'Schema mismatch' }, { status: 500 });
+    }
+    if (safe.data.illegible) {
+      return NextResponse.json(
+        {
+          error: 'illegible',
+          reason: safe.data.illegible_reason ?? 'No se aprecia bien la factura',
+        },
+        { status: 422 },
+      );
     }
     return NextResponse.json(safe.data);
   } catch (err) {

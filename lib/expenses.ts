@@ -18,16 +18,24 @@ export const PAID_BY_OPTIONS: PaidBy[] = ['MK', 'Xabi', 'Compartido'];
 
 export interface ReceiptItem {
   name: string;
-  price: number | null;
+  qty: number | null;
+  unit_price: number | null;
+  line_total: number | null;
 }
 
 export interface ReceiptData {
   total: number | null;
+  subtotal: number | null;
+  tax_amount: number | null;
+  tax_rate: number | null;
+  tax_included: boolean | null;
   date: string | null;
   merchant: string | null;
   category_suggested: Category | null;
   items: ReceiptItem[];
   confidence: number | null;
+  illegible: boolean;
+  illegible_reason: string | null;
 }
 
 export interface Expense {

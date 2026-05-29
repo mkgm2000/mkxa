@@ -24,10 +24,15 @@ export function BottomNav() {
   const pathname = usePathname() ?? '';
 
   return (
-    <nav
-      aria-label="Navegación principal"
-      className="fixed inset-x-0 bottom-0 z-40 flex justify-center pb-[env(safe-area-inset-bottom,16px)]"
-    >
+    <>
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-32 bg-gradient-to-t from-white via-white/85 to-transparent"
+      />
+      <nav
+        aria-label="Navegación principal"
+        className="fixed inset-x-0 bottom-0 z-40 flex justify-center pb-[env(safe-area-inset-bottom,16px)]"
+      >
       <div className="mx-4 mb-2 flex w-full max-w-md justify-around gap-1 rounded-full bg-white/85 px-3 py-2 shadow-nav backdrop-blur">
         {ITEMS.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/');
@@ -50,6 +55,7 @@ export function BottomNav() {
           );
         })}
       </div>
-    </nav>
+      </nav>
+    </>
   );
 }

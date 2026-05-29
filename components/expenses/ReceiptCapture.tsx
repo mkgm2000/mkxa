@@ -93,6 +93,13 @@ export function ReceiptCapture({ onResult }: ReceiptCaptureProps) {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ image_base64: payload.base64, media_type: 'image/jpeg' }),
       });
+      if (res.status === 422) {
+        const body = (await res.json().catch(() => ({}))) as { reason?: string };
+        setError(
+          `No se aprecia bien la factura${body.reason ? ` (${body.reason})` : ''}. Sácala con más luz, enfocada y completa.`,
+        );
+        return;
+      }
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? `OCR ${res.status}`);
