@@ -20,3 +20,4 @@ Or paste each SQL file from `supabase/migrations/` into the [dashboard SQL edito
 - `20260528120200_meals.sql` — applied 2026-05-29 (recipes, recipe_ingredients, recipe_steps, meal_plan)
 - `20260528120300_shopping_and_pantry.sql` — applied 2026-05-29 (pantry_items, shopping_list)
 - `20260529120000_athlete_profiles.sql` — applied 2026-05-29 (athlete_profiles table + avatars bucket)
+- `20260529130000_training_weeks.sql` — applied 2026-05-29 (training_weeks + training_sources tables)
