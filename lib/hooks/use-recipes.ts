@@ -1,0 +1,104 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { supabaseClient } from '@/lib/supabase/client';
+import { saveState } from '@/lib/save-state';
+import type {
+  Recipe,
+  RecipeIngredient,
+  RecipeStep,
+  RecipeWithDetails,
+} from '@/lib/meals/recipes';
+
+interface NewRecipeInput {
+  recipe: Omit<Recipe, 'id' | 'created_at' | 'updated_at'> & { id?: string };
+  ingredients: Omit<RecipeIngredient, 'id' | 'recipe_id'>[];
+  steps: Omit<RecipeStep, 'id' | 'recipe_id'>[];
+}
+
+export function useRecipes() {
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabaseClient()
+      .from('recipes')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) { saveState.getState().set('error'); setLoading(false); return; }
+    setRecipes((data as Recipe[]) ?? []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  return { recipes, loading, refresh };
+}
+
+export function useRecipe(id: string | null) {
+  const [recipe, setRecipe] = useState<RecipeWithDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    if (!id) { setRecipe(null); setLoading(false); return; }
+    setLoading(true);
+    const supa = supabaseClient();
+    const [{ data: r, error: er }, { data: i, error: ei }, { data: s, error: es }] = await Promise.all([
+      supa.from('recipes').select('*').eq('id', id).maybeSingle(),
+      supa.from('recipe_ingredients').select('*').eq('recipe_id', id).order('position'),
+      supa.from('recipe_steps').select('*').eq('recipe_id', id).order('position'),
+    ]);
+    if (er || ei || es) { saveState.getState().set('error'); setLoading(false); return; }
+    if (!r) { setRecipe(null); setLoading(false); return; }
+    setRecipe({
+      ...(r as Recipe),
+      ingredients: (i as RecipeIngredient[]) ?? [],
+      steps: (s as RecipeStep[]) ?? [],
+    });
+    setLoading(false);
+  }, [id]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  return { recipe, loading, refresh };
+}
+
+export async function saveRecipe(input: NewRecipeInput): Promise<{ id: string } | { error: string }> {
+  const supa = supabaseClient();
+  saveState.getState().set('saving');
+
+  const { data: created, error: e1 } = await supa
+    .from('recipes')
+    .insert([input.recipe])
+    .select('id')
+    .single();
+  if (e1 || !created) {
+    saveState.getState().set('error');
+    return { error: e1?.message ?? 'No se pudo crear la receta' };
+  }
+  const recipeId = (created as { id: string }).id;
+
+  if (input.ingredients.length > 0) {
+    const rows = input.ingredients.map((ing, idx) => ({
+      ...ing,
+      recipe_id: recipeId,
+      position: ing.position ?? idx,
+    }));
+    const { error: e2 } = await supa.from('recipe_ingredients').insert(rows);
+    if (e2) { saveState.getState().set('error'); return { error: e2.message }; }
+  }
+
+  if (input.steps.length > 0) {
+    const rows = input.steps.map((st, idx) => ({
+      ...st,
+      recipe_id: recipeId,
+      position: st.position ?? idx + 1,
+    }));
+    const { error: e3 } = await supa.from('recipe_steps').insert(rows);
+    if (e3) { saveState.getState().set('error'); return { error: e3.message }; }
+  }
+
+  saveState.getState().set('saved');
+  return { id: recipeId };
+}

@@ -12,3 +12,5 @@ Track applied migrations in this table by appending to the log below.
 
 - `20260528120000_mood_logs.sql` — pending
 - `20260528120100_expenses_and_storage.sql` — pending (creates `expenses` table with `set_updated_at()` trigger and private `receipts` storage bucket; open RLS)
+- `20260528120200_meals.sql` — pending (recipes, recipe_ingredients, recipe_steps, meal_plan tables)
+- `20260528120300_shopping_and_pantry.sql` — pending (pantry_items, shopping_list tables)
