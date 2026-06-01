@@ -4,9 +4,9 @@ import { describe, it, expect, vi } from 'vitest';
 import { MoodTokenStrip } from '@/components/mood/MoodTokenStrip';
 
 describe('MoodTokenStrip', () => {
-  it('renders 10 mood tokens', () => {
+  it('renders 11 mood tokens', () => {
     render(<MoodTokenStrip value="happy" onChange={() => {}} />);
-    expect(screen.getAllByRole('radio')).toHaveLength(10);
+    expect(screen.getAllByRole('radio')).toHaveLength(11);
   });
 
   it('reports the selected mood', async () => {

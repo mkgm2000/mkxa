@@ -210,6 +210,36 @@ function Face({ mood }: { mood: Mood }) {
           <line x1="84" y1="148" x2="136" y2="148" stroke={stroke} strokeWidth="5" strokeLinecap="round" />
         </>
       );
+    case 'stressed':
+      return (
+        <>
+          {/* throbbing tension mark (vein) */}
+          <path
+            d="M158 42 Q 163 53, 174 58 Q 163 63, 158 74 Q 153 63, 142 58 Q 153 53, 158 42 Z"
+            fill="#c0261b"
+          />
+          {/* furrowed strained brows */}
+          <path d="M60 92 L 96 100"   fill="none" stroke={stroke} strokeWidth="6" strokeLinecap="round" />
+          <path d="M160 92 L 124 100" fill="none" stroke={stroke} strokeWidth="6" strokeLinecap="round" />
+          {/* wide anxious eyes (big whites, tiny pupils) */}
+          <ellipse cx="82"  cy="116" rx="11" ry="13" fill="#ffffff" stroke={stroke} strokeWidth="2.4" />
+          <ellipse cx="138" cy="116" rx="11" ry="13" fill="#ffffff" stroke={stroke} strokeWidth="2.4" />
+          <circle  cx="83"  cy="114" r="3.6" fill={stroke} />
+          <circle  cx="137" cy="114" r="3.6" fill={stroke} />
+          {/* clenched, gritted-teeth grimace */}
+          <path
+            d="M80 150 Q 110 144, 140 150 L 140 162 Q 110 168, 80 162 Z"
+            fill="#ffffff"
+            stroke={stroke}
+            strokeWidth="4"
+            strokeLinejoin="round"
+          />
+          <line x1="80"  y1="156" x2="140" y2="156" stroke={stroke} strokeWidth="3" />
+          <line x1="96"  y1="147" x2="96"  y2="165" stroke={stroke} strokeWidth="2.4" />
+          <line x1="110" y1="146" x2="110" y2="166" stroke={stroke} strokeWidth="2.4" />
+          <line x1="124" y1="147" x2="124" y2="165" stroke={stroke} strokeWidth="2.4" />
+        </>
+      );
   }
 }
 

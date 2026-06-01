@@ -19,7 +19,7 @@ describe('GreetingHeader', () => {
 
   it('shows the logged mood label as subtitle', () => {
     render(<GreetingHeader athlete="MK" now={new Date('2026-05-28T10:00:00')} todayMood="sleepy" />);
-    expect(screen.getByText(/Adormilado/)).toBeInTheDocument();
+    expect(screen.getByText(/Dormido/)).toBeInTheDocument();
   });
 
   it('links the avatar circle to /profile', () => {

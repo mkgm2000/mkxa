@@ -1,14 +1,18 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState, type PointerEvent } from 'react';
-import type { MealPass } from '@/lib/meals/meal-passes';
+import { useCallback, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
+import type { MealPass, MealPassKind, MealPassTheme } from '@/lib/meals/meal-passes';
 import { formatRedeemDate } from '@/lib/meals/meal-passes';
 
 interface MealPassTicketProps {
   pass: MealPass;
+  theme: MealPassTheme;
+  /** Background colour for the perforation notches (matches the parent's gradient
+   *  midtone so they appear "cut" out of the ticket). */
   stageBg: string;
   onRedeem: (idx: number) => void;
   onPlace: (idx: number, place: string) => void;
+  onKind: (idx: number, kind: MealPassKind) => void;
 }
 
 function jaggedMask(side: 'left' | 'right', teeth: number, seed: number): string {
@@ -38,16 +42,30 @@ function jaggedMask(side: 'left' | 'right', teeth: number, seed: number): string
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
-function Cutlery({ color, size = 15 }: { color: string; size?: number }) {
+/** The app's signature 3D smiley blob, inlined per the redesign spec
+ *  (do NOT swap for `MoodBlob.tsx`). */
+function Blob({
+  c1, c2, dark, mood, used,
+}: { c1: string; c2: string; dark: string; mood: MealPassTheme['mood']; used: boolean }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M7 2v7a2 2 0 0 0 2 2v0M7 2v4M5 2v4M9 2v4M9 11v11M5 11v0" />
-      <path d="M17 2c-1.5 0-2.5 2-2.5 5s1 4 2.5 4m0 0v11m0-11c1.5 0 2.5-1 2.5-4s-1-5-2.5-5" />
-    </svg>
+    <div
+      className={`mp-blob${used ? ' is-used' : ''}`}
+      style={{ background: `radial-gradient(circle at 32% 28%, ${c1}, ${c2} 78%)` }}
+    >
+      <div className="mp-blob-eyes"><i /><i /></div>
+      <div
+        className={`mp-blob-mouth ${used ? 'smile' : mood}`}
+        style={{ borderColor: dark, color: dark }}
+      />
+      <span className="mp-blob-cheek l" style={{ background: dark }} />
+      <span className="mp-blob-cheek r" style={{ background: dark }} />
+    </div>
   );
 }
 
-export function MealPassTicket({ pass, stageBg, onRedeem, onPlace }: MealPassTicketProps) {
+const CONFETTI_COLORS = ['#F4B740', '#FF5C8A', '#5FD3B4', '#9B7BF0'];
+
+export function MealPassTicket({ pass, theme, stageBg, onRedeem, onPlace, onKind }: MealPassTicketProps) {
   const torn = pass.redeemed;
   const [dx, setDx] = useState(0);
   const drag = useRef<{ x: number; moved: number } | null>(null);
@@ -83,48 +101,72 @@ export function MealPassTicket({ pass, stageBg, onRedeem, onPlace }: MealPassTic
   };
 
   const dragging = dx > 0;
-  const stubStyle: React.CSSProperties = {
-    transform: torn ? 'translate(34px, 7px) rotate(3deg)' : `translateX(${dx}px) rotate(${dx * 0.035}deg)`,
+  const stubStyle: CSSProperties = {
+    transform: torn ? 'translate(30px, 8px) rotate(3.5deg)' : `translateX(${dx}px) rotate(${dx * 0.035}deg)`,
     transition: dragging ? 'none' : 'transform .55s cubic-bezier(.18,.9,.25,1.1)',
     WebkitMaskImage: torn ? masks.stub : undefined,
     maskImage: torn ? masks.stub : undefined,
     cursor: torn ? 'default' : 'grab',
+    background: theme.stub,
+    color: theme.stubFg,
   };
-  const bodyStyle: React.CSSProperties = {
+  const bodyStyle: CSSProperties = {
     WebkitMaskImage: torn ? masks.body : undefined,
     maskImage: torn ? masks.body : undefined,
   };
   const redeemedDate = pass.redeemed_at ? formatRedeemDate(new Date(pass.redeemed_at)) : '';
+  const cssVars = { ['--accent' as string]: theme.accent } as CSSProperties;
 
   return (
-    <div className={`mp ${torn ? 'is-used' : ''}`}>
+    <div className={`mp ${torn ? 'is-used' : ''}`} style={cssVars}>
+      {/* BODY */}
       <div className="mp-body" style={bodyStyle}>
-        <div className="mp-perfcol" aria-hidden />
-        <div className="mp-kicker">
-          <Cutlery color="#e0533b" size={15} />
-          <span>Pase de comida</span>
-          <b>Nº {String(pass.idx + 1).padStart(2, '0')}</b>
+        <Blob c1={theme.b1} c2={theme.b2} dark={theme.blobDark} mood={theme.mood} used={torn} />
+
+        <div className="mp-body-main">
+          <div className="mp-kicker">
+            Pase <b style={{ color: theme.accent }}>#{String(pass.idx + 1).padStart(2, '0')}</b>
+            {torn && redeemedDate && <span className="mp-kicker-date"> · {redeemedDate}</span>}
+          </div>
+          <div className="mp-title">{torn ? '¡Disfrutado!' : 'Una comida\nfuera de casa'}</div>
+
+          {!torn ? (
+            <div className="mp-sub">{pass.note}</div>
+          ) : (
+            <div className="mp-log">
+              <div className="mp-seg" role="group" aria-label="¿Fuisteis o pedisteis?">
+                <button
+                  type="button"
+                  className={`mp-seg-btn${pass.kind === 'dine' ? ' on' : ''}`}
+                  onClick={() => onKind(pass.idx, 'dine')}
+                >
+                  Fuimos
+                </button>
+                <button
+                  type="button"
+                  className={`mp-seg-btn${pass.kind === 'delivery' ? ' on' : ''}`}
+                  onClick={() => onKind(pass.idx, 'delivery')}
+                >
+                  A domicilio
+                </button>
+              </div>
+              <input
+                className="mp-place"
+                type="text"
+                value={pass.place ?? ''}
+                placeholder={pass.kind === 'delivery' ? 'pedimos a…' : 'comimos en…'}
+                onChange={(e) => onPlace(pass.idx, e.target.value)}
+              />
+            </div>
+          )}
         </div>
 
-        <div className="mp-title">Una comida<br />fuera de casa</div>
-        <div className="mp-sub">{pass.note}</div>
-        <div className="mp-meta"><span>Vale por 1 cena · invita el azar</span></div>
-
         {torn && (
-          <div className="mp-log">
-            <label htmlFor={`mp-place-${pass.idx}`}>Comimos en</label>
-            <input
-              id={`mp-place-${pass.idx}`}
-              type="text"
-              value={pass.place ?? ''}
-              placeholder="añade el restaurante…"
-              onChange={(e) => onPlace(pass.idx, e.target.value)}
-            />
-            <span className="mp-date">{redeemedDate}</span>
-          </div>
+          <div className="mp-stamp show" aria-hidden>Canjeado</div>
         )}
       </div>
 
+      {/* STUB */}
       <div
         className="mp-stub"
         style={stubStyle}
@@ -142,7 +184,7 @@ export function MealPassTicket({ pass, stageBg, onRedeem, onPlace }: MealPassTic
       >
         {!torn ? (
           <>
-            <div className="mp-stub-top">M&nbsp;<span>♥</span>&nbsp;X</div>
+            <div className="mp-stub-top">MK<span>♥</span>XA</div>
             <div className="mp-stub-cta">Canjear</div>
             <div className="mp-grip" aria-hidden><i /><i /><i /></div>
           </>
@@ -160,6 +202,20 @@ export function MealPassTicket({ pass, stageBg, onRedeem, onPlace }: MealPassTic
 
       {!torn && (
         <div className="mp-hint" style={{ opacity: dragging ? 0 : 1 }} aria-hidden>desliza →</div>
+      )}
+
+      {torn && (
+        <div className="mp-confetti" aria-hidden>
+          {Array.from({ length: 12 }).map((_, i) => {
+            const confettiStyle = {
+              ['--a' as string]: `${(i / 12) * 360}deg`,
+              ['--d' as string]: `${34 + (i % 3) * 16}px`,
+              background: CONFETTI_COLORS[i % 4],
+              animationDelay: `${(i % 4) * 18}ms`,
+            } as CSSProperties;
+            return <span key={i} style={confettiStyle} />;
+          })}
+        </div>
       )}
     </div>
   );

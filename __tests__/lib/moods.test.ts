@@ -2,10 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { MOODS, isMood, getMoodTokens, MOOD_ORDER } from '@/lib/moods';
 
 describe('moods', () => {
-  it('exposes the 10 moods in canonical order', () => {
+  it('exposes the 11 moods in canonical order', () => {
     expect(MOODS).toEqual([
       'happy', 'joyful', 'annoyed', 'worried', 'dizzy',
-      'sad', 'angry', 'love', 'sleepy', 'neutral',
+      'sad', 'angry', 'love', 'sleepy', 'neutral', 'stressed',
     ]);
   });
 
@@ -24,15 +24,15 @@ describe('moods', () => {
 });
 
 describe('MOOD_ORDER', () => {
-  it('has the 10 moods in the best→worst order picked by the user', () => {
+  it('has the 11 moods in the best→worst order picked by the user', () => {
     expect(MOOD_ORDER).toEqual([
       'joyful', 'happy', 'love', 'sleepy', 'neutral',
-      'annoyed', 'worried', 'sad', 'angry', 'dizzy',
+      'annoyed', 'worried', 'stressed', 'sad', 'angry', 'dizzy',
     ]);
   });
 
   it('contains every mood exactly once', () => {
-    expect(new Set(MOOD_ORDER).size).toBe(10);
+    expect(new Set(MOOD_ORDER).size).toBe(11);
     for (const m of MOODS) expect(MOOD_ORDER).toContain(m);
   });
 });

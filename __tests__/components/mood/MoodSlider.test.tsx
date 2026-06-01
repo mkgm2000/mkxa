@@ -9,7 +9,7 @@ describe('MoodSlider', () => {
     render(<MoodSlider value="joyful" onChange={() => {}} />);
     const s = screen.getByRole('slider');
     expect(s).toHaveAttribute('aria-valuemin', '0');
-    expect(s).toHaveAttribute('aria-valuemax', '9');
+    expect(s).toHaveAttribute('aria-valuemax', '10');
     expect(s).toHaveAttribute('aria-valuenow', String(MOOD_ORDER.indexOf('joyful')));
   });
 
