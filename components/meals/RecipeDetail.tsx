@@ -13,6 +13,7 @@ import { RecipeImageUploader } from '@/components/meals/RecipeImageUploader';
 import {
   addRecipeImage,
   removeRecipeImageByUrl,
+  updateRecipePrimaryImage,
 } from '@/lib/hooks/use-recipes';
 
 interface RecipeDetailProps {
@@ -24,6 +25,7 @@ export function RecipeDetail({ recipe, onChange }: RecipeDetailProps) {
   // Optimistic local state so the gallery feels responsive without a full
   // reload; the parent can pass `onChange` to also trigger a refresh.
   const [images, setImages] = useState<string[]>(recipe.images ?? []);
+  const [primaryUrl, setPrimaryUrl] = useState<string | null>(recipe.image_url);
   const [busy, setBusy] = useState(false);
 
   const emoji = recipeFallbackEmoji(recipe.title);
@@ -43,6 +45,38 @@ export function RecipeDetail({ recipe, onChange }: RecipeDetailProps) {
       onChange?.();
     },
     [recipe.id, onChange],
+  );
+
+  const handlePrimaryUploaded = useCallback(
+    async (url: string) => {
+      const prev = primaryUrl;
+      setPrimaryUrl(url);
+      setBusy(true);
+      const res = await updateRecipePrimaryImage(recipe.id, url);
+      setBusy(false);
+      if ('error' in res) {
+        setPrimaryUrl(prev);
+        return;
+      }
+      onChange?.();
+    },
+    [recipe.id, onChange, primaryUrl],
+  );
+
+  const handlePrimaryRemove = useCallback(
+    async () => {
+      const prev = primaryUrl;
+      setPrimaryUrl(null);
+      setBusy(true);
+      const res = await updateRecipePrimaryImage(recipe.id, null);
+      setBusy(false);
+      if ('error' in res) {
+        setPrimaryUrl(prev);
+        return;
+      }
+      onChange?.();
+    },
+    [recipe.id, onChange, primaryUrl],
   );
 
   const handleRemove = useCallback(
@@ -65,10 +99,10 @@ export function RecipeDetail({ recipe, onChange }: RecipeDetailProps) {
       <div
         className={`relative aspect-[4/3] w-full overflow-hidden rounded-card bg-gradient-to-br ${gradient}`}
       >
-        {recipe.image_url ? (
+        {primaryUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={recipe.image_url}
+            src={primaryUrl}
             alt=""
             className="h-full w-full object-cover"
           />
@@ -79,6 +113,23 @@ export function RecipeDetail({ recipe, onChange }: RecipeDetailProps) {
           >
             {emoji}
           </div>
+        )}
+        <RecipeImageUploader
+          overlay
+          onUploaded={handlePrimaryUploaded}
+          athleteSubdir={subdir}
+          label={primaryUrl ? 'Cambiar foto' : 'Añadir foto'}
+        />
+        {primaryUrl && (
+          <button
+            type="button"
+            onClick={handlePrimaryRemove}
+            disabled={busy}
+            aria-label="Quitar foto principal"
+            className="absolute left-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-ink shadow-action active:scale-95"
+          >
+            <X size={14} strokeWidth={1.5} aria-hidden />
+          </button>
         )}
       </div>
 

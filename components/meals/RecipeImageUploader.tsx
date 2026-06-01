@@ -14,6 +14,8 @@ export interface RecipeImageUploaderProps {
   onUploaded: (url: string) => void;
   athleteSubdir?: string;
   label?: string;
+  /** When true, render as an invisible full-area button. Parent must be `relative`. */
+  overlay?: boolean;
 }
 
 async function readDataUrl(file: File): Promise<string> {
@@ -68,6 +70,7 @@ export function RecipeImageUploader({
   onUploaded,
   athleteSubdir,
   label = 'Subir imagen',
+  overlay = false,
 }: RecipeImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
@@ -129,6 +132,39 @@ export function RecipeImageUploader({
   function onChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) void handleFile(file);
+  }
+
+  if (overlay) {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={loading}
+          aria-label={label}
+          className="absolute inset-0 z-10 flex items-end justify-end p-3"
+        >
+          <span className="flex items-center gap-1.5 rounded-full bg-ink/80 px-3 py-1.5 text-[11px] font-bold text-white shadow-action backdrop-blur-sm">
+            <Camera size={12} strokeWidth={1.5} aria-hidden />
+            {loading ? 'Subiendo…' : label}
+          </span>
+        </button>
+        <input
+          ref={inputRef}
+          aria-label={label}
+          type="file"
+          accept={ACCEPT_ATTR}
+          onChange={onChange}
+          disabled={loading}
+          className="sr-only"
+        />
+        {error && (
+          <p role="alert" className="absolute inset-x-2 bottom-12 z-10 rounded bg-danger/90 px-2 py-1 text-center text-[11px] font-medium text-white">
+            {error}
+          </p>
+        )}
+      </>
+    );
   }
 
   return (

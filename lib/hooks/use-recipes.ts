@@ -136,6 +136,21 @@ export async function saveRecipe(input: NewRecipeInput): Promise<{ id: string } 
   return { id: recipeId };
 }
 
+export async function updateRecipePrimaryImage(
+  recipeId: string,
+  url: string | null,
+): Promise<{ ok: true } | { error: string }> {
+  const supa = supabaseClient();
+  saveState.getState().set('saving');
+  const { error } = await supa
+    .from('recipes')
+    .update({ image_url: url, updated_at: new Date().toISOString() })
+    .eq('id', recipeId);
+  if (error) { saveState.getState().set('error'); return { error: error.message }; }
+  saveState.getState().set('saved');
+  return { ok: true };
+}
+
 export async function addRecipeImage(
   recipeId: string,
   url: string,
