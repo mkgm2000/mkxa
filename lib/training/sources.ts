@@ -6,6 +6,7 @@ export const TRAINING_SOURCE_SLUGS = [
   'pdf_tema7_macro',
   'pdf_macro_meso_micro',
   'pdf_periodizacion_tradicional_inversa',
+  'pdf_rulebook_hyrox_doubles',
   'xlsx_master_23s',
 ] as const;
 

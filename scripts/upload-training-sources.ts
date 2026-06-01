@@ -28,7 +28,8 @@ const SOURCES: SourceDef[] = [
   { slug: 'pdf_tema7_macro',                       filename: 'pdf_tema7_macro.pdf',                       description: 'UFV Tema 7: macrociclos',                          mimeType: 'application/pdf' },
   { slug: 'pdf_macro_meso_micro',                  filename: 'pdf_macro_meso_micro.pdf',                  description: 'UFV macro/meso/micro estructura jerárquica',       mimeType: 'application/pdf' },
   { slug: 'pdf_periodizacion_tradicional_inversa', filename: 'pdf_periodizacion_tradicional_inversa.pdf', description: 'UFV periodización tradicional e inversa',          mimeType: 'application/pdf' },
-  { slug: 'xlsx_master_23s',                       filename: 'xlsx_master_23s.xlsx',                      description: 'MKXA 23S v3 master plan',                          mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+  { slug: 'pdf_rulebook_hyrox_doubles',            filename: 'pdf_rulebook_hyrox_doubles.pdf',            description: 'HYROX Doubles official rulebook',                  mimeType: 'application/pdf' },
+  { slug: 'xlsx_master_23s',                       filename: 'xlsx_master_23s.txt',                       description: 'MKXA 23S v3 master plan (xlsx convertido a text/plain)', mimeType: 'text/plain' },
 ];
 
 async function main() {

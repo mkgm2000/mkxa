@@ -18,7 +18,7 @@ const ReqSchema = z.object({
 
 // Deload weeks per the Excel master plan — intocables.
 const DELOAD_WEEKS = new Set([8, 12, 17]);
-const REQUIRED_SOURCE_COUNT = 6;
+const REQUIRED_SOURCE_COUNT = 7;
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -46,15 +46,16 @@ export async function POST(req: Request) {
     return jsonError(`Faltan fuentes (${sources.length}/${REQUIRED_SOURCE_COUNT}); ejecuta scripts/upload-training-sources.ts`, 500);
   }
 
-  // Rate limit (org tier 30k tok/min) only fits the Excel master plan as a
-  // doc block. Adjuntar los 5 PDFs supera el límite incluso en cache miss.
-  // Claude tiene conocimiento sólido de los conceptos de periodización
-  // (S.G.A., supercompensación, interferencia AMPK/mTOR, concurrent
-  // training); citamos los PDFs por nombre en el prompt y los referencia
-  // aunque no estén adjuntos. El Excel SÍ se adjunta como text/plain.
+  // Rate limit (org tier 30k tok/min) restringe qué adjuntamos: el Excel
+  // master plan (text/plain, ~14k tok) Y el rulebook HYROX Doubles (~8-10k
+  // tok). Los 5 PDFs académicos UFV se referencian por nombre en el system
+  // prompt; Claude tiene conocimiento sólido de S.G.A., supercompensación,
+  // interferencia AMPK/mTOR, periodización concurrent/tradicional/inversa.
   const xlsxSource = sources.find((s) => s.id === 'xlsx_master_23s');
+  const rulebookSource = sources.find((s) => s.id === 'pdf_rulebook_hyrox_doubles');
   if (!xlsxSource) return jsonError('Falta xlsx_master_23s en training_sources', 500);
-  const docSources = [xlsxSource];
+  if (!rulebookSource) return jsonError('Falta pdf_rulebook_hyrox_doubles en training_sources', 500);
+  const docSources = [xlsxSource, rulebookSource];
 
   const supa = supabaseServer();
   const lo = Math.max(1, target_week - 2);
