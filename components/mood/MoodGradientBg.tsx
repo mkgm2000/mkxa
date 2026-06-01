@@ -10,41 +10,39 @@ export interface MoodGradientBgProps extends React.HTMLAttributes<HTMLDivElement
 }
 
 /**
- * Paints the mood gradient as the page background.
+ * Paints the mood gradient as the page background AND mirrors `cardFrom`
+ * onto the `--mood-bg` CSS variable on `<html>` so the chrome behind the
+ * safe-area (status bar) and any overscroll rubber-band paint the same
+ * colour as the top edge of the in-flow gradient. Otherwise iOS Safari
+ * shows a contrasting strip above the content.
  *
- * In addition to the in-flow `<div>` (kept for the visible content area and
- * test backwards-compatibility — tests assert `linear-gradient(170deg…`),
- * this component also mirrors the gradient stops onto `--mood-bg-from` /
- * `--mood-bg-to` CSS variables on `<html>`. `globals.css` reads those vars
- * and paints them on the html element with `background-attachment: fixed`,
- * so iOS Safari overscroll reveals the mood gradient instead of white edges.
- *
- * When this component unmounts we clear the vars so the CSS fallback color
- * kicks back in. When multiple instances are mounted (e.g. the page-level
- * `MoodGate` wrapping the meals/expenses inner overrides), React's
- * bottom-up effect ordering means the outermost / latest-mounted parent's
- * effect runs last and wins — so the html background tracks the user's
- * daily mood, while the inner override paints its own gradient over the
- * content area as before.
+ * Effect ordering: when multiple `<MoodGradientBg>` are nested (page-level
+ * `MoodGate` wrapping the meals/expenses inner overrides), each effect
+ * captures the previous var, sets its own, and restores on unmount. The
+ * outermost mounted parent runs last and "wins" the var.
  */
 export function MoodGradientBg({ mood, children, className, style, ...rest }: MoodGradientBgProps) {
   const t = getMoodTokens(mood);
 
   useEffect(() => {
     const root = document.documentElement;
-    const prevFrom = root.style.getPropertyValue('--mood-bg-from');
-    const prevTo = root.style.getPropertyValue('--mood-bg-to');
-    root.style.setProperty('--mood-bg-from', t.cardFrom);
-    root.style.setProperty('--mood-bg-to', t.cardTo);
+    const body = document.body;
+    const prevVar = root.style.getPropertyValue('--mood-bg');
+    const prevBody = body.style.backgroundColor;
+    const prevTheme = document.querySelector('meta[name="theme-color"]')?.getAttribute('content') ?? null;
+    root.style.setProperty('--mood-bg', t.cardFrom);
+    // Also paint body directly so the chrome behind the safe-area matches
+    // without depending on var-cascade timing.
+    body.style.backgroundColor = t.cardFrom;
+    // Sync iOS Safari status-bar chrome too.
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t.cardFrom);
     return () => {
-      // Restore the previous values (or clear if there were none) so nested
-      // overrides hand control back to their parent on unmount.
-      if (prevFrom) root.style.setProperty('--mood-bg-from', prevFrom);
-      else root.style.removeProperty('--mood-bg-from');
-      if (prevTo) root.style.setProperty('--mood-bg-to', prevTo);
-      else root.style.removeProperty('--mood-bg-to');
+      if (prevVar) root.style.setProperty('--mood-bg', prevVar);
+      else root.style.removeProperty('--mood-bg');
+      body.style.backgroundColor = prevBody;
+      if (prevTheme) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', prevTheme);
     };
-  }, [t.cardFrom, t.cardTo]);
+  }, [t.cardFrom]);
 
   return (
     <div
