@@ -78,7 +78,7 @@ export default function TrainingPage() {
   const todayBadge = week === currentWeek;
 
   return (
-    <main className="flex flex-col gap-5 pt-2">
+    <main className="flex flex-col gap-5 pt-2 pb-12">
       <header className="flex items-start justify-between gap-4 px-5 pt-6">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">

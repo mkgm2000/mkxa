@@ -75,57 +75,49 @@ export default function HyroxTablePage() {
           })}
         </div>
         <p className="mt-2 px-1 text-[11px] text-ink-muted">
-          MK + Xabi compiten en <strong className="text-ink">Doubles Mixed</strong>. La columna destacada se resalta abajo.
+          MK + Xabi compiten en <strong className="text-ink">Doubles Mixed</strong>. Cambia la pestaña para ver cada categoría.
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-card bg-white shadow-card mx-4">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr>
-                <th className="sticky left-0 z-10 bg-white px-3 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-ink-muted" />
-                {(['women', 'men', 'mixed'] as Modality[]).map((m) => (
-                  <th
-                    key={m}
-                    className={`px-3 py-3 text-center text-[10px] font-extrabold uppercase tracking-[0.1em] ${
-                      m === highlight ? 'bg-ink text-white' : 'bg-ink-soft/30 text-ink'
-                    }`}
-                  >
-                    {MOD_LABELS[m]}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {STATIONS.map((s, idx) => (
-                <tr key={s.name} className={idx % 2 === 0 ? 'bg-white' : 'bg-ink-soft/15'}>
-                  <th
-                    scope="row"
-                    className="sticky left-0 z-10 min-w-[120px] max-w-[160px] px-3 py-3 align-middle text-[12px] font-extrabold uppercase tracking-[0.02em] text-ink"
-                    style={{ background: '#FFE600' }}
-                  >
-                    <div>{s.name}</div>
-                    {s.meta && (
-                      <div className="mt-0.5 text-[10px] font-bold text-ink-muted">{s.meta}</div>
-                    )}
-                  </th>
-                  {(['women', 'men', 'mixed'] as Modality[]).map((m) => (
-                    <td
-                      key={m}
-                      className={`px-3 py-3 text-center text-[13px] font-medium tabular-nums whitespace-nowrap ${
-                        m === highlight ? 'font-bold text-ink' : 'text-ink-muted'
-                      }`}
-                    >
-                      {s[m]}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="mx-4 overflow-hidden rounded-card bg-white shadow-card">
+        <div className="px-4 py-2.5 text-center text-[10px] font-extrabold uppercase tracking-[0.12em] bg-ink text-white">
+          {MOD_LABELS[highlight]}
         </div>
+        <ul key={highlight} className="divide-y divide-ink-soft/30">
+          {STATIONS.map((s, idx) => (
+            <li
+              key={s.name}
+              className={`grid grid-cols-[2fr_3fr] items-stretch ${
+                idx % 2 === 0 ? 'bg-white' : 'bg-ink-soft/15'
+              }`}
+            >
+              <div
+                className="flex flex-col justify-center px-3 py-3 text-[12px] font-extrabold uppercase tracking-[0.02em] text-ink"
+                style={{ background: '#FFE600' }}
+              >
+                <span className="leading-tight">{s.name}</span>
+                {s.meta && (
+                  <span className="mt-0.5 text-[10px] font-bold text-ink-muted normal-case tracking-normal">
+                    {s.meta}
+                  </span>
+                )}
+              </div>
+              <div
+                className="flex items-center justify-center px-3 py-4 text-[17px] font-extrabold tabular-nums text-ink animate-[fadeIn_180ms_ease-out]"
+              >
+                {s[highlight]}
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(2px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
 
       <div className="mx-4 rounded-card bg-white/60 p-4 text-[11px] leading-relaxed text-ink-muted shadow-item">
         <p className="font-bold text-ink">Orden oficial de estaciones (Rulebook §6):</p>

@@ -1,10 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const create = vi.fn();
-vi.mock('@/lib/anthropic/client', () => ({
-  anthropic: () => ({ messages: { create } }),
-  ANTHROPIC_MODEL: 'claude-sonnet-4-6',
-}));
+// Route no longer uses SDK; it calls fetch directly with files-api beta.
+vi.mock('@/lib/anthropic/client', () => ({ ANTHROPIC_MODEL: 'claude-sonnet-4-6' }));
 
 const insertResult = { data: { id: 'tw-1' }, error: null };
 const insert = vi.fn(() => ({
@@ -18,6 +15,7 @@ const SOURCES = [
   { id: 'pdf_tema7_macro',                       file_id: 'file_c' },
   { id: 'pdf_macro_meso_micro',                  file_id: 'file_d' },
   { id: 'pdf_periodizacion_tradicional_inversa', file_id: 'file_e' },
+  { id: 'pdf_rulebook_hyrox_doubles',            file_id: 'file_g' },
   { id: 'xlsx_master_23s',                       file_id: 'file_f' },
 ];
 
@@ -30,6 +28,7 @@ function makeChain(data: unknown) {
   chain.eq = vi.fn(self);
   chain.gte = vi.fn(self);
   chain.lte = vi.fn(self);
+  chain.order = vi.fn(self);
   chain.in = vi.fn(() => Promise.resolve({ data, error: null }));
   chain.maybeSingle = maybeSingle;
   (chain as { then?: unknown }).then = (
@@ -38,8 +37,12 @@ function makeChain(data: unknown) {
   return chain;
 }
 
-const select = vi.fn(() => makeChain(SOURCES));
-const from = vi.fn(() => ({ select, insert }));
+// Per-table data dispatch so registros/training_weeks calls don't accidentally
+// receive the training_sources fixture rows (different shape).
+const from = vi.fn((table: string) => {
+  const data = table === 'training_sources' ? SOURCES : [];
+  return { select: () => makeChain(data), insert };
+});
 
 vi.mock('@/lib/supabase/server', () => ({
   supabaseServer: () => ({ from }),
@@ -61,10 +64,20 @@ const VALID = {
   ],
 };
 
+function mockClaudeFetch(textBody: string, ok = true, status = 200) {
+  return vi.fn().mockResolvedValue({
+    ok,
+    status,
+    json: () => Promise.resolve({ content: [{ type: 'text', text: textBody }] }),
+    text: () => Promise.resolve(textBody),
+  });
+}
+
 describe('POST /api/training/generate-week', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     maybeSingle.mockResolvedValue({ data: null, error: null });
+    process.env.ANTHROPIC_API_KEY = 'sk-ant-api03-' + 'x'.repeat(95);
   });
 
   function makeReq(body: object) {
@@ -76,7 +89,7 @@ describe('POST /api/training/generate-week', () => {
   }
 
   it('returns 200 with week_id and plan on a valid Claude response', async () => {
-    create.mockResolvedValueOnce({ content: [{ type: 'text', text: JSON.stringify(VALID) }] });
+    global.fetch = mockClaudeFetch(JSON.stringify(VALID)) as unknown as typeof fetch;
     const { POST } = await import('@/app/api/training/generate-week/route');
     const res = await POST(makeReq({ athlete: 'MK', target_week: 4, extra_prompt: '' }));
     expect(res.status).toBe(200);
@@ -85,7 +98,7 @@ describe('POST /api/training/generate-week', () => {
   });
 
   it('returns 502 when Claude returns invalid JSON', async () => {
-    create.mockResolvedValueOnce({ content: [{ type: 'text', text: 'not json' }] });
+    global.fetch = mockClaudeFetch('not json') as unknown as typeof fetch;
     const { POST } = await import('@/app/api/training/generate-week/route');
     const res = await POST(makeReq({ athlete: 'MK', target_week: 4, extra_prompt: '' }));
     expect(res.status).toBe(502);

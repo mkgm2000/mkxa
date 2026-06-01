@@ -18,14 +18,62 @@ export interface BuildDynamicContextArgs {
   registros: RecentRegistro[];
 }
 
+const EXPECTED_DAYS_PER_WEEK = 4;
+
+function collapseNotes(notes: string): string {
+  return notes
+    .split(/\r?\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(' / ');
+}
+
+function formatRegistros(registros: RecentRegistro[]): string {
+  if (registros.length === 0) {
+    return '(sin registros previos — devuelve baseline literal del Excel)';
+  }
+
+  // Group by week
+  const byWeek = new Map<number, RecentRegistro[]>();
+  for (const r of registros) {
+    if (!byWeek.has(r.week)) byWeek.set(r.week, []);
+    byWeek.get(r.week)!.push(r);
+  }
+
+  const weeks = Array.from(byWeek.keys()).sort((a, b) => a - b);
+  const lines: string[] = [];
+
+  for (const w of weeks) {
+    const rows = byWeek.get(w)!.slice().sort((a, b) => a.day_key.localeCompare(b.day_key));
+    const completedCount = rows.filter((r) => r.completed === true).length;
+    const weekNote = rows.find((r) => r.week_note && r.week_note.trim().length > 0)?.week_note?.trim() ?? null;
+
+    const headerBase = `### S${w} (${completedCount}/${EXPECTED_DAYS_PER_WEEK} sesiones completadas`;
+    const header = weekNote
+      ? `${headerBase}; nota semanal: "${collapseNotes(weekNote)}")`
+      : `${headerBase})`;
+    lines.push(header);
+
+    for (const r of rows) {
+      const completedMark = r.completed === true ? '✓' : '✗';
+      const rpePart = r.completed === true && r.rpe != null ? ` RPE ${r.rpe}` : '';
+      const statusLabel = r.completed === true ? completedMark + rpePart : `${completedMark} no completada`;
+      const notesPart = r.notes && r.notes.trim().length > 0
+        ? `  "${collapseNotes(r.notes)}"`
+        : '';
+      lines.push(`  ${r.day_key} [${statusLabel}]${notesPart}`);
+    }
+  }
+
+  return lines.join('\n');
+}
+
 export function buildDynamicContext(a: BuildDynamicContextArgs): string {
   const extra = a.extra_prompt.trim() ? a.extra_prompt.trim() : '(ninguna)';
   const previous = a.previousConfirmed
     ? JSON.stringify(a.previousConfirmed)
     : '(no se generó previamente)';
-  const regs = a.registros.length > 0
-    ? JSON.stringify(a.registros)
-    : '(sin registros)';
+  const regs = formatRegistros(a.registros);
   return [
     `ATLETA: ${a.athlete}`,
     `SEMANA OBJETIVO: ${a.target_week}`,
