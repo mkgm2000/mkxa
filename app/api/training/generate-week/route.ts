@@ -8,6 +8,7 @@ import { GeneratedWeek } from '@/lib/training/generated';
 import { supabaseServer } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
+export const maxDuration = 120;
 
 const ReqSchema = z.object({
   athlete: z.enum(['MK', 'Xabi']),
