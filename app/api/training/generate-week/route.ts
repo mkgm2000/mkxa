@@ -16,6 +16,10 @@ const ReqSchema = z.object({
   extra_prompt: z.string().max(500).optional(),
 });
 
+// Deload weeks per the Excel master plan — intocables.
+const DELOAD_WEEKS = new Set([8, 12, 17]);
+const REQUIRED_SOURCE_COUNT = 6;
+
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
@@ -28,9 +32,19 @@ export async function POST(req: Request) {
   const { athlete, target_week } = parsed.data;
   const extra_prompt = parsed.data.extra_prompt ?? '';
 
+  if (DELOAD_WEEKS.has(target_week)) {
+    return jsonError(
+      `S${target_week} es semana de descarga (intocable según el Excel master). No se regenera.`,
+      400,
+    );
+  }
+
   let sources: Awaited<ReturnType<typeof readTrainingSources>>;
   try { sources = await readTrainingSources(); } catch { return jsonError('Las fuentes no están subidas; ejecuta scripts/upload-training-sources.ts', 500); }
-  if (sources.length === 0) return jsonError('Las fuentes no están subidas; ejecuta scripts/upload-training-sources.ts', 500);
+  if (sources.length !== REQUIRED_SOURCE_COUNT) {
+    console.error('[generate-week] expected', REQUIRED_SOURCE_COUNT, 'sources, got', sources.length, sources.map((s) => s.id));
+    return jsonError(`Faltan fuentes (${sources.length}/${REQUIRED_SOURCE_COUNT}); ejecuta scripts/upload-training-sources.ts`, 500);
+  }
 
   const supa = supabaseServer();
   const lo = Math.max(1, target_week - 2);

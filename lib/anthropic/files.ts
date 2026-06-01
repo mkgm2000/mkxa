@@ -18,8 +18,12 @@ export async function uploadFile(args: {
   filename: string;
   mimeType: string;
 }): Promise<UploadedFile> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('Missing ANTHROPIC_API_KEY');
+  const raw = process.env.ANTHROPIC_API_KEY;
+  if (!raw) throw new Error('Missing ANTHROPIC_API_KEY');
+  // Same defensive sanitisation as lib/anthropic/client.ts — Vercel pasted
+  // values may carry a literal "\n" suffix that breaks auth.
+  const apiKey = raw.trim().match(/^[A-Za-z0-9_-]+/)?.[0] ?? '';
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY is malformed');
 
   const fs = await import('node:fs/promises');
   const buf = await fs.readFile(args.filepath);
