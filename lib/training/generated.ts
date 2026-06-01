@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 export const GeneratedBlock = z.object({
-  name: z.string().min(1).max(300),
-  sets: z.string().min(1).max(200),
-  load: z.string().min(1).max(400),
+  name: z.string().min(1).max(500),
+  sets: z.string().min(1).max(400),
+  load: z.string().min(1).max(800),
 });
 
 export const GeneratedDay = z.object({
