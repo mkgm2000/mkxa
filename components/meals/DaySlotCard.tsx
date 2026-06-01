@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import clsx from 'clsx';
-import { Plus, Hourglass, X, Play } from 'lucide-react';
+import { Plus, Hourglass, X, Play, Flame, Utensils } from 'lucide-react';
 import type { MealDay, MealPlanRow, MealSlot } from '@/lib/meals/recipes';
 
 interface DaySlotCardProps {
@@ -88,13 +88,14 @@ export function DaySlotCard({
             aria-pressed={prepared}
             aria-label={prepared ? 'Marcar no cocinada' : 'Marcar cocinada'}
             className={clsx(
-              'inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-bold transition-colors',
+              'inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-[11px] font-bold transition-colors',
               prepared
                 ? 'bg-ink text-white'
                 : 'bg-ink/5 text-ink',
             )}
           >
-            🔥 Cocinada
+            <Flame size={12} strokeWidth={1.5} aria-hidden />
+            Cocinada
           </button>
         )}
         {onToggleEaten && prepared && (
@@ -104,13 +105,14 @@ export function DaySlotCard({
             aria-pressed={eaten}
             aria-label={eaten ? 'Marcar no comida' : 'Marcar comida'}
             className={clsx(
-              'inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-bold transition-colors',
+              'inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-[11px] font-bold transition-colors',
               eaten
                 ? 'bg-ink text-white'
                 : 'bg-ink/5 text-ink',
             )}
           >
-            🍽️ Comida
+            <Utensils size={12} strokeWidth={1.5} aria-hidden />
+            Comida
           </button>
         )}
         {onToggleEaten && !prepared && (
@@ -118,17 +120,18 @@ export function DaySlotCard({
             type="button"
             onClick={() => onToggleEaten(day, slot, true)}
             aria-label="Marcar comida (también cocina)"
-            className="inline-flex h-7 items-center gap-1 rounded-full bg-ink/5 px-2.5 text-[11px] font-bold text-ink"
+            className="inline-flex h-7 items-center gap-1.5 rounded-full bg-ink/5 px-3 text-[11px] font-bold text-ink"
           >
-            🍽️ Comida
+            <Utensils size={12} strokeWidth={1.5} aria-hidden />
+            Comida
           </button>
         )}
         <Link
           href={`/meals/cook/${recipe.id}`}
           aria-label={`Cocinar ${recipe.title}`}
-          className="inline-flex items-center gap-1 rounded-action bg-ink/10 px-2.5 py-1 text-[12px] font-bold text-ink"
+          className="inline-flex items-center gap-1.5 rounded-action bg-ink/10 px-3 py-1 text-[12px] font-bold text-ink"
         >
-          <Play size={11} strokeWidth={2} aria-hidden />
+          <Play size={12} strokeWidth={1.5} aria-hidden />
           Cocinar
         </Link>
       </div>

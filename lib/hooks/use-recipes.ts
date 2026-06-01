@@ -139,6 +139,23 @@ export async function saveRecipe(input: NewRecipeInput): Promise<{ id: string } 
   return { id: recipeId };
 }
 
+// Lazy backfill helper used by the TikTok card: when an older recipe
+// has no thumbnail_url yet, the card calls this with the URL it just
+// resolved from oEmbed. Best-effort — failure is silent (the next
+// render will retry).
+export async function setRecipeThumbnail(
+  id: string,
+  url: string,
+): Promise<{ ok: true } | { error: string }> {
+  const supa = supabaseClient();
+  const { error } = await supa
+    .from('recipes')
+    .update({ thumbnail_url: url, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function updateRecipePrimaryImage(
   recipeId: string,
   url: string | null,

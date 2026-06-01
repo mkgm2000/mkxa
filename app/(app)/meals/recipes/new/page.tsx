@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, Plus } from 'lucide-react';
+import { ChevronLeft, Plus, Play } from 'lucide-react';
 import clsx from 'clsx';
 import { RecipeReview, type ExtractedRecipe } from '@/components/meals/RecipeReview';
 import { saveRecipe } from '@/lib/hooks/use-recipes';
@@ -66,6 +66,7 @@ export default function NewRecipePage() {
         notes: null,
         created_by: athlete,
         meal_type: null,
+        thumbnail_url: null,
       },
       ingredients: payload.ingredients,
       steps: payload.steps,
@@ -79,10 +80,48 @@ export default function NewRecipePage() {
     setTtError(null);
     if (!athlete) return;
     const url = ttUrl.trim();
-    const title = ttTitle.trim();
-    if (!title) { setTtError('Pon un título.'); return; }
+    let title = ttTitle.trim();
+    // Title is optional now — if MK leaves it blank we'll try to
+    // backfill it from the oEmbed `title` field (which TikTok returns
+    // as `@username video description`). If oEmbed also fails we
+    // gate-keep with a friendly message.
     if (!url || !isTikTokUrl(url)) { setTtError('El link debe ser de tiktok.com'); return; }
     setBusy(true);
+
+    // Best-effort metadata fetch — never blocks the save. Timeouts and
+    // 4xx/5xx all collapse into "no thumbnail" with the recipe still
+    // persisted so MK doesn't lose the link.
+    let thumbnail_url: string | null = null;
+    let author_name: string | null = null;
+    try {
+      const metaRes = await fetch('/api/recipes/tiktok-meta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      if (metaRes.ok) {
+        const meta = (await metaRes.json()) as {
+          thumbnail_url?: string | null;
+          title?: string | null;
+          author_name?: string | null;
+          error?: string;
+        };
+        if (!meta.error) {
+          thumbnail_url = meta.thumbnail_url ?? null;
+          author_name = meta.author_name ?? null;
+          if (!title && meta.title) title = meta.title;
+        }
+      }
+    } catch {
+      // Swallow — proceed without metadata.
+    }
+
+    if (!title) {
+      setBusy(false);
+      setTtError('Pon un título (no pude leerlo del video).');
+      return;
+    }
+
     const res = await saveRecipe({
       recipe: {
         title,
@@ -91,10 +130,11 @@ export default function NewRecipePage() {
         image_url: null,
         prep_minutes: null,
         servings: null,
-        tags: [],
+        tags: author_name ? [`@${author_name.replace(/^@/, '')}`] : [],
         notes: null,
         created_by: athlete,
         meal_type: ttSlot,
+        thumbnail_url,
       },
       ingredients: [],
       steps: [],
@@ -145,7 +185,12 @@ export default function NewRecipePage() {
             onClick={() => setMode('tiktok')}
             className="flex items-center gap-4 rounded-card bg-ink p-4 text-left text-white shadow-card transition-transform duration-150 active:scale-[0.98]"
           >
-            <span className="text-[36px] leading-none" aria-hidden>▶</span>
+            <span
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15"
+              aria-hidden
+            >
+              <Play size={22} strokeWidth={2} fill="currentColor" className="ml-0.5" />
+            </span>
             <span className="flex flex-col">
               <span className="font-sans text-[16px] font-extrabold leading-tight">Solo TikTok</span>
               <span className="text-[12px] text-white/70">Para cuando solo necesitas el video</span>
@@ -206,7 +251,12 @@ export default function NewRecipePage() {
       {mode === 'tiktok' && (
         <section className="flex flex-col gap-5 px-5 pb-8">
           <div className="flex flex-col items-center gap-2 pt-4">
-            <span className="text-[64px] leading-none" aria-hidden>▶</span>
+            <span
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-ink text-white"
+              aria-hidden
+            >
+              <Play size={32} strokeWidth={2} fill="currentColor" className="ml-1" />
+            </span>
             <h2 className="font-sans text-[24px] font-extrabold tracking-tightest text-ink">
               Solo TikTok
             </h2>

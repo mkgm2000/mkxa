@@ -1,5 +1,6 @@
 'use client';
 
+import { ChefHat } from 'lucide-react';
 import { DaySlotCard } from './DaySlotCard';
 import {
   MEAL_DAYS, DAY_LABELS,
@@ -48,7 +49,8 @@ export function WeekPlanBoard({
             onClick={() => { void onCookAll(); }}
             className="inline-flex items-center gap-1.5 rounded-action bg-ink px-3 py-2 text-[12px] font-bold text-white active:scale-95"
           >
-            🥘 Cocinar todo (domingo)
+            <ChefHat size={14} strokeWidth={1.5} aria-hidden />
+            Cocinar todo (domingo)
           </button>
         </div>
       )}

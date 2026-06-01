@@ -15,6 +15,7 @@ import { ShoppingList } from '@/components/meals/ShoppingList';
 import { FinishShoppingSheet } from '@/components/meals/FinishShoppingSheet';
 import { PantryList } from '@/components/meals/PantryList';
 import { MealPassesSection } from '@/components/meals/MealPassesSection';
+import { TikTokRecipeSheet } from '@/components/meals/TikTokRecipeSheet';
 import { useRecipes, deleteRecipe } from '@/lib/hooks/use-recipes';
 import type { Recipe } from '@/lib/meals/recipes';
 import { useMealPlan, currentWeekStart } from '@/lib/hooks/use-meal-plan';
@@ -75,6 +76,7 @@ export default function MealsHubPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState<{ day: MealDay; slot: MealSlot } | null>(null);
   const [finishOpen, setFinishOpen] = useState(false);
+  const [tiktokSheet, setTiktokSheet] = useState<Recipe | null>(null);
 
   // Group recipes by meal_type for the Recetas tab. Empty groups skipped.
   const recipesByType = useMemo(() => {
@@ -243,6 +245,15 @@ export default function MealsHubPage() {
                             <div className="block">
                               <RecipeCard recipe={r} />
                             </div>
+                          ) : r.source_type === 'tiktok' ? (
+                            <button
+                              type="button"
+                              onClick={() => setTiktokSheet(r)}
+                              className="block w-full text-left"
+                              aria-label={`Ver vídeo de ${r.title}`}
+                            >
+                              <RecipeCard recipe={r} />
+                            </button>
                           ) : (
                             <Link href={`/meals/recipes/${r.id}`} className="block">
                               <RecipeCard recipe={r} />
@@ -335,6 +346,8 @@ export default function MealsHubPage() {
           </div>
         </div>
       )}
+
+      <TikTokRecipeSheet recipe={tiktokSheet} onClose={() => setTiktokSheet(null)} />
 
       <RecipePickerSheet
         open={pickerOpen}

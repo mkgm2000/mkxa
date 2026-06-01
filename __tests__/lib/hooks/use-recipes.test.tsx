@@ -46,7 +46,7 @@ describe('saveRecipe', () => {
       recipe: {
         title: 'T', source_url: null, source_type: 'manual', image_url: null,
         prep_minutes: 10, servings: 2, tags: [], notes: null, created_by: 'MK',
-        meal_type: null,
+        meal_type: null, thumbnail_url: null,
       },
       ingredients: [{ name: 'sal', quantity: 1, unit: 'pizca', aisle: 'despensa', position: 0 }],
       steps: [{ position: 1, body: 'Mezclar', timer_min: null }],

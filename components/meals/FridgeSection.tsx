@@ -1,6 +1,6 @@
 'use client';
 
-import { Utensils } from 'lucide-react';
+import { Utensils, Snowflake } from 'lucide-react';
 import {
   DAY_LABELS,
   type MealDay,
@@ -39,8 +39,9 @@ export function FridgeSection({ plan, onEat }: FridgeSectionProps) {
   return (
     <section className="flex flex-col gap-3 px-4 pt-2">
       <header className="flex items-baseline justify-between px-1">
-        <h2 className="font-sans text-[20px] font-extrabold leading-none text-ink">
-          🧊 En la nevera
+        <h2 className="flex items-center gap-1.5 font-sans text-[20px] font-extrabold leading-none text-ink">
+          <Snowflake size={16} strokeWidth={1.5} aria-hidden />
+          En la nevera
         </h2>
         <span className="text-[12px] font-bold tabular-nums text-ink-muted">
           {inFridge.length}
@@ -49,7 +50,6 @@ export function FridgeSection({ plan, onEat }: FridgeSectionProps) {
 
       {inFridge.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-card border-2 border-dashed border-ink-soft bg-white/40 px-5 py-8 text-center">
-          <span className="text-[32px]" aria-hidden>🥶</span>
           <p className="text-[13px] font-medium text-ink-muted">
             Nevera vacía — todo comido o nada cocinado aún
           </p>
@@ -76,8 +76,8 @@ export function FridgeSection({ plan, onEat }: FridgeSectionProps) {
                   onClick={() => onEat(row.day, row.slot)}
                   className="inline-flex items-center gap-1.5 rounded-action bg-ink px-3 py-2 text-[12px] font-bold text-white active:scale-95"
                 >
-                  <Utensils size={12} strokeWidth={2} aria-hidden />
-                  🍽️ Comerlo ahora
+                  <Utensils size={14} strokeWidth={1.5} aria-hidden />
+                  Comer ahora
                 </button>
               </li>
             );

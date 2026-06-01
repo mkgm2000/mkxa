@@ -1,19 +1,106 @@
-import { Hourglass } from 'lucide-react';
+'use client';
+
+import { useEffect } from 'react';
+import { Hourglass, Play } from 'lucide-react';
 import {
   tagColor,
   recipeFallbackEmoji,
   recipeFallbackGradient,
+  mealSlotLabel,
   type Recipe,
 } from '@/lib/meals/recipes';
+import { setRecipeThumbnail } from '@/lib/hooks/use-recipes';
+
+// Module-local guard so we only hit /api/recipes/tiktok-meta once per
+// recipe per page-load. Without this, every render of the Recetas grid
+// would re-fire the fetch for the same id — bad UX and a free way to
+// get rate-limited by TikTok.
+const tiktokMetaLookupAttempted = new Set<string>();
+
+async function backfillTikTokThumbnail(recipe: Recipe): Promise<void> {
+  if (!recipe.source_url) return;
+  if (tiktokMetaLookupAttempted.has(recipe.id)) return;
+  tiktokMetaLookupAttempted.add(recipe.id);
+  try {
+    const res = await fetch('/api/recipes/tiktok-meta', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: recipe.source_url }),
+    });
+    if (!res.ok) return;
+    const data = (await res.json()) as { thumbnail_url?: string | null; error?: string };
+    if (data.error || !data.thumbnail_url) return;
+    await setRecipeThumbnail(recipe.id, data.thumbnail_url);
+    // Parent (useRecipes) refetches on next focus; no manual refresh here.
+  } catch {
+    // Silent — the next mount can retry after a page navigation.
+  }
+}
 
 export function RecipeCard({ recipe }: { recipe: Recipe }) {
+  const isTikTok = recipe.source_type === 'tiktok';
+  const hasThumb = Boolean(recipe.thumbnail_url);
+
+  // Lazy backfill: only for TikTok recipes that don't yet have a
+  // thumbnail and do have a source_url. Fires once per recipe id per
+  // page lifetime (module-level Set), best-effort.
+  useEffect(() => {
+    if (!isTikTok || hasThumb) return;
+    void backfillTikTokThumbnail(recipe);
+  }, [isTikTok, hasThumb, recipe]);
+
+  if (isTikTok && hasThumb && recipe.thumbnail_url) {
+    return <TikTokPosterCard recipe={recipe} />;
+  }
+
+  return <DefaultCard recipe={recipe} />;
+}
+
+function TikTokPosterCard({ recipe }: { recipe: Recipe }) {
+  return (
+    <article className="group relative overflow-hidden rounded-card bg-ink shadow-card">
+      <div className="relative aspect-[9/16] w-full">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={recipe.thumbnail_url ?? ''}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          className="h-full w-full object-cover"
+        />
+        {/* Center play indicator — mimics a TikTok feed item that hasn't started playing yet. */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <span
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-white/25 backdrop-blur-sm"
+            style={{ filter: 'drop-shadow(0 2px 6px rgb(0 0 0 / 0.35))' }}
+            aria-hidden
+          >
+            <Play size={28} strokeWidth={2} fill="currentColor" className="ml-1 text-white" />
+          </span>
+        </div>
+        {/* Meal-type tag, top-right. */}
+        {recipe.meal_type && (
+          <span className="absolute right-2 top-2 rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
+            {mealSlotLabel(recipe.meal_type)}
+          </span>
+        )}
+        {/* Bottom gradient + title. */}
+        <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
+          <h3 className="line-clamp-2 font-sans text-[14px] font-bold leading-tight text-white">
+            {recipe.title}
+          </h3>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function DefaultCard({ recipe }: { recipe: Recipe }) {
   const emoji = recipeFallbackEmoji(recipe.title);
   const gradient = recipeFallbackGradient(recipe.title);
   return (
     <article className="overflow-hidden rounded-card bg-white shadow-card">
-      <div
-        className={`relative aspect-[4/3] w-full bg-gradient-to-br ${gradient}`}
-      >
+      <div className={`relative aspect-[4/3] w-full bg-gradient-to-br ${gradient}`}>
         {recipe.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

@@ -80,6 +80,11 @@ export interface Recipe {
   notes: string | null;
   created_by: 'MK' | 'Xabi' | null;
   meal_type: MealSlot | null;
+  // Poster image for the recipe — sourced from TikTok's oEmbed when
+  // available, else null. Distinct from `image_url` which is the
+  // user-uploaded primary photo. Renders as the 9:16 background in the
+  // TikTok-style recipe card.
+  thumbnail_url: string | null;
   created_at: string;
   updated_at: string;
 }
