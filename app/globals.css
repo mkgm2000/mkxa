@@ -49,56 +49,82 @@ body { color: #1b1d1f; }
 
 /* ---------- meal pass ---------- */
 .mp {
-  position: relative; width: 460px; max-width: 92vw; height: 188px;
+  position: relative; width: 460px; max-width: 92vw; min-height: 188px;
   display: flex; user-select: none; touch-action: pan-y;
   transition: filter .4s;
 }
-.mp-body, .mp-stub { position: relative; height: 100%; filter: drop-shadow(0 16px 28px rgba(120,90,20,0.22)); }
+.mp-body, .mp-stub { position: relative; filter: drop-shadow(0 16px 28px rgba(120,90,20,0.22)); }
 .mp-body {
-  flex: 1; border-radius: 30px 8px 8px 30px; padding: 22px 22px 20px;
-  display: flex; align-items: center; gap: 18px; overflow: hidden;
+  flex: 1; border-radius: 30px 8px 8px 30px; padding: 18px 18px 16px;
+  display: flex; align-items: center; gap: 14px; overflow: hidden;
   background: #ffffff; color: #1c1b18;
 }
 .mp-body-main { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .mp-stub {
-  width: 130px; flex: 0 0 130px; border-radius: 8px 30px 30px 8px; padding: 16px 12px;
+  width: 110px; flex: 0 0 110px; border-radius: 8px 30px 30px 8px; padding: 14px 10px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  text-align: center; gap: 7px; touch-action: none; color: #fff;
+  text-align: center; gap: 6px; touch-action: none; color: #fff;
 }
 .mp-stub:active { cursor: grabbing; }
 
 /* blob face */
 .mp-blob {
-  position: relative; width: 86px; height: 86px; border-radius: 50%;
-  flex: 0 0 86px;
+  position: relative; width: 72px; height: 72px; border-radius: 50%;
+  flex: 0 0 72px;
   box-shadow: inset -6px -8px 16px rgba(0,0,0,0.16), inset 5px 6px 12px rgba(255,255,255,0.55), 0 8px 16px -6px rgba(0,0,0,0.25);
   animation: blobBob 3.4s ease-in-out infinite;
 }
 @keyframes blobBob { 0%,100% { transform: translateY(0) scale(1,1); } 50% { transform: translateY(-4px) scale(1.015,0.99); } }
 .mp-blob.is-used { animation: none; filter: saturate(0.8); }
-.mp-blob-eyes { position: absolute; top: 34px; left: 0; right: 0; display: flex; justify-content: center; gap: 18px; }
-.mp-blob-eyes i { width: 7px; height: 9px; border-radius: 50%; background: rgba(20,18,12,0.82); display: block; animation: blink 4.2s infinite; }
+.mp-blob-eyes { position: absolute; top: 28px; left: 0; right: 0; display: flex; justify-content: center; gap: 14px; }
+.mp-blob-eyes i { width: 6px; height: 8px; border-radius: 50%; background: rgba(20,18,12,0.82); display: block; animation: blink 4.2s infinite; }
 @keyframes blink { 0%,94%,100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
-.mp-blob-mouth { position: absolute; left: 50%; top: 50px; transform: translateX(-50%); width: 26px; height: 13px; }
-.mp-blob-mouth.smile { border: 3px solid; border-top: none; border-radius: 0 0 26px 26px; }
-.mp-blob-mouth.grin  { border: 3px solid; border-top: none; border-radius: 0 0 28px 28px; height: 16px; width: 30px; }
-.mp-blob-mouth.flat  { border-bottom: 3px solid; width: 18px; height: 0; border-radius: 0; top: 56px; }
-.mp-blob-cheek { position: absolute; top: 47px; width: 10px; height: 7px; border-radius: 50%; opacity: 0.28; }
-.mp-blob-cheek.l { left: 14px; } .mp-blob-cheek.r { right: 14px; }
+.mp-blob-mouth { position: absolute; left: 50%; top: 42px; transform: translateX(-50%); width: 22px; height: 11px; }
+.mp-blob-mouth.smile { border: 3px solid; border-top: none; border-radius: 0 0 22px 22px; }
+.mp-blob-mouth.grin  { border: 3px solid; border-top: none; border-radius: 0 0 24px 24px; height: 14px; width: 26px; }
+.mp-blob-mouth.flat  { border-bottom: 3px solid; width: 16px; height: 0; border-radius: 0; top: 48px; }
+.mp-blob-cheek { position: absolute; top: 40px; width: 9px; height: 6px; border-radius: 50%; opacity: 0.28; }
+.mp-blob-cheek.l { left: 10px; } .mp-blob-cheek.r { right: 10px; }
 
-.mp-kicker { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #a99a70; font-weight: 700; }
+.mp-kicker { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #a99a70; font-weight: 700; padding-right: 84px; }
 .mp-kicker b { font-weight: 900; }
 .mp-kicker-date { color: #b3a273; font-weight: 700; }
-.mp-title { font-weight: 900; font-size: 24px; line-height: 0.98; letter-spacing: -0.02em; margin: 5px 0 7px; white-space: pre-line; }
-.mp-sub { font-size: 13.5px; color: #968a66; font-weight: 500; }
+.mp-title { font-weight: 900; font-size: 17px; line-height: 1.08; letter-spacing: -0.01em; margin: 4px 0 4px; white-space: pre-line; }
+.mp-sub { font-size: 12.5px; color: #968a66; font-weight: 500; line-height: 1.35; }
 
-.mp-stub-top { font-weight: 800; font-size: 19px; letter-spacing: 0.06em; }
+@media (min-width: 480px) {
+  .mp { min-height: 200px; }
+  .mp-body { padding: 22px 22px 20px; gap: 18px; }
+  .mp-stub { width: 130px; flex: 0 0 130px; padding: 16px 12px; gap: 7px; }
+  .mp-blob { width: 86px; height: 86px; flex: 0 0 86px; }
+  .mp-blob-eyes { top: 34px; gap: 18px; }
+  .mp-blob-eyes i { width: 7px; height: 9px; }
+  .mp-blob-mouth { top: 50px; width: 26px; height: 13px; }
+  .mp-blob-mouth.smile { border-radius: 0 0 26px 26px; }
+  .mp-blob-mouth.grin { height: 16px; width: 30px; border-radius: 0 0 28px 28px; }
+  .mp-blob-mouth.flat { width: 18px; top: 56px; }
+  .mp-blob-cheek { top: 47px; width: 10px; height: 7px; }
+  .mp-blob-cheek.l { left: 14px; } .mp-blob-cheek.r { right: 14px; }
+  .mp-kicker { font-size: 12px; letter-spacing: 0.12em; padding-right: 96px; }
+  .mp-title { font-size: 22px; line-height: 1.02; margin: 6px 0 6px; }
+  .mp-sub { font-size: 13.5px; }
+}
+
+.mp-stub-top { font-weight: 800; font-size: 16px; letter-spacing: 0.04em; }
 .mp-stub-top span { margin: 0 1px; opacity: 0.85; }
-.mp-stub-cta { font-weight: 900; font-size: 17px; letter-spacing: 0.04em; text-transform: uppercase; }
-.mp-grip { display: flex; flex-direction: column; gap: 4px; margin-top: 2px; opacity: 0.8; }
-.mp-grip i { width: 24px; height: 2.5px; border-radius: 2px; background: currentColor; display: block; }
-.mp-stub-check { font-size: 30px; line-height: 1; font-weight: 900; }
-.mp-stub-used { font-weight: 900; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; }
+.mp-stub-cta { font-weight: 900; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; }
+.mp-grip { display: flex; flex-direction: column; gap: 3px; margin-top: 2px; opacity: 0.8; }
+.mp-grip i { width: 20px; height: 2px; border-radius: 2px; background: currentColor; display: block; }
+.mp-stub-check { font-size: 26px; line-height: 1; font-weight: 900; }
+.mp-stub-used { font-weight: 900; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+@media (min-width: 480px) {
+  .mp-stub-top { font-size: 19px; letter-spacing: 0.06em; }
+  .mp-stub-cta { font-size: 17px; }
+  .mp-grip i { width: 24px; height: 2.5px; }
+  .mp-stub-check { font-size: 30px; }
+  .mp-stub-used { font-size: 14px; letter-spacing: 0.12em; }
+}
 
 /* log form (redeemed) */
 .mp-log { display: flex; flex-direction: column; gap: 9px; margin-top: 2px; }
@@ -119,27 +145,36 @@ body { color: #1b1d1f; }
 }
 .mp-place::placeholder { color: #c2b389; font-weight: 600; }
 
-.mp-perf { position: absolute; top: 12px; bottom: 12px; right: 130px; border-left: 2.5px dashed rgba(180,160,110,0.5); transition: opacity .2s; }
+.mp-perf { position: absolute; top: 12px; bottom: 12px; right: 110px; border-left: 2.5px dashed rgba(180,160,110,0.5); transition: opacity .2s; }
 .is-used .mp-perf { opacity: 0; }
-.mp-notch { position: absolute; width: 24px; height: 24px; border-radius: 50%; right: 118px; z-index: 3; transition: opacity .2s; }
-.mp-notch--t { top: -12px; } .mp-notch--b { bottom: -12px; }
+.mp-notch { position: absolute; width: 22px; height: 22px; border-radius: 50%; right: 99px; z-index: 3; transition: opacity .2s; }
+.mp-notch--t { top: -11px; } .mp-notch--b { bottom: -11px; }
 .is-used .mp-notch { opacity: 0; }
 
-.mp-hint { position: absolute; right: 146px; bottom: 16px;
-  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #b3a273; font-weight: 700;
+.mp-hint { position: absolute; right: 122px; bottom: 14px;
+  font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #b3a273; font-weight: 700;
   pointer-events: none; transition: opacity .2s; animation: nudge 1.6s ease-in-out infinite; }
 @keyframes nudge { 0%,100% { transform: translateX(0);} 50%{ transform: translateX(4px);} }
 
 .mp-stamp {
-  position: absolute; top: 16px; right: 18px;
-  font-weight: 900; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--accent); border: 2.5px solid var(--accent); border-radius: 999px; padding: 4px 11px;
+  position: absolute; top: 10px; right: 14px;
+  font-weight: 900; font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--accent); border: 2px solid var(--accent); border-radius: 999px; padding: 3px 8px;
   transform: rotate(-8deg) scale(0.6); opacity: 0;
   transition: opacity .25s, transform .35s cubic-bezier(.2,1.4,.3,1);
+  z-index: 4;
 }
 .mp-stamp.show { opacity: 0.95; transform: rotate(-8deg) scale(1); }
 
-.mp-confetti { position: absolute; right: 130px; top: 50%; pointer-events: none; }
+@media (min-width: 480px) {
+  .mp-perf { right: 130px; }
+  .mp-notch { width: 24px; height: 24px; right: 118px; }
+  .mp-notch--t { top: -12px; } .mp-notch--b { bottom: -12px; }
+  .mp-hint { right: 146px; bottom: 16px; font-size: 10px; letter-spacing: 0.16em; }
+  .mp-stamp { top: 14px; right: 18px; font-size: 12px; letter-spacing: 0.1em; padding: 4px 11px; border-width: 2.5px; }
+}
+
+.mp-confetti { position: absolute; right: 110px; top: 50%; pointer-events: none; }
 .mp-confetti span { position: absolute; width: 8px; height: 8px; border-radius: 2px;
   transform: rotate(var(--a)) translateX(0); animation: burst .65s ease-out forwards; }
 @keyframes burst { to { transform: rotate(var(--a)) translateX(var(--d)) scale(0.3); opacity: 0; } }
