@@ -178,12 +178,20 @@ export default function TrainingPage() {
         </label>
       </section>
 
-      <section className="px-5">
+      <section className="flex flex-wrap gap-2 px-5">
         <Link
           href="/training/progress"
           className="inline-flex items-center gap-1.5 rounded-action border border-ink-soft bg-white px-4 py-2.5 text-[13px] font-semibold text-ink shadow-action transition-transform duration-150 active:scale-95"
         >
           Ver progresión
+          <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
+        </Link>
+        <Link
+          href="/training/hyrox"
+          className="inline-flex items-center gap-1.5 rounded-action px-4 py-2.5 text-[13px] font-bold text-ink shadow-action transition-transform duration-150 active:scale-95"
+          style={{ background: '#FFE600' }}
+        >
+          Tabla HYROX
           <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
         </Link>
       </section>
