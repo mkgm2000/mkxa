@@ -14,12 +14,11 @@ export function useRecentRegistros(athlete: Athlete | null, targetWeek: number |
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const lo = Math.max(1, targetWeek - 2);
       const { data, error } = await supabaseClient()
         .from('registros')
         .select('week,day_key,completed,rpe,notes,week_note')
         .eq('athlete', athlete)
-        .gte('week', lo)
+        .gte('week', 1)
         .lte('week', targetWeek - 1)
         .order('week', { ascending: true });
       if (cancelled) return;

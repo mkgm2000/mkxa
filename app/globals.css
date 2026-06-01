@@ -2,8 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body { height: 100%; }
-body { color: #1b1d1f; }
+/* ---------- Native-feel overscroll ----------
+   iOS Safari rubber-bands past the top/bottom of the document and reveals
+   whatever color sits on `html`/`body`. Without these rules the chrome paints
+   white edges that immediately give away "this is a webpage". Strategy:
+     1. `overscroll-behavior: none` disables the rubber-band on both axes
+        (prevents scroll-chaining past the actual content — pure CSS, no JS).
+     2. `html`/`body` carry the same mood gradient as the in-flow
+        `MoodGradientBg` via the `--mood-bg-from` / `--mood-bg-to` CSS vars
+        the component sets at runtime. When the vars are unset (SSR / first
+        paint / no mood yet) we fall back to `--mood-bg-fallback`, a warm
+        cream that matches the default mood midtone — so the very first frame
+        already looks native instead of flashing white.
+   The `background-attachment: fixed` on `html` makes the gradient stay put
+   when the user scrolls, so overscroll reveals the exact same color the
+   gradient is painting at that edge (top color at top, bottom color at
+   bottom) instead of a separate flat fill. */
+html, body {
+  height: 100%;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+  background-color: var(--mood-bg-fallback, #f3e9d8);
+}
+html {
+  background-image: linear-gradient(
+    170deg,
+    var(--mood-bg-from, #f3e9d8) 0%,
+    var(--mood-bg-to,   #d6cfc1) 100%
+  );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+/* Body stays transparent so the html gradient bleeds through (and so the
+   in-flow MoodGradientBg div on top still paints normally). */
+body { color: #1b1d1f; background: transparent; }
 
 /* iOS Safari kept zooming when focusing inputs <16px and never auto-reset.
    maximum-scale=1 in <viewport> handles it, but we also keep this rule as
