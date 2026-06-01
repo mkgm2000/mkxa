@@ -8,6 +8,7 @@ export const TRAINING_SOURCE_SLUGS = [
   'pdf_periodizacion_tradicional_inversa',
   'pdf_rulebook_hyrox_doubles',
   'xlsx_master_23s',
+  'xlsx_bateria_ejercicios',
 ] as const;
 
 export type TrainingSourceSlug = (typeof TRAINING_SOURCE_SLUGS)[number];

@@ -24,6 +24,16 @@ export const GeneratedWeek = z.object({
   days: z.array(GeneratedDay).min(3).max(6),
 });
 
+// Shared/common dual-athlete generation: one Claude call returns BOTH plans.
+export const GeneratedWeekPair = z.object({
+  week: z.number().int().min(1).max(23),
+  weekly_note: z.string().min(1).max(4000),
+  mk: GeneratedWeek,
+  xabi: GeneratedWeek,
+});
+
+export type GeneratedWeekPair = z.infer<typeof GeneratedWeekPair>;
+
 export type GeneratedBlock = z.infer<typeof GeneratedBlock>;
 export type GeneratedDay   = z.infer<typeof GeneratedDay>;
 export type GeneratedWeek  = z.infer<typeof GeneratedWeek>;

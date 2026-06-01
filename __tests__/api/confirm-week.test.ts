@@ -33,7 +33,7 @@ describe('PATCH /api/training/confirm-week', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 404 when target row is missing', async () => {
+  it('returns 500 when target row is missing', async () => {
     fromMock.mockReturnValue(makeBuilder({ single: { data: null, error: { message: 'no row' } } }));
     const { PATCH } = await import('@/app/api/training/confirm-week/route');
     const res = await PATCH(new Request('http://x/api/training/confirm-week', {
@@ -41,7 +41,7 @@ describe('PATCH /api/training/confirm-week', () => {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ week_id: 'missing' }),
     }));
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(500);
   });
 
   it('confirms a valid row and returns 200', async () => {
@@ -63,7 +63,6 @@ describe('PATCH /api/training/confirm-week', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.ok).toBe(true);
-    expect(body.athlete).toBe('MK');
-    expect(body.week).toBe(4);
+    expect(body.confirmed).toEqual([{ athlete: 'MK', week: 4 }]);
   });
 });

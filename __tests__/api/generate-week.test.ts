@@ -17,6 +17,7 @@ const SOURCES = [
   { id: 'pdf_periodizacion_tradicional_inversa', file_id: 'file_e' },
   { id: 'pdf_rulebook_hyrox_doubles',            file_id: 'file_g' },
   { id: 'xlsx_master_23s',                       file_id: 'file_f' },
+  { id: 'xlsx_bateria_ejercicios',               file_id: 'file_h' },
 ];
 
 // Chainable Supabase builder mock supporting eq/gte/lte/in chains,
@@ -48,21 +49,24 @@ vi.mock('@/lib/supabase/server', () => ({
   supabaseServer: () => ({ from }),
 }));
 
-const VALID = {
-  athlete: 'MK', week: 4,
-  weekly_note: 'Base aeróbica. Excel S4.',
-  days: [
-    { key: 'D1', title: 'Fuerza', rpe: 'RPE 7-8',
-      blocks: [{ name: 'Sentadilla', sets: '4x5', load: '32.5kg' }],
-      rationale: 'Excel S4 baseline' },
-    { key: 'D2', title: 'Z2',     rpe: 'RPE 4-5',
-      blocks: [{ name: 'Carrera Z2', sets: "30'", load: '6:20/km' }],
-      rationale: 'macro_meso_micro.pdf §carga progresiva' },
-    { key: 'D3', title: 'HYROX',  rpe: 'RPE 5-6',
-      blocks: [{ name: 'Ski Erg', sets: '3x250m', load: 'Técnica' }],
-      rationale: 'Sin cambios respecto baseline Excel S4' },
-  ],
-};
+function makePlan(athlete: 'MK' | 'Xabi') {
+  return {
+    athlete, week: 4,
+    weekly_note: `Base aeróbica. ${athlete} S4.`,
+    days: [
+      { key: 'D1', title: 'Fuerza', rpe: 'RPE 7-8',
+        blocks: [{ name: 'Sentadilla', sets: '4x5', load: athlete === 'MK' ? '32.5kg' : '36kg' }],
+        rationale: 'Excel S4 baseline' },
+      { key: 'D2', title: 'Z2',     rpe: 'RPE 4-5',
+        blocks: [{ name: 'Carrera Z2', sets: "30'", load: '6:20/km' }],
+        rationale: 'macro_meso_micro.pdf §carga progresiva' },
+      { key: 'D3', title: 'HYROX',  rpe: 'RPE 5-6',
+        blocks: [{ name: 'Ski Erg', sets: '3x250m', load: 'Técnica' }],
+        rationale: 'Sin cambios respecto baseline Excel S4' },
+    ],
+  };
+}
+const VALID_PAIR = { week: 4, weekly_note: 'Pair S4.', mk: makePlan('MK'), xabi: makePlan('Xabi') };
 
 function mockClaudeFetch(textBody: string, ok = true, status = 200) {
   return vi.fn().mockResolvedValue({
@@ -88,25 +92,32 @@ describe('POST /api/training/generate-week', () => {
     });
   }
 
-  it('returns 200 with week_id and plan on a valid Claude response', async () => {
-    global.fetch = mockClaudeFetch(JSON.stringify(VALID)) as unknown as typeof fetch;
+  it('returns 200 with both MK + Xabi plans on a valid Claude pair response', async () => {
+    // Each insertDraft path needs the insert mock to also return an id.
+    insert.mockImplementation(() => ({
+      select: () => ({ single: () => Promise.resolve({ data: { id: 'tw-x' }, error: null }) }),
+    }));
+    global.fetch = mockClaudeFetch(JSON.stringify(VALID_PAIR)) as unknown as typeof fetch;
     const { POST } = await import('@/app/api/training/generate-week/route');
-    const res = await POST(makeReq({ athlete: 'MK', target_week: 4, extra_prompt: '' }));
+    const res = await POST(makeReq({ target_week: 4, extra_prompt: '' }));
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.plan.days).toHaveLength(3);
+    expect(body.mk.plan.days).toHaveLength(3);
+    expect(body.xabi.plan.days).toHaveLength(3);
+    expect(body.mk.week_id).toBeTruthy();
+    expect(body.xabi.week_id).toBeTruthy();
   });
 
   it('returns 502 when Claude returns invalid JSON', async () => {
     global.fetch = mockClaudeFetch('not json') as unknown as typeof fetch;
     const { POST } = await import('@/app/api/training/generate-week/route');
-    const res = await POST(makeReq({ athlete: 'MK', target_week: 4, extra_prompt: '' }));
+    const res = await POST(makeReq({ target_week: 4, extra_prompt: '' }));
     expect(res.status).toBe(502);
   });
 
   it('returns 400 when target_week is out of range', async () => {
     const { POST } = await import('@/app/api/training/generate-week/route');
-    const res = await POST(makeReq({ athlete: 'MK', target_week: 24, extra_prompt: '' }));
+    const res = await POST(makeReq({ target_week: 24, extra_prompt: '' }));
     expect(res.status).toBe(400);
   });
 });

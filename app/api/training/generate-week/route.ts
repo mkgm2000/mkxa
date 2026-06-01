@@ -4,21 +4,23 @@ import { ANTHROPIC_MODEL } from '@/lib/anthropic/client';
 import { TRAINING_SYSTEM_PROMPT } from '@/lib/anthropic/training-prompts';
 import { readTrainingSources } from '@/lib/training/sources';
 import { buildDynamicContext, type RecentRegistro } from '@/lib/training/dynamic-context';
-import { GeneratedWeek } from '@/lib/training/generated';
+import { GeneratedWeekPair, GeneratedWeek } from '@/lib/training/generated';
 import { supabaseServer } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
 
 const ReqSchema = z.object({
-  athlete: z.enum(['MK', 'Xabi']),
+  // Backwards compat: athlete is optional. If provided, we still generate
+  // the COMMON pair plan but route the success response toward that athlete
+  // (the legacy single-athlete flow). New callers pass `target_week` only.
+  athlete: z.enum(['MK', 'Xabi']).optional(),
   target_week: z.number().int().min(1).max(23),
   extra_prompt: z.string().max(500).optional(),
 });
 
-// Deload weeks per the Excel master plan — intocables.
 const DELOAD_WEEKS = new Set([8, 12, 17]);
-const REQUIRED_SOURCE_COUNT = 7;
+const REQUIRED_SOURCE_COUNT = 8;
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -29,7 +31,7 @@ export async function POST(req: Request) {
   try { body = await req.json(); } catch { return jsonError('Invalid JSON body', 400); }
   const parsed = ReqSchema.safeParse(body);
   if (!parsed.success) return jsonError('Invalid payload', 400);
-  const { athlete, target_week } = parsed.data;
+  const { target_week } = parsed.data;
   const extra_prompt = parsed.data.extra_prompt ?? '';
 
   if (DELOAD_WEEKS.has(target_week)) {
@@ -46,40 +48,77 @@ export async function POST(req: Request) {
     return jsonError(`Faltan fuentes (${sources.length}/${REQUIRED_SOURCE_COUNT}); ejecuta scripts/upload-training-sources.ts`, 500);
   }
 
-  // Rate limit (org tier 30k tok/min) restringe qué adjuntamos: el Excel
-  // master plan (text/plain, ~14k tok) Y el rulebook HYROX Doubles (~8-10k
-  // tok). Los 5 PDFs académicos UFV se referencian por nombre en el system
-  // prompt; Claude tiene conocimiento sólido de S.G.A., supercompensación,
-  // interferencia AMPK/mTOR, periodización concurrent/tradicional/inversa.
+  // Attached on every call: Master Plan v8 (~22k tok) + Bateria Ejercicios (~3k).
+  // PDFs UFV referenciados por nombre (sin attach) y Rulebook referenciado en el
+  // system prompt (Claude tiene conocimiento + el system list las 8 estaciones
+  // y cargas). Esto deja ~25-27k tokens totales, dentro del rate-limit 30k/min.
   const xlsxSource = sources.find((s) => s.id === 'xlsx_master_23s');
-  const rulebookSource = sources.find((s) => s.id === 'pdf_rulebook_hyrox_doubles');
+  const batSource = sources.find((s) => s.id === 'xlsx_bateria_ejercicios');
   if (!xlsxSource) return jsonError('Falta xlsx_master_23s en training_sources', 500);
-  if (!rulebookSource) return jsonError('Falta pdf_rulebook_hyrox_doubles en training_sources', 500);
-  const docSources = [xlsxSource, rulebookSource];
+  if (!batSource) return jsonError('Falta xlsx_bateria_ejercicios en training_sources', 500);
+  const docSources = [xlsxSource, batSource];
 
   const supa = supabaseServer();
-  // Trae el histórico COMPLETO previo (semanas 1 a target_week - 1) para que
-  // Claude vea la evolución entera del atleta, no solo las últimas 2 semanas.
-  const { data: regRows } = await supa.from('registros')
+
+  // SHARED generation: fetch BOTH athletes' registros (S1 → target-1).
+  // The prompt processes both — the output covers both plans.
+  const { data: mkRows } = await supa.from('registros')
     .select('week,day_key,completed,rpe,notes,week_note')
-    .eq('athlete', athlete)
+    .eq('athlete', 'MK')
     .gte('week', 1)
     .lte('week', target_week - 1)
     .order('week', { ascending: true })
     .order('day_key', { ascending: true });
-  const registros = (regRows ?? []) as RecentRegistro[];
+  const { data: xabiRows } = await supa.from('registros')
+    .select('week,day_key,completed,rpe,notes,week_note')
+    .eq('athlete', 'Xabi')
+    .gte('week', 1)
+    .lte('week', target_week - 1)
+    .order('week', { ascending: true })
+    .order('day_key', { ascending: true });
+  const mkRegistros = (mkRows ?? []) as RecentRegistro[];
+  const xabiRegistros = (xabiRows ?? []) as RecentRegistro[];
 
-  const { data: prevRow } = await supa.from('training_weeks')
+  const { data: mkPrev } = await supa.from('training_weeks')
     .select('plan_jsonb')
-    .eq('athlete', athlete).eq('week', target_week - 1).eq('status', 'confirmed')
+    .eq('athlete', 'MK').eq('week', target_week - 1).eq('status', 'confirmed')
     .maybeSingle();
-  const previousConfirmed = prevRow && (prevRow as { plan_jsonb: unknown }).plan_jsonb
-    ? ((prevRow as { plan_jsonb: import('@/lib/training/generated').GeneratedWeek }).plan_jsonb)
+  const { data: xabiPrev } = await supa.from('training_weeks')
+    .select('plan_jsonb')
+    .eq('athlete', 'Xabi').eq('week', target_week - 1).eq('status', 'confirmed')
+    .maybeSingle();
+  const previousMk = mkPrev && (mkPrev as { plan_jsonb: unknown }).plan_jsonb
+    ? ((mkPrev as { plan_jsonb: import('@/lib/training/generated').GeneratedWeek }).plan_jsonb)
+    : null;
+  const previousXabi = xabiPrev && (xabiPrev as { plan_jsonb: unknown }).plan_jsonb
+    ? ((xabiPrev as { plan_jsonb: import('@/lib/training/generated').GeneratedWeek }).plan_jsonb)
     : null;
 
-  const dynamicText = buildDynamicContext({
-    athlete, target_week, extra_prompt, previousConfirmed, registros,
-  });
+  // Build combined dynamic context — registros for both athletes, side by side.
+  const dynamicText = [
+    `SEMANA OBJETIVO: ${target_week}`,
+    `NOTAS EXTRA: "${extra_prompt.trim() || '(ninguna)'}"`,
+    '',
+    `===== MK =====`,
+    buildDynamicContext({
+      athlete: 'MK',
+      target_week,
+      extra_prompt: '',
+      previousConfirmed: previousMk,
+      registros: mkRegistros,
+    }),
+    '',
+    `===== Xabi =====`,
+    buildDynamicContext({
+      athlete: 'Xabi',
+      target_week,
+      extra_prompt: '',
+      previousConfirmed: previousXabi,
+      registros: xabiRegistros,
+    }),
+    '',
+    `Genera la SEMANA ${target_week} COMÚN para AMBOS atletas. Output JSON con campos { week, weekly_note, mk: GeneratedWeek, xabi: GeneratedWeek }. Las sesiones (day_key) son COMUNES; las cargas y volúmenes pueden diferir según RM y registros de cada atleta.`,
+  ].join('\n');
 
   type DocBlock = { type: 'document'; source: { type: 'file'; file_id: string }; cache_control?: { type: 'ephemeral' } };
   type TextBlock = { type: 'text'; text: string };
@@ -90,8 +129,6 @@ export async function POST(req: Request) {
   }));
   const content: Array<DocBlock | TextBlock> = [...docBlocks, { type: 'text', text: dynamicText }];
 
-  // SDK v0.27 doesn't support file_id document sources — call REST directly
-  // with the files-api beta header.
   const rawKey = process.env.ANTHROPIC_API_KEY ?? '';
   const apiKey = rawKey.trim().match(/^[A-Za-z0-9_-]+/)?.[0] ?? '';
   if (!apiKey) return jsonError('ANTHROPIC_API_KEY misconfigured', 500);
@@ -108,7 +145,7 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         model: ANTHROPIC_MODEL,
-        max_tokens: 4096,
+        max_tokens: 8192,
         system: [{
           type: 'text',
           text: TRAINING_SYSTEM_PROMPT,
@@ -154,35 +191,54 @@ export async function POST(req: Request) {
       { status: 502 },
     );
   }
-  const safe = GeneratedWeek.safeParse(parsedJson);
+  const safe = GeneratedWeekPair.safeParse(parsedJson);
   if (!safe.success) {
     console.error('[generate-week] schema mismatch', JSON.stringify(safe.error.issues));
     return NextResponse.json(
       {
         error: 'Modelo devolvió formato inesperado',
         issues: safe.error.issues.slice(0, 8),
-        sample: JSON.stringify(parsedJson).slice(0, 400),
+        sample: JSON.stringify(parsedJson).slice(0, 600),
       },
       { status: 502 },
     );
   }
-  const plan = safe.data;
+  const pair = safe.data;
 
-  const { data: versions } = await supa.from('training_weeks')
-    .select('version').eq('athlete', athlete).eq('week', target_week);
-  const nextVersion = ((versions as { version: number }[] | null) ?? [])
-    .reduce((m, r) => Math.max(m, r.version), 0) + 1;
+  // Insert TWO drafts (one per athlete) for this week_pair.
+  const sourceSummary = {
+    mk_registros: mkRegistros,
+    xabi_registros: xabiRegistros,
+    previousMk: previousMk ? { week: previousMk.week } : null,
+    previousXabi: previousXabi ? { week: previousXabi.week } : null,
+  };
 
-  const { data: inserted, error: insErr } = await supa.from('training_weeks')
-    .insert({
-      athlete, week: target_week, version: nextVersion, status: 'draft',
-      plan_jsonb: plan, weekly_note: plan.weekly_note,
-      generated_by: 'claude', extra_prompt: extra_prompt || null,
-      source_summary: { registros, previousConfirmed: previousConfirmed ? { week: previousConfirmed.week } : null },
-    })
-    .select('id')
-    .single();
-  if (insErr || !inserted) return jsonError('No se pudo guardar el borrador', 500);
+  async function insertDraft(athlete: 'MK' | 'Xabi', plan: GeneratedWeek): Promise<string | null> {
+    const { data: versions } = await supa.from('training_weeks')
+      .select('version').eq('athlete', athlete).eq('week', target_week);
+    const nextVersion = ((versions as { version: number }[] | null) ?? [])
+      .reduce((m, r) => Math.max(m, r.version), 0) + 1;
+    const { data: inserted, error: insErr } = await supa.from('training_weeks')
+      .insert({
+        athlete, week: target_week, version: nextVersion, status: 'draft',
+        plan_jsonb: plan, weekly_note: plan.weekly_note,
+        generated_by: 'claude', extra_prompt: extra_prompt || null,
+        source_summary: sourceSummary,
+      })
+      .select('id')
+      .single();
+    if (insErr || !inserted) return null;
+    return (inserted as { id: string }).id;
+  }
 
-  return NextResponse.json({ week_id: (inserted as { id: string }).id, plan });
+  const mkId = await insertDraft('MK', pair.mk);
+  const xabiId = await insertDraft('Xabi', pair.xabi);
+  if (!mkId || !xabiId) return jsonError('No se pudo guardar el borrador', 500);
+
+  return NextResponse.json({
+    week: pair.week,
+    weekly_note: pair.weekly_note,
+    mk: { week_id: mkId, plan: pair.mk },
+    xabi: { week_id: xabiId, plan: pair.xabi },
+  });
 }
