@@ -1,13 +1,33 @@
 import { Hourglass } from 'lucide-react';
-import { tagColor, type Recipe } from '@/lib/meals/recipes';
+import {
+  tagColor,
+  recipeFallbackEmoji,
+  recipeFallbackGradient,
+  type Recipe,
+} from '@/lib/meals/recipes';
 
 export function RecipeCard({ recipe }: { recipe: Recipe }) {
+  const emoji = recipeFallbackEmoji(recipe.title);
+  const gradient = recipeFallbackGradient(recipe.title);
   return (
     <article className="overflow-hidden rounded-card bg-white shadow-card">
-      <div className="aspect-[4/3] w-full bg-mood-happy-from">
-        {recipe.image_url && (
+      <div
+        className={`relative aspect-[4/3] w-full bg-gradient-to-br ${gradient}`}
+      >
+        {recipe.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={recipe.image_url} alt="" className="h-full w-full object-cover" />
+          <img
+            src={recipe.image_url}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div
+            className="flex h-full w-full items-center justify-center text-[56px] leading-none"
+            aria-hidden
+          >
+            {emoji}
+          </div>
         )}
       </div>
       <div className="p-3">

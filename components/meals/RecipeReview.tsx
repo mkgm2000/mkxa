@@ -1,9 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Trash2, Sparkles } from 'lucide-react';
-import { AISLES, aisleLabel, type Aisle, type RecipeIngredient, type RecipeStep } from '@/lib/meals/recipes';
+import { Plus, Trash2, Sparkles, X } from 'lucide-react';
+import {
+  AISLES,
+  aisleLabel,
+  recipeFallbackEmoji,
+  recipeFallbackGradient,
+  type Aisle,
+  type RecipeIngredient,
+  type RecipeStep,
+} from '@/lib/meals/recipes';
 import { COMMON_INGREDIENTS, inferAisle } from '@/lib/meals/ingredient-aisles';
+import { RecipeImageUploader } from '@/components/meals/RecipeImageUploader';
 
 export interface ExtractedRecipe {
   title: string;
@@ -24,7 +33,11 @@ interface RecipeReviewProps {
   onSave: (
     recipe: Required<
       Pick<ExtractedRecipe, 'title' | 'prep_minutes' | 'servings' | 'tags' | 'ingredients' | 'steps'>
-    > & { source_url: string | null; image_url: string | null },
+    > & {
+      source_url: string | null;
+      image_url: string | null;
+      images?: string[];
+    },
   ) => Promise<void>;
 }
 
@@ -48,11 +61,13 @@ const AISLE_DOT: Record<Aisle, string> = {
   otros: 'bg-ink-soft',
 };
 
-export function RecipeReview({ initial, busy, onSave }: RecipeReviewProps) {
+export function RecipeReview({ initial, athlete, busy, onSave }: RecipeReviewProps) {
   const [title, setTitle] = useState(initial.title);
   const [prep, setPrep] = useState(initial.prep_minutes ?? 0);
   const [servings, setServings] = useState(initial.servings ?? 2);
   const [tags, setTags] = useState(initial.tags.join(', '));
+  const [imageUrl, setImageUrl] = useState<string | null>(initial.image_url ?? null);
+  const [extraImages, setExtraImages] = useState<string[]>([]);
   const [ingredients, setIngredients] = useState<RecipeIngredient[]>(
     initial.ingredients.length > 0 ? initial.ingredients : Array.from({ length: 5 }, blankIng),
   );
@@ -127,13 +142,55 @@ export function RecipeReview({ initial, busy, onSave }: RecipeReviewProps) {
         .filter((x) => x.body.trim().length > 0)
         .map((x, idx) => ({ ...x, position: idx + 1 })),
       source_url: initial.source_url ?? null,
-      image_url: initial.image_url ?? null,
+      image_url: imageUrl,
+      images: extraImages,
     });
   }
+
+  const fallbackEmoji = recipeFallbackEmoji(title);
+  const fallbackGradient = recipeFallbackGradient(title);
+  const athleteSubdir = athlete.toLowerCase();
 
   return (
     <section className="flex flex-col gap-5 px-5 pb-6">
       <div className="rounded-card bg-white p-4 shadow-card">
+        <div className="mb-3 flex flex-col gap-2">
+          <label className="block text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
+            Foto principal
+          </label>
+          <div
+            className={`relative aspect-[4/3] w-full overflow-hidden rounded-item bg-gradient-to-br ${fallbackGradient}`}
+          >
+            {imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imageUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-[64px]" aria-hidden>
+                {fallbackEmoji}
+              </div>
+            )}
+            {imageUrl && (
+              <button
+                type="button"
+                onClick={() => setImageUrl(null)}
+                aria-label="Quitar foto principal"
+                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-ink shadow-action active:scale-95"
+              >
+                <X size={14} strokeWidth={1.5} aria-hidden />
+              </button>
+            )}
+          </div>
+          <RecipeImageUploader
+            onUploaded={(url) => setImageUrl(url)}
+            athleteSubdir={athleteSubdir}
+            label={imageUrl ? 'Cambiar foto' : 'Añadir foto'}
+          />
+        </div>
+
         <label className="block text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
           Título
         </label>
@@ -273,6 +330,46 @@ export function RecipeReview({ initial, busy, onSave }: RecipeReviewProps) {
             </li>
           ))}
         </ul>
+      </div>
+
+      <div>
+        <div className="mb-2 flex items-baseline justify-between px-1">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
+            Más fotos
+          </h3>
+          <span className="text-[11px] text-ink-muted">
+            {extraImages.length} {extraImages.length === 1 ? 'foto' : 'fotos'}
+          </span>
+        </div>
+        {extraImages.length > 0 && (
+          <ul className="mb-2 flex gap-2 overflow-x-auto pb-1">
+            {extraImages.map((url, i) => (
+              <li key={url} className="relative shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt=""
+                  className="h-20 w-20 rounded-item object-cover shadow-item"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExtraImages((arr) => arr.filter((_, idx) => idx !== i))
+                  }
+                  aria-label={`Quitar foto ${i + 1}`}
+                  className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-ink shadow-action active:scale-95"
+                >
+                  <X size={12} strokeWidth={1.5} aria-hidden />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <RecipeImageUploader
+          onUploaded={(url) => setExtraImages((arr) => [...arr, url])}
+          athleteSubdir={athleteSubdir}
+          label="+ Añadir imagen"
+        />
       </div>
 
       <div>

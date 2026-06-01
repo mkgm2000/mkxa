@@ -83,9 +83,53 @@ export interface Recipe {
   updated_at: string;
 }
 
+export interface RecipeImage {
+  id: string;
+  recipe_id: string;
+  url: string;
+  position: number;
+  created_at: string;
+}
+
 export interface RecipeWithDetails extends Recipe {
   ingredients: RecipeIngredient[];
   steps: RecipeStep[];
+  images: string[];
+}
+
+// Deterministic emoji from a recipe title for placeholder cards/headers.
+const RECIPE_FALLBACK_EMOJIS = [
+  '🍝', '🍗', '🥗', '🍣', '🍳', '🐟', '🫘', '🎃', '🍔', '🌯', '🍕', '🥘',
+] as const;
+
+export function recipeFallbackEmoji(title: string): string {
+  const seed = (title ?? '').trim();
+  if (!seed) return '🍽️';
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  const idx = Math.abs(hash) % RECIPE_FALLBACK_EMOJIS.length;
+  return RECIPE_FALLBACK_EMOJIS[idx];
+}
+
+// Pretty pastel gradient for placeholder cards (cycles through a fixed palette).
+const RECIPE_FALLBACK_GRADIENTS = [
+  'from-rose-200 to-amber-200',
+  'from-amber-200 to-orange-200',
+  'from-emerald-200 to-cyan-200',
+  'from-sky-200 to-violet-200',
+  'from-violet-200 to-rose-200',
+  'from-lime-200 to-emerald-200',
+  'from-orange-200 to-rose-200',
+  'from-cyan-200 to-sky-200',
+] as const;
+
+export function recipeFallbackGradient(title: string): string {
+  const seed = (title ?? '').trim();
+  if (!seed) return RECIPE_FALLBACK_GRADIENTS[0];
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  const idx = Math.abs(hash) % RECIPE_FALLBACK_GRADIENTS.length;
+  return RECIPE_FALLBACK_GRADIENTS[idx];
 }
 
 export type MealSlot = 'breakfast' | 'lunch' | 'dinner' | 'snack';

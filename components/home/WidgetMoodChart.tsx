@@ -32,18 +32,25 @@ export function WidgetMoodChart({ weekStartISO, todayISO, logsByDate }: Props) {
         {days.map((iso, i) => {
           const m = logsByDate[iso];
           const isToday = iso === resolvedTodayISO;
+          const tokens = m ? getMoodTokens(m) : null;
           return (
             <div key={iso} className="flex flex-col items-center gap-1">
               <span className="text-[9px] font-bold text-ink-muted">{LABELS[i]}</span>
               <span
                 className={clsx(
-                  'h-6 w-6 rounded-full',
-                  !m && 'border border-ink-soft',
+                  'flex h-7 w-7 items-center justify-center rounded-full leading-none',
+                  !m && 'border border-dashed border-ink-soft',
                   isToday && 'ring-2 ring-ink ring-offset-1 ring-offset-white',
                 )}
-                style={{ backgroundColor: m ? getMoodTokens(m).bodyMid : 'transparent' }}
-                aria-label={m ? `${LABELS[i]} ${getMoodTokens(m).label}` : `${LABELS[i]} sin registro`}
-              />
+                style={{ backgroundColor: tokens ? tokens.bodyMid : 'transparent' }}
+                aria-label={tokens ? `${LABELS[i]} ${tokens.label}` : `${LABELS[i]} sin registro`}
+              >
+                {tokens && (
+                  <span aria-hidden="true" className="text-[14px] leading-none">
+                    {tokens.emoji}
+                  </span>
+                )}
+              </span>
             </div>
           );
         })}

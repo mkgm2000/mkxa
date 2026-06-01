@@ -47,35 +47,34 @@ export function MoodHistoryChart({ athlete }: { athlete: Athlete }) {
 
   function DayRow({ row }: { row: string[] }) {
     return (
-      <>
-        <div className="grid grid-cols-7 gap-2 px-1">
-          {row.map((iso) => (
-            <span key={`l-${iso}`} className="text-center text-[9px] font-bold text-ink-muted">
-              {dayNum(iso)}
-            </span>
-          ))}
-        </div>
-        <div className="mt-1 grid grid-cols-7 gap-2 px-1">
-          {row.map((iso) => {
-            const m = logsByDate[iso];
-            const isToday = iso === today;
-            return (
-              <div key={iso} className="flex justify-center">
-                <span
-                  data-testid="mood-cell"
-                  className={clsx(
-                    'h-6 w-6 rounded-full',
-                    !m && 'border border-ink-soft',
-                    isToday && 'ring-2 ring-ink ring-offset-1 ring-offset-white',
-                  )}
-                  style={{ backgroundColor: m ? getMoodTokens(m).bodyMid : 'transparent' }}
-                  aria-label={m ? `${iso} ${getMoodTokens(m).label}` : `${iso} sin registro`}
-                />
-              </div>
-            );
-          })}
-        </div>
-      </>
+      <div className="grid grid-cols-7 gap-2 px-1">
+        {row.map((iso) => {
+          const m = logsByDate[iso];
+          const tokens = m ? getMoodTokens(m) : null;
+          const isToday = iso === today;
+          return (
+            <div key={iso} className="flex flex-col items-center gap-1">
+              <span
+                data-testid="mood-cell"
+                className={clsx(
+                  'flex h-9 w-9 items-center justify-center rounded-full leading-none',
+                  !m && 'border border-dashed border-ink-soft',
+                  isToday && 'ring-2 ring-ink ring-offset-1 ring-offset-white',
+                )}
+                style={{ backgroundColor: tokens ? tokens.bodyMid : 'transparent' }}
+                aria-label={tokens ? `${iso} ${tokens.label}` : `${iso} sin registro`}
+              >
+                {tokens && (
+                  <span aria-hidden="true" className="text-[18px] leading-none">
+                    {tokens.emoji}
+                  </span>
+                )}
+              </span>
+              <span className="text-[9px] font-bold text-ink-muted">{dayNum(iso)}</span>
+            </div>
+          );
+        })}
+      </div>
     );
   }
 
