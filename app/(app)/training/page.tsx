@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft, ArrowUpRight } from 'lucide-react';
 import { HeaderActionButton } from '@/components/nav/HeaderActionButton';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
@@ -17,12 +17,38 @@ import type { Day, DayKey } from '@/lib/plan-hyrox';
 
 export default function TrainingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const athlete = useAthlete();
   const currentWeek = useMemo(() => Math.min(getCurrentWeek(), MAX_WEEK), []);
-  const [week, setWeek] = useState<number>(currentWeek);
+  const initialWeek = useMemo(() => {
+    const raw = searchParams.get('week');
+    const n = raw ? parseInt(raw, 10) : NaN;
+    if (Number.isFinite(n) && n >= 1 && n <= MAX_WEEK) return n;
+    return currentWeek;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [week, setWeek] = useState<number>(initialWeek);
+
+  // Sync URL ?week= when user changes week via navigation
+  useEffect(() => {
+    const q = searchParams.get('week');
+    const n = q ? parseInt(q, 10) : NaN;
+    if (Number.isFinite(n) && n >= 1 && n <= MAX_WEEK && n !== week) {
+      setWeek(n);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const { byKey, setLog, setWeekNote } = useTraining(athlete, week);
-  const { plan: confirmedPlan } = useConfirmedWeek(athlete, week);
+  const { plan: confirmedPlan, refresh: refreshConfirmed } = useConfirmedWeek(athlete, week);
+
+  // Force refetch when arriving from /training/adjust (the URL will have
+  // ?week=N after confirm). Without this, useConfirmedWeek's [athlete, week]
+  // effect wouldn't re-fire if the user was already viewing the same week.
+  useEffect(() => {
+    void refreshConfirmed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const days = useMemo(() => {
     // Strip rationale from confirmed plan to match the Day[] render contract.
     const override: Day[] | undefined = confirmedPlan

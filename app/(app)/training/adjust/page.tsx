@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
@@ -9,7 +9,9 @@ import { AdjustPreview } from '@/components/training/AdjustPreview';
 import { MoodBlob } from '@/components/mood/MoodBlob';
 import { useAthlete } from '@/lib/athlete-context';
 import { getCurrentWeek } from '@/lib/plan-hyrox';
+import { supabaseClient } from '@/lib/supabase/client';
 import type { GeneratedWeek } from '@/lib/training/generated';
+import type { Athlete } from '@/lib/athlete-context';
 
 export default function AdjustPage() {
   const router = useRouter();
@@ -26,14 +28,63 @@ export default function AdjustPage() {
 
   useEffect(() => setError(null), [targetWeek, extraPrompt]);
 
+  // Watermark = newest draft id at the moment of clicking Generar. Anything
+  // newer than this for (athlete, week) is the server's response — used by
+  // the resume-after-disconnect poller below.
+  const generationStartedAt = useRef<string | null>(null);
+
+  // Resume an in-flight generation if the user returns to the page after
+  // backgrounding the phone: any draft inserted after `generationStartedAt`
+  // for (athlete, week) is the result we missed.
+  useEffect(() => {
+    if (!busy || !athlete || !generationStartedAt.current) return;
+    let stopped = false;
+    const baseline = generationStartedAt.current;
+
+    async function pollForResult() {
+      const { data, error } = await supabaseClient()
+        .from('training_weeks')
+        .select('id,plan_jsonb,created_at')
+        .eq('athlete', athlete as Athlete)
+        .eq('week', targetWeek)
+        .eq('status', 'draft')
+        .gt('created_at', baseline)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (stopped) return null;
+      if (error || !data) return null;
+      const row = data as { id: string; plan_jsonb: GeneratedWeek };
+      return row;
+    }
+
+    const interval = setInterval(async () => {
+      const row = await pollForResult();
+      if (!row || stopped) return;
+      setWeekId(row.id);
+      setPlan(row.plan_jsonb);
+      setBusy(false);
+      stopped = true;
+      clearInterval(interval);
+    }, 4000);
+
+    return () => { stopped = true; clearInterval(interval); };
+  }, [busy, athlete, targetWeek]);
+
   async function generate() {
     if (!athlete) return;
     setBusy(true); setError(null); setPlan(null); setWeekId(null);
+    // Stamp the baseline for the resume-poller: nowISO before we kick off.
+    generationStartedAt.current = new Date().toISOString();
+
     try {
       const res = await fetch('/api/training/generate-week', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ athlete, target_week: targetWeek, extra_prompt: extraPrompt }),
+        // keepalive lets the request keep flying even if the page is
+        // backgrounded for short periods (Safari respects this on POST).
+        keepalive: true,
       });
       if (!res.ok) {
         if (res.status === 429) {
@@ -49,9 +100,18 @@ export default function AdjustPage() {
       const body = await res.json() as { week_id: string; plan: GeneratedWeek };
       setWeekId(body.week_id);
       setPlan(body.plan);
+    } catch (e) {
+      // Network failure (phone slept long enough to drop the connection):
+      // leave busy=true so the resume-poller can pick up the draft when
+      // the server eventually finishes.
+      console.error('[adjust] fetch error, poller will resume', e);
+      return;
     } finally {
-      setBusy(false);
+      // Only clear busy on a clean path; if we got here via catch + return,
+      // the poller is in charge. The finally still runs but we already
+      // returned, so busy state stays for the poller.
     }
+    setBusy(false);
   }
 
   async function accept(edited: GeneratedWeek) {
