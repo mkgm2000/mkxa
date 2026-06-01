@@ -91,8 +91,13 @@ export async function POST(req: Request) {
     const first = res.content.find((b) => b.type === 'text');
     rawText = first && 'text' in first ? first.text : '';
   } catch (err) {
-    console.error('[generate-week] anthropic error', err);
-    return jsonError('Algo falló pidiendo a Claude. Reintenta.', 502);
+    const msg = err instanceof Error ? err.message : String(err);
+    const status = (err as { status?: number })?.status;
+    console.error('[generate-week] anthropic error status=', status, 'msg=', msg.slice(0, 400));
+    return NextResponse.json(
+      { error: 'Algo falló pidiendo a Claude. Reintenta.', detail: msg.slice(0, 300), status: status ?? null },
+      { status: 502 },
+    );
   }
 
   let parsedJson: unknown;
