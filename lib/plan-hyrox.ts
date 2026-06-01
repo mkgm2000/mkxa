@@ -235,7 +235,14 @@ export const PLAN: Plan = {
   },
 };
 
-export const MAX_WEEK = Math.max(...Object.keys(PLAN).map((k) => Number(k)));
+// MAX_WEEK is the full macrocycle (23 weeks → competition at S23). The PLAN
+// constant only defines S1-S3 as static baselines for the very first weeks;
+// any week beyond that is rendered from `useConfirmedWeek` (Claude-generated
+// plans stored in DB). If a user navigates to an uncovered week with no
+// confirmed plan yet, getDays falls back to the last defined PLAN week so
+// the UI shows SOMETHING instead of crashing.
+export const MAX_WEEK = 23;
+const LAST_DEFINED_PLAN_WEEK = Math.max(...Object.keys(PLAN).map((k) => Number(k)));
 
 /** Week number (1-based) given current date. Capped at last defined week. */
 export function getCurrentWeek(now: Date = new Date()): number {
@@ -253,7 +260,10 @@ export function getDays(
   if (override && override.length > 0) return override;
   const p = PLAN[week];
   if (!p) {
-    const fallback = PLAN[Math.min(week, MAX_WEEK)];
+    // No baseline defined for this week (true for S4+). Use last defined as
+    // a soft fallback so the UI shows something while the user generates a
+    // proper plan via /training/adjust.
+    const fallback = PLAN[Math.min(week, LAST_DEFINED_PLAN_WEEK)];
     return fallback[athlete ?? 'MK'] ?? fallback.MK;
   }
   return p[athlete ?? 'MK'] ?? p.MK;
