@@ -45,6 +45,16 @@ export async function POST(req: Request) {
     return jsonError(`Faltan fuentes (${sources.length}/${REQUIRED_SOURCE_COUNT}); ejecuta scripts/upload-training-sources.ts`, 500);
   }
 
+  // Rate limit (org tier 30k tok/min) only fits the Excel master plan as a
+  // doc block. Adjuntar los 5 PDFs supera el límite incluso en cache miss.
+  // Claude tiene conocimiento sólido de los conceptos de periodización
+  // (S.G.A., supercompensación, interferencia AMPK/mTOR, concurrent
+  // training); citamos los PDFs por nombre en el prompt y los referencia
+  // aunque no estén adjuntos. El Excel SÍ se adjunta como text/plain.
+  const xlsxSource = sources.find((s) => s.id === 'xlsx_master_23s');
+  if (!xlsxSource) return jsonError('Falta xlsx_master_23s en training_sources', 500);
+  const docSources = [xlsxSource];
+
   const supa = supabaseServer();
   const lo = Math.max(1, target_week - 2);
   const { data: regRows } = await supa.from('registros')
@@ -68,7 +78,7 @@ export async function POST(req: Request) {
 
   type DocBlock = { type: 'document'; source: { type: 'file'; file_id: string }; cache_control?: { type: 'ephemeral' } };
   type TextBlock = { type: 'text'; text: string };
-  const docBlocks: DocBlock[] = sources.map((s, i, arr) => ({
+  const docBlocks: DocBlock[] = docSources.map((s, i, arr) => ({
     type: 'document',
     source: { type: 'file', file_id: s.file_id },
     ...(i === arr.length - 1 ? { cache_control: { type: 'ephemeral' as const } } : {}),
