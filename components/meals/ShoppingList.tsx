@@ -4,19 +4,44 @@ import { useMemo } from 'react';
 import { ShoppingSectionHeader } from './ShoppingSectionHeader';
 import { ShoppingItemRow } from './ShoppingItemRow';
 import { AddItemRow } from './AddItemRow';
-import { type Aisle, type ShoppingItem, aisleOrder } from '@/lib/meals/recipes';
+import {
+  type Aisle,
+  type PantryItem,
+  type ShoppingItem,
+  aisleOrder,
+  normalizeIngredientName,
+} from '@/lib/meals/recipes';
 
 interface ShoppingListProps {
   items: ShoppingItem[];
   onToggle: (id: string) => void;
   onAddManual: (input: { name: string; quantity: number | null; unit: string | null; aisle: Aisle }) => Promise<void> | void;
   recipeNamesById?: Record<string, string>;
+  pantryItems?: PantryItem[];
 }
 
-export function ShoppingList({ items, onToggle, onAddManual, recipeNamesById }: ShoppingListProps) {
+export function ShoppingList({ items, onToggle, onAddManual, recipeNamesById, pantryItems = [] }: ShoppingListProps) {
+  const inStockNames = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of pantryItems) {
+      if (p.in_stock) set.add(normalizeIngredientName(p.name));
+    }
+    return set;
+  }, [pantryItems]);
+
+  const { toBuy, alreadyAtHome } = useMemo(() => {
+    const toBuy: ShoppingItem[] = [];
+    const alreadyAtHome: ShoppingItem[] = [];
+    for (const it of items) {
+      if (inStockNames.has(normalizeIngredientName(it.name))) alreadyAtHome.push(it);
+      else toBuy.push(it);
+    }
+    return { toBuy, alreadyAtHome };
+  }, [items, inStockNames]);
+
   const sections = useMemo(() => {
     const map = new Map<Aisle, ShoppingItem[]>();
-    for (const it of items) {
+    for (const it of toBuy) {
       const arr = map.get(it.aisle) ?? [];
       arr.push(it);
       map.set(it.aisle, arr);
@@ -27,11 +52,22 @@ export function ShoppingList({ items, onToggle, onAddManual, recipeNamesById }: 
         aisle,
         items: list.sort((a, b) => a.position - b.position),
       }));
-  }, [items]);
+  }, [toBuy]);
 
-  const checked = items.filter((i) => i.checked).length;
-  const total = items.length;
+  const alreadyAtHomeSorted = useMemo(
+    () => [...alreadyAtHome].sort((a, b) => {
+      const ao = aisleOrder[a.aisle] - aisleOrder[b.aisle];
+      if (ao !== 0) return ao;
+      return a.position - b.position;
+    }),
+    [alreadyAtHome],
+  );
+
+  const checked = toBuy.filter((i) => i.checked).length;
+  const total = toBuy.length;
   const pct = total === 0 ? 0 : Math.round((checked / total) * 100);
+
+  const bothEmpty = sections.length === 0 && alreadyAtHomeSorted.length === 0;
 
   return (
     <div className="flex flex-col gap-1">
@@ -57,7 +93,27 @@ export function ShoppingList({ items, onToggle, onAddManual, recipeNamesById }: 
           </div>
         </div>
       ))}
-      {sections.length === 0 && (
+      {alreadyAtHomeSorted.length > 0 && (
+        <div>
+          <div className="px-2 pt-4 pb-1">
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted opacity-70">
+              Ya tienes en casa
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5 px-2">
+            {alreadyAtHomeSorted.map((it) => (
+              <ShoppingItemRow
+                key={it.id}
+                item={it}
+                onToggle={onToggle}
+                recipeNamesById={recipeNamesById}
+                alreadyAtHome
+              />
+            ))}
+          </div>
+        </div>
+      )}
+      {bothEmpty && (
         <p className="px-2 pt-4 text-center text-[13px] text-ink-muted">Lista vacía. Genera desde el plan o añade items.</p>
       )}
     </div>

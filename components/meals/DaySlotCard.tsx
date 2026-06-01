@@ -1,6 +1,7 @@
 'use client';
 
-import { Plus, Hourglass, X } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, Hourglass, X, Play } from 'lucide-react';
 import type { MealDay, MealPlanRow, MealSlot } from '@/lib/meals/recipes';
 
 interface DaySlotCardProps {
@@ -65,6 +66,16 @@ export function DaySlotCard({ day, slot, row, onPick, onClear }: DaySlotCardProp
       >
         <X size={12} strokeWidth={1.5} aria-hidden />
       </button>
+      <div className="mt-2 flex justify-end">
+        <Link
+          href={`/meals/cook/${recipe.id}`}
+          aria-label={`Cocinar ${recipe.title}`}
+          className="inline-flex items-center gap-1 rounded-action bg-ink/10 px-2.5 py-1 text-[12px] font-bold text-ink"
+        >
+          <Play size={11} strokeWidth={2} aria-hidden />
+          Cocinar
+        </Link>
+      </div>
     </div>
   );
 }

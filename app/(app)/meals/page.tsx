@@ -221,6 +221,7 @@ export default function MealsHubPage() {
             onToggle={toggleChecked}
             onAddManual={addManual}
             recipeNamesById={recipeNamesById}
+            pantryItems={pantryItems}
           />
           {shoppingItems.length > 0 && (
             <div className="px-4 pb-4">
