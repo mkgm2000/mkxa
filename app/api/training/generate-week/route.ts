@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import type Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
-import { anthropic, ANTHROPIC_MODEL } from '@/lib/anthropic/client';
+import { ANTHROPIC_MODEL } from '@/lib/anthropic/client';
 import { TRAINING_SYSTEM_PROMPT } from '@/lib/anthropic/training-prompts';
 import { readTrainingSources } from '@/lib/training/sources';
 import { buildDynamicContext, type RecentRegistro } from '@/lib/training/dynamic-context';
@@ -76,20 +75,40 @@ export async function POST(req: Request) {
   }));
   const content: Array<DocBlock | TextBlock> = [...docBlocks, { type: 'text', text: dynamicText }];
 
+  // SDK v0.27 doesn't support file_id document sources — call REST directly
+  // with the files-api beta header.
+  const rawKey = process.env.ANTHROPIC_API_KEY ?? '';
+  const apiKey = rawKey.trim().match(/^[A-Za-z0-9_-]+/)?.[0] ?? '';
+  if (!apiKey) return jsonError('ANTHROPIC_API_KEY misconfigured', 500);
+
   let rawText: string;
   try {
-    const res = await anthropic().messages.create({
-      model: ANTHROPIC_MODEL,
-      max_tokens: 4096,
-      system: [{
-        type: 'text',
-        text: TRAINING_SYSTEM_PROMPT,
-        cache_control: { type: 'ephemeral' },
-      } as unknown as Anthropic.TextBlockParam],
-      messages: [{ role: 'user', content: content as unknown as never }],
-    } as unknown as Anthropic.MessageCreateParamsNonStreaming);
-    const first = res.content.find((b) => b.type === 'text');
-    rawText = first && 'text' in first ? first.text : '';
+    const httpRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'files-api-2025-04-14',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 4096,
+        system: [{
+          type: 'text',
+          text: TRAINING_SYSTEM_PROMPT,
+          cache_control: { type: 'ephemeral' },
+        }],
+        messages: [{ role: 'user', content }],
+      }),
+    });
+    if (!httpRes.ok) {
+      const txt = await httpRes.text();
+      throw Object.assign(new Error(`${httpRes.status} ${txt}`), { status: httpRes.status });
+    }
+    const json = (await httpRes.json()) as { content: Array<{ type: string; text?: string }> };
+    const first = json.content.find((b) => b.type === 'text');
+    rawText = first && first.text ? first.text : '';
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     const status = (err as { status?: number })?.status;
