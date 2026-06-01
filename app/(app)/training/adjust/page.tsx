@@ -35,7 +35,17 @@ export default function AdjustPage() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ athlete, target_week: targetWeek, extra_prompt: extraPrompt }),
       });
-      if (!res.ok) { setError(await res.text()); return; }
+      if (!res.ok) {
+        if (res.status === 429) {
+          const body = await res.json().catch(() => ({})) as { retry_after_seconds?: number };
+          const wait = body.retry_after_seconds ?? 60;
+          setError(`Demasiadas peticiones a Claude. Espera ${wait}s y vuelve a intentarlo.`);
+        } else {
+          const body = await res.json().catch(() => ({})) as { error?: string; detail?: string };
+          setError(body.detail ?? body.error ?? `Error ${res.status}`);
+        }
+        return;
+      }
       const body = await res.json() as { week_id: string; plan: GeneratedWeek };
       setWeekId(body.week_id);
       setPlan(body.plan);

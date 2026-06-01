@@ -119,6 +119,17 @@ export async function POST(req: Request) {
     });
     if (!httpRes.ok) {
       const txt = await httpRes.text();
+      if (httpRes.status === 429) {
+        const retryAfter = httpRes.headers.get('retry-after') ?? '60';
+        return NextResponse.json(
+          {
+            error: 'Rate limit alcanzado',
+            detail: 'Anthropic limita 30k tokens/min. Espera y reintenta.',
+            retry_after_seconds: Number(retryAfter) || 60,
+          },
+          { status: 429, headers: { 'retry-after': retryAfter } },
+        );
+      }
       throw Object.assign(new Error(`${httpRes.status} ${txt}`), { status: httpRes.status });
     }
     const json = (await httpRes.json()) as { content: Array<{ type: string; text?: string }> };
