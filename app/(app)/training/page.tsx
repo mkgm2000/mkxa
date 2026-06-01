@@ -140,6 +140,12 @@ export default function TrainingPage() {
         onNext={() => setWeek((w) => Math.min(MAX_WEEK, w + 1))}
       />
 
+      {confirmedPlan && (
+        <div className="mx-5 rounded-card bg-ink/8 px-3 py-2 text-[12px] font-medium text-ink" style={{ background: 'rgba(27,29,31,0.06)' }}>
+          Plan ajustado por Claude · S{week} v actualizada
+        </div>
+      )}
+
       <section className="flex flex-col gap-3 px-5">
         {days.map((day) => (
           <SessionCard

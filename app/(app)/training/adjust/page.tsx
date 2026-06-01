@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { AdjustContextBox } from '@/components/training/AdjustContextBox';
 import { AdjustPreview } from '@/components/training/AdjustPreview';
@@ -20,7 +20,6 @@ type PairResult = {
 };
 
 export default function AdjustPage() {
-  const router = useRouter();
   const sp = useSearchParams();
   const athlete = useAthlete();
   const defaultWeek = Number(sp.get('week') ?? '') || Math.min(23, getCurrentWeek() + 1);
@@ -121,7 +120,9 @@ export default function AdjustPage() {
         body: JSON.stringify({ week_ids: [pair.mk.week_id, pair.xabi.week_id] }),
       });
       if (!res.ok) { setError(await res.text()); return; }
-      router.push(`/training?week=${targetWeek}`);
+      // Full reload — Next.js SPA navigation sometimes keeps /training mounted
+      // with stale confirmedPlan state. window.location forces a clean fetch.
+      window.location.assign(`/training?week=${targetWeek}`);
     } finally {
       setBusy(false);
     }
