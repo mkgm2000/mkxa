@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import clsx from 'clsx';
 import { Plus, Hourglass, X, Play } from 'lucide-react';
 import type { MealDay, MealPlanRow, MealSlot } from '@/lib/meals/recipes';
 
@@ -10,13 +11,23 @@ interface DaySlotCardProps {
   row?: MealPlanRow;
   onPick: (day: MealDay, slot: MealSlot) => void;
   onClear: (day: MealDay, slot: MealSlot) => void;
+  onTogglePrepared?: (day: MealDay, slot: MealSlot, value: boolean) => void;
+  onToggleEaten?: (day: MealDay, slot: MealSlot, value: boolean) => void;
 }
 
 const SLOT_LABELS: Record<MealSlot, string> = {
   breakfast: 'Desayuno', lunch: 'Comida', dinner: 'Cena', snack: 'Snack',
 };
 
-export function DaySlotCard({ day, slot, row, onPick, onClear }: DaySlotCardProps) {
+export function DaySlotCard({
+  day,
+  slot,
+  row,
+  onPick,
+  onClear,
+  onTogglePrepared,
+  onToggleEaten,
+}: DaySlotCardProps) {
   const recipe = row?.recipe ?? null;
 
   if (!recipe) {
@@ -35,6 +46,9 @@ export function DaySlotCard({ day, slot, row, onPick, onClear }: DaySlotCardProp
       </button>
     );
   }
+
+  const prepared = row?.prepared === true;
+  const eaten = row?.eaten === true;
 
   return (
     <div className="relative rounded-card bg-white p-3 shadow-card">
@@ -66,7 +80,49 @@ export function DaySlotCard({ day, slot, row, onPick, onClear }: DaySlotCardProp
       >
         <X size={12} strokeWidth={1.5} aria-hidden />
       </button>
-      <div className="mt-2 flex justify-end">
+      <div className="mt-2 flex flex-wrap items-center justify-end gap-1.5">
+        {onTogglePrepared && (
+          <button
+            type="button"
+            onClick={() => onTogglePrepared(day, slot, !prepared)}
+            aria-pressed={prepared}
+            aria-label={prepared ? 'Marcar no cocinada' : 'Marcar cocinada'}
+            className={clsx(
+              'inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-bold transition-colors',
+              prepared
+                ? 'bg-ink text-white'
+                : 'bg-ink/5 text-ink',
+            )}
+          >
+            🔥 Cocinada
+          </button>
+        )}
+        {onToggleEaten && prepared && (
+          <button
+            type="button"
+            onClick={() => onToggleEaten(day, slot, !eaten)}
+            aria-pressed={eaten}
+            aria-label={eaten ? 'Marcar no comida' : 'Marcar comida'}
+            className={clsx(
+              'inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-bold transition-colors',
+              eaten
+                ? 'bg-ink text-white'
+                : 'bg-ink/5 text-ink',
+            )}
+          >
+            🍽️ Comida
+          </button>
+        )}
+        {onToggleEaten && !prepared && (
+          <button
+            type="button"
+            onClick={() => onToggleEaten(day, slot, true)}
+            aria-label="Marcar comida (también cocina)"
+            className="inline-flex h-7 items-center gap-1 rounded-full bg-ink/5 px-2.5 text-[11px] font-bold text-ink"
+          >
+            🍽️ Comida
+          </button>
+        )}
         <Link
           href={`/meals/cook/${recipe.id}`}
           aria-label={`Cocinar ${recipe.title}`}

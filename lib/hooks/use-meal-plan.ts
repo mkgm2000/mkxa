@@ -60,5 +60,58 @@ export function useMealPlan(weekStart: string | null) {
     await refresh();
   }, [weekStart, refresh]);
 
-  return { plan, loading, refresh, upsertSlot, clearSlot };
+  const setPrepared = useCallback(async (day: MealDay, slot: MealSlot, value: boolean) => {
+    if (!weekStart) return;
+    // Optimistic update
+    setPlan((prev) => prev.map((r) =>
+      r.day === day && r.slot === slot ? { ...r, prepared: value } : r
+    ));
+    saveState.getState().set('saving');
+    const { error } = await supabaseClient()
+      .from('meal_plan')
+      .update({ prepared: value })
+      .match({ week_start: weekStart, day, slot });
+    if (error) { saveState.getState().set('error'); await refresh(); return; }
+    saveState.getState().set('saved');
+  }, [weekStart, refresh]);
+
+  const setEaten = useCallback(async (day: MealDay, slot: MealSlot, value: boolean) => {
+    if (!weekStart) return;
+    // If eating, also imply prepared=true.
+    const row = plan.find((r) => r.day === day && r.slot === slot);
+    const alsoPrepare = value === true && row && row.prepared !== true;
+    // Optimistic update
+    setPlan((prev) => prev.map((r) =>
+      r.day === day && r.slot === slot
+        ? { ...r, eaten: value, prepared: alsoPrepare ? true : r.prepared }
+        : r
+    ));
+    saveState.getState().set('saving');
+    const patch: { eaten: boolean; prepared?: boolean } = { eaten: value };
+    if (alsoPrepare) patch.prepared = true;
+    const { error } = await supabaseClient()
+      .from('meal_plan')
+      .update(patch)
+      .match({ week_start: weekStart, day, slot });
+    if (error) { saveState.getState().set('error'); await refresh(); return; }
+    saveState.getState().set('saved');
+  }, [weekStart, plan, refresh]);
+
+  const cookAllToday = useCallback(async () => {
+    if (!weekStart) return;
+    // Optimistic: flip every assigned slot in current state.
+    setPlan((prev) => prev.map((r) =>
+      r.recipe_id ? { ...r, prepared: true } : r
+    ));
+    saveState.getState().set('saving');
+    const { error } = await supabaseClient()
+      .from('meal_plan')
+      .update({ prepared: true })
+      .eq('week_start', weekStart)
+      .not('recipe_id', 'is', null);
+    if (error) { saveState.getState().set('error'); await refresh(); return; }
+    saveState.getState().set('saved');
+  }, [weekStart, refresh]);
+
+  return { plan, loading, refresh, upsertSlot, clearSlot, setPrepared, setEaten, cookAllToday };
 }

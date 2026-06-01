@@ -11,6 +11,9 @@ import type {
   RecipeWithDetails,
 } from '@/lib/meals/recipes';
 
+// `recipe` carries every column the API needs to persist — including
+// `meal_type` (breakfast/lunch/dinner/snack), which classifies the recipe
+// and powers the grouped Recetas view + Solo TikTok quick-create.
 interface NewRecipeInput {
   recipe: Omit<Recipe, 'id' | 'created_at' | 'updated_at'> & { id?: string };
   ingredients: Omit<RecipeIngredient, 'id' | 'recipe_id'>[];

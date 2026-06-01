@@ -24,3 +24,5 @@ Or paste each SQL file from `supabase/migrations/` into the [dashboard SQL edito
 - `20260529170000_meal_passes.sql` — applied 2026-05-29 (meal_passes table for monthly eat-out tickets)
 - `20260601110000_recipe_images.sql` — applied 2026-06-01 (recipe_images table + recipe-images storage bucket)
 - `20260601120000_meal_passes_v2.sql` — applied 2026-06-01 (4 passes/month + kind dine/delivery column)
+- `20260601200000_recipes_meal_type.sql` — applied 2026-06-01 (recipes.meal_type breakfast/lunch/dinner/snack)
+- `20260601210000_meal_plan_prepared_eaten.sql` — applied 2026-06-01 (meal_plan.prepared + eaten columns)

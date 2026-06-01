@@ -8,6 +8,7 @@ import clsx from 'clsx';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
 import { RecipeCard } from '@/components/meals/RecipeCard';
 import { WeekPlanBoard } from '@/components/meals/WeekPlanBoard';
+import { FridgeSection } from '@/components/meals/FridgeSection';
 import { GenerateShoppingButton } from '@/components/meals/GenerateShoppingButton';
 import { RecipePickerSheet } from '@/components/meals/RecipePickerSheet';
 import { ShoppingList } from '@/components/meals/ShoppingList';
@@ -19,7 +20,7 @@ import type { Recipe } from '@/lib/meals/recipes';
 import { useMealPlan, currentWeekStart } from '@/lib/hooks/use-meal-plan';
 import { useShoppingList } from '@/lib/hooks/use-shopping-list';
 import { usePantry } from '@/lib/hooks/use-pantry';
-import type { MealDay, MealSlot } from '@/lib/meals/recipes';
+import { MEAL_SLOTS, mealSlotLabel, type MealDay, type MealSlot } from '@/lib/meals/recipes';
 
 type Tab = 'semana' | 'recetas' | 'compra' | 'despensa' | 'pases';
 const TABS: { value: Tab; label: string }[] = [
@@ -57,7 +58,15 @@ export default function MealsHubPage() {
   }
 
   const { recipes, refresh: refreshRecipes } = useRecipes();
-  const { plan, upsertSlot, clearSlot, refresh: refreshPlan } = useMealPlan(weekStart);
+  const {
+    plan,
+    upsertSlot,
+    clearSlot,
+    refresh: refreshPlan,
+    setPrepared,
+    setEaten,
+    cookAllToday,
+  } = useMealPlan(weekStart);
   const { items: shoppingItems, toggleChecked, addManual, finish } = useShoppingList(weekStart);
   const { items: pantryItems, toggleInStock, addItem: addPantry } = usePantry();
 
@@ -66,6 +75,18 @@ export default function MealsHubPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState<{ day: MealDay; slot: MealSlot } | null>(null);
   const [finishOpen, setFinishOpen] = useState(false);
+
+  // Group recipes by meal_type for the Recetas tab. Empty groups skipped.
+  const recipesByType = useMemo(() => {
+    const buckets: Record<MealSlot | 'untyped', Recipe[]> = {
+      breakfast: [], lunch: [], dinner: [], snack: [], untyped: [],
+    };
+    for (const r of recipes) {
+      const key = r.meal_type ?? 'untyped';
+      buckets[key].push(r);
+    }
+    return buckets;
+  }, [recipes]);
 
   const recipeNamesById = useMemo(() => {
     const m: Record<string, string> = {};
@@ -132,6 +153,13 @@ export default function MealsHubPage() {
             plan={plan}
             onPick={openPicker}
             onClear={async (day, slot) => { await clearSlot({ day, slot }); }}
+            onTogglePrepared={(day, slot, value) => { void setPrepared(day, slot, value); }}
+            onToggleEaten={(day, slot, value) => { void setEaten(day, slot, value); }}
+            onCookAll={() => cookAllToday()}
+          />
+          <FridgeSection
+            plan={plan}
+            onEat={(day, slot) => setEaten(day, slot, true)}
           />
           <GenerateShoppingButton
             weekStart={weekStart}
@@ -177,38 +205,55 @@ export default function MealsHubPage() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                {recipes.map((r, idx) => (
-                  <div
-                    key={r.id}
-                    className={clsx(
-                      'relative',
-                      editingRecipes && (idx % 2 === 0 ? 'animate-wobble-l' : 'animate-wobble-r'),
-                    )}
-                    style={editingRecipes ? { animationDelay: `${(idx % 4) * 70}ms` } : undefined}
-                  >
-                    {editingRecipes && (
-                      <button
-                        type="button"
-                        aria-label={`Eliminar ${r.title}`}
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPendingDelete(r); }}
-                        className="absolute -right-2 -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-danger text-white shadow-action active:scale-95"
-                      >
-                        <X size={14} strokeWidth={2.2} aria-hidden />
-                      </button>
-                    )}
-                    {editingRecipes ? (
-                      <div className="block">
-                        <RecipeCard recipe={r} />
-                      </div>
-                    ) : (
-                      <Link href={`/meals/recipes/${r.id}`} className="block">
-                        <RecipeCard recipe={r} />
-                      </Link>
-                    )}
-                  </div>
-                ))}
-              </div>
+              {([...MEAL_SLOTS, 'untyped'] as const).map((bucket) => {
+                const list = recipesByType[bucket];
+                if (list.length === 0) return null;
+                const label = bucket === 'untyped' ? 'Sin tipo' : mealSlotLabel(bucket);
+                return (
+                  <section key={bucket} className="flex flex-col gap-3">
+                    <header className="flex items-center justify-between px-1">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
+                        {label}
+                      </p>
+                      <p className="text-[11px] font-bold tabular-nums text-ink-muted">
+                        {list.length}
+                      </p>
+                    </header>
+                    <div className="grid grid-cols-2 gap-3">
+                      {list.map((r, idx) => (
+                        <div
+                          key={r.id}
+                          className={clsx(
+                            'relative',
+                            editingRecipes && (idx % 2 === 0 ? 'animate-wobble-l' : 'animate-wobble-r'),
+                          )}
+                          style={editingRecipes ? { animationDelay: `${(idx % 4) * 70}ms` } : undefined}
+                        >
+                          {editingRecipes && (
+                            <button
+                              type="button"
+                              aria-label={`Eliminar ${r.title}`}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPendingDelete(r); }}
+                              className="absolute -right-2 -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-danger text-white shadow-action active:scale-95"
+                            >
+                              <X size={14} strokeWidth={2.2} aria-hidden />
+                            </button>
+                          )}
+                          {editingRecipes ? (
+                            <div className="block">
+                              <RecipeCard recipe={r} />
+                            </div>
+                          ) : (
+                            <Link href={`/meals/recipes/${r.id}`} className="block">
+                              <RecipeCard recipe={r} />
+                            </Link>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
             </>
           )}
         </div>

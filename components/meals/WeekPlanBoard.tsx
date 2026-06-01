@@ -6,7 +6,7 @@ import {
   type MealDay, type MealPlanRow, type MealSlot,
 } from '@/lib/meals/recipes';
 
-const DEFAULT_SLOTS: MealSlot[] = ['lunch', 'dinner'];
+const DEFAULT_SLOTS: MealSlot[] = ['breakfast', 'lunch', 'dinner'];
 
 interface WeekPlanBoardProps {
   weekStart: string;
@@ -14,6 +14,9 @@ interface WeekPlanBoardProps {
   slots?: MealSlot[];
   onPick: (day: MealDay, slot: MealSlot) => void;
   onClear: (day: MealDay, slot: MealSlot) => void;
+  onTogglePrepared?: (day: MealDay, slot: MealSlot, value: boolean) => void;
+  onToggleEaten?: (day: MealDay, slot: MealSlot, value: boolean) => void;
+  onCookAll?: () => void | Promise<void>;
 }
 
 function rowFor(plan: MealPlanRow[], day: MealDay, slot: MealSlot): MealPlanRow | undefined {
@@ -26,9 +29,29 @@ function dayNumber(weekStart: string, dayIdx: number): number {
   return dt.getUTCDate();
 }
 
-export function WeekPlanBoard({ weekStart, plan, slots = DEFAULT_SLOTS, onPick, onClear }: WeekPlanBoardProps) {
+export function WeekPlanBoard({
+  weekStart,
+  plan,
+  slots = DEFAULT_SLOTS,
+  onPick,
+  onClear,
+  onTogglePrepared,
+  onToggleEaten,
+  onCookAll,
+}: WeekPlanBoardProps) {
   return (
     <div className="flex flex-col gap-4 px-4">
+      {onCookAll && (
+        <div className="flex justify-end px-1">
+          <button
+            type="button"
+            onClick={() => { void onCookAll(); }}
+            className="inline-flex items-center gap-1.5 rounded-action bg-ink px-3 py-2 text-[12px] font-bold text-white active:scale-95"
+          >
+            🥘 Cocinar todo (domingo)
+          </button>
+        </div>
+      )}
       {MEAL_DAYS.map((day, idx) => (
         <section key={day}>
           <header className="mb-2 flex items-baseline gap-2 px-1">
@@ -48,6 +71,8 @@ export function WeekPlanBoard({ weekStart, plan, slots = DEFAULT_SLOTS, onPick, 
                 row={rowFor(plan, day, slot)}
                 onPick={onPick}
                 onClear={onClear}
+                onTogglePrepared={onTogglePrepared}
+                onToggleEaten={onToggleEaten}
               />
             ))}
           </div>

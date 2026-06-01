@@ -56,6 +56,7 @@ export default function MealsScanPage() {
         tags: payload.tags,
         notes: null,
         created_by: athlete,
+        meal_type: null,
       },
       ingredients: payload.ingredients,
       steps: payload.steps,

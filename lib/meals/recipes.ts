@@ -79,6 +79,7 @@ export interface Recipe {
   tags: string[];
   notes: string | null;
   created_by: 'MK' | 'Xabi' | null;
+  meal_type: MealSlot | null;
   created_at: string;
   updated_at: string;
 }
@@ -133,6 +134,22 @@ export function recipeFallbackGradient(title: string): string {
 }
 
 export type MealSlot = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
+export const MEAL_SLOTS: readonly MealSlot[] = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
+
+const MEAL_SLOT_LABELS_MAP: Record<MealSlot, string> = {
+  breakfast: 'Desayuno',
+  lunch: 'Comida',
+  dinner: 'Cena',
+  snack: 'Snack',
+};
+
+export function mealSlotLabel(slot: MealSlot): string {
+  return MEAL_SLOT_LABELS_MAP[slot];
+}
+
+export const MEAL_SLOT_LABELS = MEAL_SLOT_LABELS_MAP;
+
 export type MealDay = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 
 export const MEAL_DAYS: MealDay[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
@@ -148,6 +165,8 @@ export interface MealPlanRow {
   recipe_id: string | null;
   servings: number;
   done: boolean;
+  prepared?: boolean;
+  eaten?: boolean;
   recipe?: Recipe | null;
 }
 
