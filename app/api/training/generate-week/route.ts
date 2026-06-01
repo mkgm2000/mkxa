@@ -121,11 +121,24 @@ export async function POST(req: Request) {
 
   let parsedJson: unknown;
   try { parsedJson = JSON.parse(rawText.trim().replace(/^```json\s*|\s*```$/g, '')); }
-  catch { return jsonError('Modelo devolvió formato inesperado', 502); }
+  catch {
+    console.error('[generate-week] JSON.parse failed; raw=', rawText.slice(0, 600));
+    return NextResponse.json(
+      { error: 'Modelo devolvió formato inesperado (no es JSON)', detail: rawText.slice(0, 600) },
+      { status: 502 },
+    );
+  }
   const safe = GeneratedWeek.safeParse(parsedJson);
   if (!safe.success) {
-    console.error('[generate-week] schema mismatch', safe.error.issues, parsedJson);
-    return jsonError('Modelo devolvió formato inesperado', 502);
+    console.error('[generate-week] schema mismatch', JSON.stringify(safe.error.issues));
+    return NextResponse.json(
+      {
+        error: 'Modelo devolvió formato inesperado',
+        issues: safe.error.issues.slice(0, 8),
+        sample: JSON.stringify(parsedJson).slice(0, 400),
+      },
+      { status: 502 },
+    );
   }
   const plan = safe.data;
 
