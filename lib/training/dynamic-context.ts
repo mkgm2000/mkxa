@@ -34,7 +34,7 @@ export function buildDynamicContext(a: BuildDynamicContextArgs): string {
     `PLAN CONFIRMADO PREVIO (S${a.target_week - 1}):`,
     previous,
     '',
-    'REGISTROS REALES ÚLTIMAS 2 SEMANAS:',
+    `REGISTROS REALES HISTÓRICO COMPLETO (S1 → S${a.target_week - 1}, ${a.registros.length} entradas):`,
     regs,
     '',
     `Genera la SEMANA ${a.target_week} para ${a.athlete} aplicando las reglas estrictas.`,

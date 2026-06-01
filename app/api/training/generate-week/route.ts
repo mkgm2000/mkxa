@@ -58,12 +58,15 @@ export async function POST(req: Request) {
   const docSources = [xlsxSource, rulebookSource];
 
   const supa = supabaseServer();
-  const lo = Math.max(1, target_week - 2);
+  // Trae el histórico COMPLETO previo (semanas 1 a target_week - 1) para que
+  // Claude vea la evolución entera del atleta, no solo las últimas 2 semanas.
   const { data: regRows } = await supa.from('registros')
     .select('week,day_key,completed,rpe,notes,week_note')
     .eq('athlete', athlete)
-    .gte('week', lo)
-    .lte('week', target_week - 1);
+    .gte('week', 1)
+    .lte('week', target_week - 1)
+    .order('week', { ascending: true })
+    .order('day_key', { ascending: true });
   const registros = (regRows ?? []) as RecentRegistro[];
 
   const { data: prevRow } = await supa.from('training_weeks')
