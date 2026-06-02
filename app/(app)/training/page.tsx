@@ -24,42 +24,49 @@ export default function TrainingPage() {
   // arrows don't take user to empty future weeks that just show stale fallback.
   const maxAvailableWeek = useMaxAvailableWeek(athlete);
   const currentWeek = useMemo(() => Math.min(getCurrentWeek(), MAX_WEEK), []);
-  // null = "follow latest available". Set to a number only when the URL pins
-  // a specific week or the user manually navigates via arrows.
-  const initialWeekOrNull = useMemo<number | null>(() => {
+  // userIntent = the week the user actively picked (URL ?week= or arrow nav).
+  // When null, we follow `maxAvailableWeek` as the source of truth — that way
+  // when the DB query upgrades the cap from baseline (3) to confirmed (4, 5…)
+  // the page tracks the latest week automatically, with no stale state.
+  // A previous fix tried to seed state from null → maxAvailable in an effect,
+  // but only fired ONCE while max was 3, leaving the page pinned at 3 forever.
+  const initialIntent = useMemo<number | null>(() => {
     const raw = searchParams.get('week');
     const n = raw ? parseInt(raw, 10) : NaN;
     if (Number.isFinite(n) && n >= 1 && n <= MAX_WEEK) return n;
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const [week, setWeek] = useState<number | null>(initialWeekOrNull);
+  const [userIntent, setUserIntent] = useState<number | null>(initialIntent);
 
-  // When no week is pinned, follow maxAvailableWeek as it loads/changes.
+  // Derived week — re-evaluates on every render, so it auto-follows
+  // `maxAvailableWeek` until the user manually navigates or the URL pins.
+  const week = userIntent ?? Math.max(1, maxAvailableWeek);
+
+  // If the user navigated to a week beyond what's now available, walk them
+  // back to the latest. (Keeps `userIntent` itself null if they hadn't pinned.)
   useEffect(() => {
-    if (week === null && maxAvailableWeek >= 1) {
-      setWeek(maxAvailableWeek);
+    if (userIntent !== null && userIntent > maxAvailableWeek) {
+      setUserIntent(maxAvailableWeek);
     }
-  }, [maxAvailableWeek, week]);
+  }, [maxAvailableWeek, userIntent]);
 
-  // If maxAvailableWeek loads and current week is beyond it, clamp down.
-  useEffect(() => {
-    if (week !== null && week > maxAvailableWeek) setWeek(maxAvailableWeek);
-  }, [maxAvailableWeek, week]);
-
-  // Sync URL ?week= when user changes week via navigation
+  // Sync URL ?week= changes (e.g. arriving from /training/adjust with a new
+  // confirmation) into userIntent.
   useEffect(() => {
     const q = searchParams.get('week');
     const n = q ? parseInt(q, 10) : NaN;
-    if (Number.isFinite(n) && n >= 1 && n <= MAX_WEEK && n !== week) {
-      setWeek(n);
+    if (Number.isFinite(n) && n >= 1 && n <= MAX_WEEK && n !== userIntent) {
+      setUserIntent(n);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  // Effective week for downstream hooks/render. Falls back to maxAvailableWeek
-  // (which is at minimum the last baseline PLAN week) so hooks never see null.
-  const effectiveWeek = week ?? Math.max(1, maxAvailableWeek);
+  // Setter used by arrow handlers — stays a "user-pinned" signal.
+  const setWeek = setUserIntent;
+  // Keep the legacy alias because the rest of the component already reads
+  // `effectiveWeek`; both point to the same derived value.
+  const effectiveWeek = week;
 
   const { byKey, setLog, setWeekNote } = useTraining(athlete, effectiveWeek);
   const { plan: confirmedPlan, refresh: refreshConfirmed } = useConfirmedWeek(athlete, effectiveWeek);
