@@ -71,7 +71,7 @@ export function TikTokRecipeSheet({ recipe, onClose }: TikTokRecipeSheetProps) {
         </div>
 
         <div className="max-h-[70vh] overflow-hidden">
-          <TikTokEmbed url={recipe.source_url} />
+          <TikTokEmbed url={recipe.source_url} poster={recipe.thumbnail_url} />
         </div>
 
         <div className="flex flex-col gap-1 px-1 text-center">
