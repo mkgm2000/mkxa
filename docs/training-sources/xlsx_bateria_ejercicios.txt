@@ -1,65 +1,68 @@
 ### SHEET: Bateria Ejercicios
- | BATERIA DE EJERCICIOS — MK x XABI — HYROX VALENCIA 2026 |  |  |  |  |  |  |  |  | 
- | Catalogo de ejercicios del plan — anota cargas, tecnica y referencias |  |  |  |  |  |  |  |  | 
- |   CATEGORIAS:  F = Fuerza  |  H = HYROX Estaciones  |  C = Cardio  |  R = Core  |  T = Tecnica |  |  |  |  |  |  |  |  | 
- | # | Ejercicio | Categoria | Musculos | Series ref. | Reps/Dist | Carga ref. | MK | Xabi | Notas tecnicas
- | F01 | Sentadilla (Back Squat) | F Fuerza | Cuads, gluteos | 4-5x3-8 | 3-8 | 55-85% RM | 55kg RM | 60kg RM | Rodillas alineadas · Bajar hasta paralelo
- | F02 | Peso Muerto (Deadlift) | F Fuerza | Isquios, gluteos, espalda | 4-5x3-5 | 3-5 | 60-85% RM | 75kg RM | 80kg RM | Barra pegada al cuerpo · Cadera empuja al subir
- | F03 | Press Banca | F Fuerza | Pecho, triceps, hombro ant. | 4x4-10 | 4-10 | 55-85% RM | 30kg RM | 90kg RM | Escapulas retraidas · Bajar hasta pecho
- | F04 | RDL (Romanian Deadlift) | F Fuerza | Isquios, gluteos | 4x4-8 | 4-8 | 60-80% RM | — | — | Bisagra de cadera · Ligera flexion rodilla
- | F05 | Hip Thrust | F Fuerza | Gluteos, isquios | 3x10-15 | 10-15 | Moderada | 30kg | — | Espalda alta apoyada en banco
- | F06 | Sentadilla Bulgara | F Fuerza | Cuads, gluteos (unilateral) | 3x8/pierna | 8/lado | BW+mancuernas | — | 10-12kg | Rodilla trasera rozando suelo
- | F07 | Press Mancuerna (OH) | F Fuerza | Deltoides, triceps | 4x8-10 | 8-10 | Moderada | — | 10kg/mano | Nucleo activado · No arquear lumbar
- | F08 | Remo en Polea / Barra | F Fuerza | Dorsal, biceps, romboides | 4x8-10 | 8-10 | Moderada | — | — | Codos pegados al cuerpo
- | F09 | Dominadas (Pull-ups) | F Fuerza | Dorsal, biceps, core | 3x5-8 | 5-8 | BW / Asistida | Banda M | BW | Codo completo al inicio
- | F10 | Face Pull | F Fuerza | Deltoides post., manguito | 3x15 | 15 | Ligera | — | — | Codos altos · Manos a la cara
- | R01 | Plancha (Plank) | R Core | Core, estabilizadores | 3x30-60'' | 30-60s | BW | 30'' | 30'' | Cadera neutra
- | H01 | Ski Erg | H HYROX | Dorsal, hombros, core | Bloques | 500-1000m | Amort. 5-7 | — | Amort. 6 | Traccion doble brazo
- | H02 | Remo (Rowing machine) | H HYROX | Espalda, biceps, piernas | Bloques | 500-1000m | Amort. 5-7 | — | Amort. 6 | Drive con piernas primero
- | H03 | Sled Push (Trineo empuje) | H HYROX | Cuads, gluteos, pantorrillas | 4-6x20m | 20-50m | Progresivo | Ligero-Med | Progresivo | Pasos cortos · Cuerpo ~45°
- | H04 | Sled Pull (Trineo arrastre) | H HYROX | Isquios, gluteos, core | 4-6x20m | 20-50m | Progresivo | Ligero-Med | Progresivo | Caminar hacia atras · Cuerda tensa
- | H05 | Burpee Broad Jump (BBJ) | H HYROX | Full body, cardio | Bloques | 20-80 reps | BW | — | — | Salto largo · Aterrizaje suave
- | H06 | Farmer Carry | H HYROX | Trapecios, core, grip | Bloques | 50-200m | 2x12-20kg | 2x12kg | 2x18kg | Hombros atras · Pasos cortos
- | H07 | Lunges / Sandbag Lunges | H HYROX | Cuads, gluteos (unilateral) | Bloques | 30-100 reps | BW-carga | BW-carga | BW-carga | Rodilla trasera 1cm del suelo
- | H08 | Wall Balls | H HYROX | Cuads, hombros, core | Bloques | 25-100 reps | 6-9kg | 6kg | 6-9kg | Diana a 3m · Squat profundo
- | C01 | Carrera Z2 (aerobica) | C Cardio | Cardio, piernas | Continua | 30-70 min | 6:00-6:40/km | 6:20/km | Comodo | Hablar sin problema · FC < 75% FCmax
- | C02 | Intervalos 400m (pista) | C Cardio | Cardio, potencia | 5-10x400m | 400m | 5:05-5:22/km | 2:02-2:10/400m | Progresivo | Rec. 60-120'' · Salida conservadora
- | C03 | Intervalos 500m | C Cardio | Resistencia intermedia | 4-8x500m | 500m | 5:00-5:30/km | — | Progresivo | Ritmo estable
- | C04 | Intervalos 1000m | C Cardio | Umbral aerobico | 3-5x1000m | 1000m | 5:10-6:10/km | — | Progresivo | Ritmo constante cada repeticion
- | C05 | Carrera en fatiga | C Cardio | Resistencia especifica HYROX | Post-intervalos | 15-30 min | ~5:30-5:45/km | — | — | Sale del poli directo · Sin recuperacion previa
- | T01 | Movilidad Dinamica | T Tecnica | Full body | 5-8 min | — | BW | 5' | 5' | Cadera, tobillo, hombro · Antes de cada sesion
- | T02 | Tecnica de Carrera | T Tecnica | Coord. neuromuscular | 3x100m | 100m prog. | BW | — | — | Elevacion rodilla · Zancada · Frecuencia
- | Tren inferior unilateral y movilidad funcional |  |  |  |  |  |  |  |  | 
- | F12 | Elevacion de rodilla con KB en pie (unilateral) | F Fuerza | Flexores cadera, core, estabilizadores tobillo | 3x10-12/lado | 10-12/lado | KB ligero-medio | — | — | KB colgado del empeine o tobillera. De pie, eleva la rodilla al pecho. Controla el equilibrio. Sin balanceo de tronco.
- | F13 | Flexo-extension de tobillo con KB (unilateral) | F Fuerza | Gemelo, soleo, tibial anterior | 3x15-20/lado | 15-20/lado | KB ligero | — | — | KB colgado del pie. Sobre un escalon o step. Baja el talon por debajo del nivel, sube en puntilla. Rango completo.
- | F14 | Subida a cajon con elevacion de rodilla | F Fuerza | Cuadriceps, gluteo medio, core | 3x8-10/lado | 8-10/lado | Mancuerna al pecho | — | — | Mancuerna en posicion goblet (al pecho). Sube al cajon, al llegar arriba eleva la rodilla contraria al pecho. Alta transferencia a carrera y HYROX.
- | F15 | Elevacion de gemelo unilateral | F Fuerza | Gemelo, soleo | 3x15-20/lado | 15-20/lado | BW o KB | — | — | Sobre un pie, preferiblemente en escalon para mayor rango. Sube en puntilla y baja lento (3-4 segundos). Clave para fuerza de propulsion en carrera.
- | F16 | Salto unilateral a step en puntilla | F Fuerza | Gemelo, soleo, tendon de Aquiles | 3x10-15/lado | 10-15/lado | BW | — | — | Sobre un pie, salto elastico en puntilla sobre step bajo. Contacto breve con el suelo, sin flexion de rodilla. Mejora reactividad y elasticidad para carrera.
- | Core y estabilidad |  |  |  |  |  |  |  |  | 
- | R02 | Paso de KB bajo muslo de pie | R Core | Core antirotacion, flexores cadera, estabilizadores tobillo | 3x10-12/lado | 10-12 pases | KB ligero-medio | — | — | De pie, una rodilla a 90 al frente, la otra estirada atras, pies elevados. Pasa el KB de mano en mano por debajo del muslo elevado. Control total de la pelvis sin rotacion.
- | R03 | Plancha con elevacion de pierna (unilateral) | R Core | Core, gluteo, estabilizadores lumbares | 3x10-12/lado | 10-12/lado | BW | — | — | En plancha (codos o manos). Eleva una pierna estirada manteniendo la cadera completamente estable. Sin rotacion de pelvis. Aguanta 2 segundos arriba.
- | R04 | Press Pallof | R Core | Core antirotacion, oblicuos, transverso abdominal | 3x10-12/lado | 10-12/lado | Polea o goma | — | — | De pie lateral a la polea o goma. Manos al pecho, empuja recto al frente y regresa lento. La resistencia tira de ti para rotarte — resiste. Columna neutra en todo momento.
- | R05 | KB hold (isometrico) | R Core | Grip, core, estabilizadores hombro y columna | 3x20-40'' | 20-40 seg | KB o mancuerna | — | — | Sostener KB en posicion fija. Variantes: al lado del cuerpo (farmer hold), a un lado (suitcase hold), en rack a hombro, o sobre cabeza (overhead hold). Cada variante tiene un estimulo diferente.
- | Potencia y ejercicios compuestos |  |  |  |  |  |  |  |  | 
- | F17 | Thruster | F Fuerza | Cuadriceps, gluteos, deltoides, triceps, core | 4x6-10 | 6-10 | Barra o mancuernas | — | — | Sentadilla frontal completa + press sobre cabeza en un solo movimiento continuo. Sin pausa en la subida. Alta demanda metabolica. Tipico en CrossFit y circuitos HYROX.
- | F18 | Push press | F Fuerza | Deltoides, triceps, trapecio, piernas (asistencia) | 4x5-8 | 5-8 | Barra, KB o mancuernas | — | — | Desde rack frontal. Pequeno dip de rodillas (10-15 cm) y extension explosiva para iniciar el movimiento. Empuja hasta extension completa. Mas carga que press estricto.
- | F19 | Snatch con KB | F Fuerza | Cadena posterior, hombro, core, antebrazo | 3x5-8/lado | 5-8/lado | KB moderado | — | — | Desde el suelo o desde swing. En un movimiento continuo, lleva el KB a extension completa sobre la cabeza con el brazo vertical. Munica el KB — no frenes con el biceps. Confirma si usas barra o KB.
- | F20 | KB swing | F Fuerza | Gluteos, isquios, core, hombros (estabilizacion) | 4x15-20 | 15-20 | KB moderado-pesado | — | — | Bisagra de cadera explosiva. La carga sube por la fuerza de la cadera, no de los brazos. Dos variantes: swing americano (hasta sobre la cabeza) o ruso (hasta altura de hombros). Espalda recta en todo momento.
- | F21 | Devils press | F Fuerza | Full body: hombros, core, cadena posterior, cardio | 3x6-10 | 6-10 | Mancuernas medianas | — | — | Burpee con las manos en las mancuernas + al subir, swing-snatch de ambas mancuernas hasta sobre la cabeza en un movimiento. Alta demanda cardiovascular y de hombros.
- | Cardio en gimnasio (cinta y estaciones) |  |  |  |  |  |  |  |  | 
- | H09 | Burpee to plate | H HYROX | Full body, potencia de salto, cardio | Bloques | 20-50 reps | BW + disco | — | — | Burpee estandar pero aterriza con los dos pies sobre un disco en el suelo. Variante de potencia. Simula el gesto del Burpee Broad Jump de HYROX.
- | C06 | Circuito HIIT en cinta (distancias cortas) | C Cardio | Cardio, piernas, resistencia metabolica | 3-5 rondas | 200-500m/ronda | Velocidad 10-14 km/h | — | — | Rondas de carrera en cinta (<1 km) combinadas con ejercicios de gym. Ejemplo: 400m cinta + 10 Thrusters + 20 KB swings + 10 Burpees. Descanso entre rondas 90-120''. Util cuando la calle no es viable.
- | Variantes de zancadas |  |  |  |  |  |  |  |  | 
- | H10 | Zancada hacia adelante (estatica) | H HYROX | Cuadriceps, gluteo medio, isquios | 3x10-12/lado | 10-12/lado | BW o carga | — | — | Paso hacia adelante, rodilla trasera baja hasta 1 cm del suelo, vuelve al centro. Sin desplazamiento. Mas tension en cuadriceps que la version caminando.
-Añadidos v8 (2026-06-01) — core anti-movimiento + potencia/RFD para HYROX |  |  |  |  |  |  |  |  |  | 
-R06 | Dead Bug | R Core | Core antiextension, transverso | 3x8-10/lado | 8-10/lado | BW | — | — | Tumbado boca arriba. Brazo y pierna contraria descienden hacia el suelo a la vez. Lumbar pegada al suelo. Critico para respiracion bajo carga en carrera. | 
-R07 | Hollow Body Hold | R Core | Core anterior, recto abdominal | 3x20-40" | 20-40s | BW | — | — | Tumbado boca arriba, brazos y piernas estirados a 30cm del suelo. Lumbar pegada. Fundamental para Wall Balls al final cuando el core falla. | 
-R08 | Suitcase Carry | R Core | Oblicuos, antilateralizacion, grip | 3x30-50m/lado | 30-50m/lado | KB pesado | — | — | Farmer carry con UNA SOLA mano. El cuerpo quiere inclinarse hacia el lado del peso — resiste. Especifico para Farmer Carry asimetrico en HYROX. | 
-R09 | Hanging Knee Raise | R Core | Flexores cadera, recto abdominal | 3x8-12 | 8-12 | BW | — | — | Colgado de barra, eleva rodillas al pecho con control. Sin balanceo. Mejora eficiencia en Sandbag Lunges. | 
-R10 | Russian Twist con peso | R Core | Oblicuos, rotadores | 3x15-20 | 15-20 | KB 4-8kg | — | — | Sentado, pies elevados, rotacion controlada con peso. No tirar de la espalda. Util para BBJ y lunges bajo fatiga. | 
-F22 | Box Jump 50-60cm | F Fuerza | Cuads, gluteos, gemelos | 4x5-8 | 5-8 | Cajon 50-60cm | — | — | Salto vertical bilateral al cajon. Aterrizaje suave en cuarto de sentadilla. Bajar caminando. Transferencia directa a Burpee Broad Jump. | 
-F23 | Broad Jump x5 | F Fuerza | Cuads, gluteos, isquios | 4x5 | 5 consecutivos | BW | — | — | Salto horizontal maximo a dos pies, 5 saltos seguidos sin descanso. Especifico para BBJ HYROX. | 
-F24 | Power Clean (cargada de potencia) | F Fuerza | Cadena posterior, hombros, full body | 5x3 | 3 | 50-70% RM | — | — | Desde el suelo, lleva la barra hasta hombros en un movimiento explosivo. Tecnica critica — empieza ligero. Potencia transferible a Sled Push. | 
-F25 | Med Ball Slam | F Fuerza | Dorsal, core, hombros | 4x8-10 | 8-10 | Slam ball 6-10kg | — | — | Levanta la pelota sobre la cabeza y estampala contra el suelo con fuerza maxima. Descarga la fatiga acumulada y entrena el patron del Wall Ball. | 
-F26 | Single Arm KB Swing | F Fuerza | Gluteos, isquios, oblicuos | 3x10-12/lado | 10-12/lado | KB 12-20kg | — | — | KB swing tradicional con UNA SOLA mano. El core resiste la rotacion. Combinacion potencia cadera + antirotacion core. | 
-F27 | Banded Skater Hops | F Fuerza | Gluteo medio, RFD lateral | 3x8-10/lado | 8-10/lado | Banda media | — | — | Saltos laterales con banda en muslos. Aterrizaje en una pierna, controlado. Mejora equilibrio dinamico para lunges y BBJ. | 
+ | BATERIA DE EJERCICIOS — MK x XABI — HYROX VALENCIA 2026 |  |  |  |  |  |  |  |  |  | 
+ | Catalogo de ejercicios del plan — anota cargas, tecnica y referencias |  |  |  |  |  |  |  |  |  | 
+ | CATEGORIAS:  F = Fuerza  |  H = HYROX Estaciones  |  C = Cardio  |  R = Core  |  T = Tecnica |  |  |  |  |  |  |  |  |  | 
+ | # | Ejercicio | Categoria | Musculos | Series ref. | Reps/Dist | Carga ref. | MK | Xabi | Notas tecnicas | Usado en sesiones
+ | F01 | Sentadilla (Back Squat) | F Fuerza | Cuads, gluteos | 4-5x3-8 | 3-8 | 55-85% RM | 55kg RM | 60kg RM | Rodillas alineadas · Bajar hasta paralelo | ✓ Sí
+ | F02 | Peso Muerto (Deadlift) | F Fuerza | Isquios, gluteos, espalda | 4-5x3-5 | 3-5 | 60-85% RM | 75kg RM | 80kg RM | Barra pegada al cuerpo · Cadera empuja al subir | ✓ Sí
+ | F03 | Press Banca | F Fuerza | Pecho, triceps, hombro ant. | 4x4-10 | 4-10 | 55-85% RM | 30kg RM | 90kg RM | Escapulas retraidas · Bajar hasta pecho | ✓ Sí
+ | F04 | RDL (Romanian Deadlift) | F Fuerza | Isquios, gluteos | 4x4-8 | 4-8 | 60-80% RM | — | — | Bisagra de cadera · Ligera flexion rodilla | ✓ Sí
+ | F05 | Hip Thrust | F Fuerza | Gluteos, isquios | 3x10-15 | 10-15 | Moderada | 30kg | — | Espalda alta apoyada en banco | ✓ Sí
+ | F06 | Sentadilla Bulgara | F Fuerza | Cuads, gluteos (unilateral) | 3x8/pierna | 8/lado | BW+mancuernas | — | 10-12kg | Rodilla trasera rozando suelo | ✓ Sí
+ | F07 | Press Mancuerna (OH) | F Fuerza | Deltoides, triceps | 4x8-10 | 8-10 | Moderada | — | 10kg/mano | Nucleo activado · No arquear lumbar | ✓ Sí
+ | F08 | Remo en Polea / Barra | F Fuerza | Dorsal, biceps, romboides | 4x8-10 | 8-10 | Moderada | — | — | Codos pegados al cuerpo | ✓ Sí
+ | F09 | Dominadas (Pull-ups) | F Fuerza | Dorsal, biceps, core | 3x5-8 | 5-8 | BW / Asistida | Banda M | BW | Codo completo al inicio | ✓ Sí
+ | F10 | Face Pull | F Fuerza | Deltoides post., manguito | 3x15 | 15 | Ligera | — | — | Codos altos · Manos a la cara | ✓ Sí
+ | R01 | Plancha (Plank) | R Core | Core, estabilizadores | 3x30-60'' | 30-60s | BW | 30'' | 30'' | Cadera neutra | ✓ Sí
+ | H01 | Ski Erg | H HYROX | Dorsal, hombros, core | Bloques | 500-1000m | Amort. 5-7 | — | Amort. 6 | Traccion doble brazo | ✓ Sí
+ | H02 | Remo (Rowing machine) | H HYROX | Espalda, biceps, piernas | Bloques | 500-1000m | Amort. 5-7 | — | Amort. 6 | Drive con piernas primero | ✓ Sí
+ | H03 | Sled Push (Trineo empuje) | H HYROX | Cuads, gluteos, pantorrillas | 4-6x20m | 20-50m | Progresivo | Ligero-Med | Progresivo | Pasos cortos · Cuerpo ~45° | ✓ Sí
+ | H04 | Sled Pull (Trineo arrastre) | H HYROX | Isquios, gluteos, core | 4-6x20m | 20-50m | Progresivo | Ligero-Med | Progresivo | Caminar hacia atras · Cuerda tensa | ✓ Sí
+ | H05 | Burpee Broad Jump (BBJ) | H HYROX | Full body, cardio | Bloques | 20-80 reps | BW | — | — | Salto largo · Aterrizaje suave | ✓ Sí
+ | H06 | Farmer Carry | H HYROX | Trapecios, core, grip | Bloques | 50-200m | 2x12-20kg | 2x12kg | 2x18kg | Hombros atras · Pasos cortos | ✓ Sí
+ | H07 | Lunges / Sandbag Lunges | H HYROX | Cuads, gluteos (unilateral) | Bloques | 30-100 reps | BW-carga | BW-carga | BW-carga | Rodilla trasera 1cm del suelo | ✓ Sí
+ | H08 | Wall Balls | H HYROX | Cuads, hombros, core | Bloques | 25-100 reps | 6-9kg | 6kg | 6-9kg | Diana a 3m · Squat profundo | ✓ Sí
+ | C01 | Carrera Z2 (aerobica) | C Cardio | Cardio, piernas | Continua | 30-70 min | 6:00-6:40/km | 6:20/km | Comodo | Hablar sin problema · FC < 75% FCmax | ✓ Sí
+ | C02 | Intervalos 400m (pista) | C Cardio | Cardio, potencia | 5-10x400m | 400m | 5:05-5:22/km | 2:02-2:10/400m | Progresivo | Rec. 60-120'' · Salida conservadora | ✓ Sí
+ | C03 | Intervalos 500m | C Cardio | Resistencia intermedia | 4-8x500m | 500m | 5:00-5:30/km | — | Progresivo | Ritmo estable | ✓ Sí
+ | C04 | Intervalos 1000m | C Cardio | Umbral aerobico | 3-5x1000m | 1000m | 5:10-6:10/km | — | Progresivo | Ritmo constante cada repeticion | ✓ Sí
+ | C05 | Carrera en fatiga | C Cardio | Resistencia especifica HYROX | Post-intervalos | 15-30 min | ~5:30-5:45/km | — | — | Sale del poli directo · Sin recuperacion previa | ✓ Sí
+ | T01 | Movilidad Dinamica | T Tecnica | Full body | 5-8 min | — | BW | 5' | 5' | Cadera, tobillo, hombro · Antes de cada sesion | ✓ Sí
+ | T02 | Tecnica de Carrera | T Tecnica | Coord. neuromuscular | 3x100m | 100m prog. | BW | — | — | Elevacion rodilla · Zancada · Frecuencia | ✓ Sí
+ | Tren inferior unilateral y movilidad funcional |  |  |  |  |  |  |  |  |  | 
+ | F12 | Elevacion de rodilla con KB en pie (unilateral) | F Fuerza | Flexores cadera, core, estabilizadores tobillo | 3x10-12/lado | 10-12/lado | KB ligero-medio | — | — | KB colgado del empeine o tobillera. De pie, eleva la rodilla al pecho. Controla el equilibrio. Sin balanceo de tronco. | ✗ No usado
+ | F13 | Flexo-extension de tobillo con KB (unilateral) | F Fuerza | Gemelo, soleo, tibial anterior | 3x15-20/lado | 15-20/lado | KB ligero | — | — | KB colgado del pie. Sobre un escalon o step. Baja el talon por debajo del nivel, sube en puntilla. Rango completo. | ✗ No usado
+ | F14 | Subida a cajon con elevacion de rodilla | F Fuerza | Cuadriceps, gluteo medio, core | 3x8-10/lado | 8-10/lado | Mancuerna al pecho | — | — | Mancuerna en posicion goblet (al pecho). Sube al cajon, al llegar arriba eleva la rodilla contraria al pecho. Alta transferencia a carrera y HYROX. | ✗ No usado
+ | F15 | Elevacion de gemelo unilateral | F Fuerza | Gemelo, soleo | 3x15-20/lado | 15-20/lado | BW o KB | — | — | Sobre un pie, preferiblemente en escalon para mayor rango. Sube en puntilla y baja lento (3-4 segundos). Clave para fuerza de propulsion en carrera. | ✗ No usado
+ | F16 | Salto unilateral a step en puntilla | F Fuerza | Gemelo, soleo, tendon de Aquiles | 3x10-15/lado | 10-15/lado | BW | — | — | Sobre un pie, salto elastico en puntilla sobre step bajo. Contacto breve con el suelo, sin flexion de rodilla. Mejora reactividad y elasticidad para carrera. | ✗ No usado
+ | Core y estabilidad |  |  |  |  |  |  |  |  |  | 
+ | R02 | Paso de KB bajo muslo de pie | R Core | Core antirotacion, flexores cadera, estabilizadores tobillo | 3x10-12/lado | 10-12 pases | KB ligero-medio | — | — | De pie, una rodilla a 90 al frente, la otra estirada atras, pies elevados. Pasa el KB de mano en mano por debajo del muslo elevado. Control total de la pelvis sin rotacion. | ✗ No usado
+ | R03 | Plancha con elevacion de pierna (unilateral) | R Core | Core, gluteo, estabilizadores lumbares | 3x10-12/lado | 10-12/lado | BW | — | — | En plancha (codos o manos). Eleva una pierna estirada manteniendo la cadera completamente estable. Sin rotacion de pelvis. Aguanta 2 segundos arriba. | ✗ No usado
+ | R04 | Press Pallof | R Core | Core antirotacion, oblicuos, transverso abdominal | 3x10-12/lado | 10-12/lado | Polea o goma | — | — | De pie lateral a la polea o goma. Manos al pecho, empuja recto al frente y regresa lento. La resistencia tira de ti para rotarte — resiste. Columna neutra en todo momento. | ✗ No usado
+ | R05 | KB hold (isometrico) | R Core | Grip, core, estabilizadores hombro y columna | 3x20-40'' | 20-40 seg | KB o mancuerna | — | — | Sostener KB en posicion fija. Variantes: al lado del cuerpo (farmer hold), a un lado (suitcase hold), en rack a hombro, o sobre cabeza (overhead hold). Cada variante tiene un estimulo diferente. | ✗ No usado
+ | Potencia y ejercicios compuestos |  |  |  |  |  |  |  |  |  | 
+ | F17 | Thruster | F Fuerza | Cuadriceps, gluteos, deltoides, triceps, core | 4x6-10 | 6-10 | Barra o mancuernas | — | — | Sentadilla frontal completa + press sobre cabeza en un solo movimiento continuo. Sin pausa en la subida. Alta demanda metabolica. Tipico en CrossFit y circuitos HYROX. | ✓ Sí (S10+)
+ | F18 | Push press | F Fuerza | Deltoides, triceps, trapecio, piernas (asistencia) | 4x5-8 | 5-8 | Barra, KB o mancuernas | — | — | Desde rack frontal. Pequeno dip de rodillas (10-15 cm) y extension explosiva para iniciar el movimiento. Empuja hasta extension completa. Mas carga que press estricto. | ✓ Sí (S10+)
+ | F19 | Snatch con KB | F Fuerza | Cadena posterior, hombro, core, antebrazo | 3x5-8/lado | 5-8/lado | KB moderado | — | — | Desde el suelo o desde swing. En un movimiento continuo, lleva el KB a extension completa sobre la cabeza con el brazo vertical. Munica el KB — no frenes con el biceps. Confirma si usas barra o KB. | ✓ Sí (S10+)
+ | F20 | KB swing | F Fuerza | Gluteos, isquios, core, hombros (estabilizacion) | 4x15-20 | 15-20 | KB moderado-pesado | — | — | Bisagra de cadera explosiva. La carga sube por la fuerza de la cadera, no de los brazos. Dos variantes: swing americano (hasta sobre la cabeza) o ruso (hasta altura de hombros). Espalda recta en todo momento. | ✓ Sí (S10+)
+ | F21 | Devils press | F Fuerza | Full body: hombros, core, cadena posterior, cardio | 3x6-10 | 6-10 | Mancuernas medianas | — | — | Burpee con las manos en las mancuernas + al subir, swing-snatch de ambas mancuernas hasta sobre la cabeza en un movimiento. Alta demanda cardiovascular y de hombros. | ✓ Sí (S10+)
+ | Cardio en gimnasio (cinta y estaciones) |  |  |  |  |  |  |  |  |  | 
+ | H09 | Burpee to plate | H HYROX | Full body, potencia de salto, cardio | Bloques | 20-50 reps | BW + disco | — | — | Burpee estandar pero aterriza con los dos pies sobre un disco en el suelo. Variante de potencia. Simula el gesto del Burpee Broad Jump de HYROX. | ✓ Sí (S10+)
+ | C06 | Circuito HIIT en cinta (distancias cortas) | C Cardio | Cardio, piernas, resistencia metabolica | 3-5 rondas | 200-500m/ronda | Velocidad 10-14 km/h | — | — | Rondas de carrera en cinta (<1 km) combinadas con ejercicios de gym. Ejemplo: 400m cinta + 10 Thrusters + 20 KB swings + 10 Burpees. Descanso entre rondas 90-120''. Util cuando la calle no es viable. | ✗ No usado
+ | Variantes de zancadas |  |  |  |  |  |  |  |  |  | 
+ | H10 | Zancada hacia adelante (estatica) | H HYROX | Cuadriceps, gluteo medio, isquios | 3x10-12/lado | 10-12/lado | BW o carga | — | — | Paso hacia adelante, rodilla trasera baja hasta 1 cm del suelo, vuelve al centro. Sin desplazamiento. Mas tension en cuadriceps que la version caminando. | ✓ Sí (S10+)
+Añadidos v8 (2026-06-01) — core anti-movimiento + potencia/RFD para HYROX |  |  |  |  |  |  |  |  |  |  | 
+R06 | Dead Bug | R Core | Core antiextension, transverso | 3x8-10/lado | 8-10/lado | BW | — | — | Tumbado boca arriba. Brazo y pierna contraria descienden hacia el suelo a la vez. Lumbar pegada al suelo. Critico para respiracion bajo carga en carrera. |  | 
+R07 | Hollow Body Hold | R Core | Core anterior, recto abdominal | 3x20-40" | 20-40s | BW | — | — | Tumbado boca arriba, brazos y piernas estirados a 30cm del suelo. Lumbar pegada. Fundamental para Wall Balls al final cuando el core falla. |  | 
+R08 | Suitcase Carry | R Core | Oblicuos, antilateralizacion, grip | 3x30-50m/lado | 30-50m/lado | KB pesado | — | — | Farmer carry con UNA SOLA mano. El cuerpo quiere inclinarse hacia el lado del peso — resiste. Especifico para Farmer Carry asimetrico en HYROX. |  | 
+R09 | Hanging Knee Raise | R Core | Flexores cadera, recto abdominal | 3x8-12 | 8-12 | BW | — | — | Colgado de barra, eleva rodillas al pecho con control. Sin balanceo. Mejora eficiencia en Sandbag Lunges. |  | 
+R10 | Russian Twist con peso | R Core | Oblicuos, rotadores | 3x15-20 | 15-20 | KB 4-8kg | — | — | Sentado, pies elevados, rotacion controlada con peso. No tirar de la espalda. Util para BBJ y lunges bajo fatiga. |  | 
+F22 | Box Jump 50-60cm | F Fuerza | Cuads, gluteos, gemelos | 4x5-8 | 5-8 | Cajon 50-60cm | — | — | Salto vertical bilateral al cajon. Aterrizaje suave en cuarto de sentadilla. Bajar caminando. Transferencia directa a Burpee Broad Jump. |  | ✗ No usado
+F23 | Broad Jump x5 | F Fuerza | Cuads, gluteos, isquios | 4x5 | 5 consecutivos | BW | — | — | Salto horizontal maximo a dos pies, 5 saltos seguidos sin descanso. Especifico para BBJ HYROX. |  | ✗ No usado
+F24 | Power Clean (cargada de potencia) | F Fuerza | Cadena posterior, hombros, full body | 5x3 | 3 | 50-70% RM | — | — | Desde el suelo, lleva la barra hasta hombros en un movimiento explosivo. Tecnica critica — empieza ligero. Potencia transferible a Sled Push. |  | ✗ No usado
+F25 | Med Ball Slam | F Fuerza | Dorsal, core, hombros | 4x8-10 | 8-10 | Slam ball 6-10kg | — | — | Levanta la pelota sobre la cabeza y estampala contra el suelo con fuerza maxima. Descarga la fatiga acumulada y entrena el patron del Wall Ball. |  | ✗ No usado
+F26 | Single Arm KB Swing | F Fuerza | Gluteos, isquios, oblicuos | 3x10-12/lado | 10-12/lado | KB 12-20kg | — | — | KB swing tradicional con UNA SOLA mano. El core resiste la rotacion. Combinacion potencia cadera + antirotacion core. |  | ✗ No usado
+ | F27 | Banded Skater Hops | F Fuerza | Gluteo medio, RFD lateral | 3x8-10/lado | 8-10/lado | Banda media | — | — | Saltos laterales con banda en muslos. Aterrizaje en una pierna, controlado. Mejora equilibrio dinamico para lunges y BBJ. | ✗ No usado
+ | Añadidos v11 (2026-06-02) — fuerza de tirón + grip específico HYROX |  |  |  |  |  |  |  |  |  | 
+ | F28 | Remo con Barra (Barbell Row) | F Fuerza | Dorsal, romboides, biceps, deltoides post. | 4x6-10 | 6-10 | Barra 30-60kg | — | — | Barra a la altura del pecho con presas prona. Espalda neutra, rodillas ligeramente flexionadas. Codos pegados, barra roza abdomen. Complementa Ski Erg y Remo maquina. Transferencia directa al Sled Pull. | ✗ Nuevo
+ | R11 | Dead Hang (Colgado de barra) | R Core | Grip, hombros, dorsal, descompresion lumbar | 3x20-60s | 20-60 seg | BW | — | — | Colgado de barra en agarre prono o neutro. Brazos completamente extendidos. Hombros activos (no hundir cuello). Progresion: Hang pasivo → activo (hombros deprimidos) → con peso. Clave para Farmer Carry y fuerza de agarre en race day. | ✗ Nuevo

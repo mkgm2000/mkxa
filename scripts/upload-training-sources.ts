@@ -29,7 +29,8 @@ const SOURCES: SourceDef[] = [
   { slug: 'pdf_macro_meso_micro',                  filename: 'pdf_macro_meso_micro.pdf',                  description: 'UFV macro/meso/micro estructura jerárquica',       mimeType: 'application/pdf' },
   { slug: 'pdf_periodizacion_tradicional_inversa', filename: 'pdf_periodizacion_tradicional_inversa.pdf', description: 'UFV periodización tradicional e inversa',          mimeType: 'application/pdf' },
   { slug: 'pdf_rulebook_hyrox_doubles',            filename: 'pdf_rulebook_hyrox_doubles.pdf',            description: 'HYROX Doubles official rulebook',                  mimeType: 'application/pdf' },
-  { slug: 'xlsx_master_23s',                       filename: 'xlsx_master_23s.txt',                       description: 'MKXA 23S v3 master plan (xlsx convertido a text/plain)', mimeType: 'text/plain' },
+  { slug: 'xlsx_master_23s',                       filename: 'xlsx_master_23s.txt',                       description: 'MKXA 23S v12 master plan (Vision Macro + MK/Xabi Plan + Registros + Planes Confirmados + Changelog)', mimeType: 'text/plain' },
+  { slug: 'xlsx_bateria_ejercicios',               filename: 'xlsx_bateria_ejercicios.txt',               description: 'MKXA batería de ejercicios v12 (F/H/C/R/T con cargas MK/Xabi y usado-en-sesiones)',         mimeType: 'text/plain' },
 ];
 
 async function main() {
