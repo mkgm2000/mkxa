@@ -29,18 +29,28 @@ export function MoodGradientBg({ mood, children, className, style, ...rest }: Mo
     const body = document.body;
     const prevVar = root.style.getPropertyValue('--mood-bg');
     const prevBody = body.style.backgroundColor;
-    const prevTheme = document.querySelector('meta[name="theme-color"]')?.getAttribute('content') ?? null;
     root.style.setProperty('--mood-bg', t.cardFrom);
     // Also paint body directly so the chrome behind the safe-area matches
     // without depending on var-cascade timing.
     body.style.backgroundColor = t.cardFrom;
-    // Sync iOS Safari status-bar chrome too.
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t.cardFrom);
+    // iOS Safari reads <meta name="theme-color"> only when the element is
+    // mounted; mutating .content on an existing tag often won't repaint the
+    // status bar. Remove and re-insert with the new color to force a fresh
+    // read every time the mood changes.
+    const head = document.head;
+    const existing = head.querySelectorAll('meta[name="theme-color"]');
+    existing.forEach((el) => el.remove());
+    const fresh = document.createElement('meta');
+    fresh.setAttribute('name', 'theme-color');
+    fresh.setAttribute('content', t.cardFrom);
+    head.appendChild(fresh);
     return () => {
       if (prevVar) root.style.setProperty('--mood-bg', prevVar);
       else root.style.removeProperty('--mood-bg');
       body.style.backgroundColor = prevBody;
-      if (prevTheme) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', prevTheme);
+      // Leave the meta tag in place: the next mount (or another
+      // MoodGradientBg) will replace it. Re-inserting prevTheme here would
+      // race with overlapping mounts and flicker the status bar mid-nav.
     };
   }, [t.cardFrom]);
 

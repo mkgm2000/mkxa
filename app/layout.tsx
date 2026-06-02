@@ -37,7 +37,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#87c9ff',
+  // No static themeColor — MoodGradientBg recreates the <meta> at runtime
+  // with the current mood's cardFrom so the iOS status bar tracks the
+  // page gradient. A static value here would force iOS to cache a wrong
+  // color on first paint that runtime updates can't always override.
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,

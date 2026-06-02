@@ -21,7 +21,10 @@ html, body {
   height: 100%;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: auto;
-  background-color: var(--mood-bg, #fff4d8);
+  /* Neutral white fallback while MoodGradientBg loads. The previous cream
+     (#fff4d8 = happy cardFrom) bled into iOS status-bar chrome on first
+     paint and didn't always update once the real mood loaded. */
+  background-color: var(--mood-bg, #ffffff);
 }
 body { color: #1b1d1f; }
 
