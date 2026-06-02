@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Utensils } from 'lucide-react';
 import clsx from 'clsx';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
 import { RecipeCard } from '@/components/meals/RecipeCard';
@@ -116,9 +116,18 @@ export default function MealsHubPage() {
           </h1>
           <p className="mt-2 text-[13px] text-ink-muted">Semana del {weekStart}</p>
         </div>
-        <Link href="/meals/recipes/new" aria-label="Nueva receta" className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-action transition-transform duration-150 active:scale-95">
-          <Plus size={20} strokeWidth={1.5} className="text-ink" aria-hidden />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/meals/restaurants"
+            aria-label="Restaurantes"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-action transition-transform duration-150 active:scale-95"
+          >
+            <Utensils size={18} strokeWidth={1.5} className="text-ink" aria-hidden />
+          </Link>
+          <Link href="/meals/recipes/new" aria-label="Nueva receta" className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-action transition-transform duration-150 active:scale-95">
+            <Plus size={20} strokeWidth={1.5} className="text-ink" aria-hidden />
+          </Link>
+        </div>
       </header>
 
       <div className="px-5"><InlineSaveText /></div>
