@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { Circle, CheckCircle2 } from 'lucide-react';
 import clsx from 'clsx';
 import type { PantryItem } from '@/lib/meals/recipes';
@@ -7,15 +8,56 @@ import type { PantryItem } from '@/lib/meals/recipes';
 interface PantryItemRowProps {
   item: PantryItem;
   onToggle: (id: string) => void;
+  /** Long-press (≥500ms) handler used to open the edit/delete action sheet. */
+  onLongPress?: (item: PantryItem) => void;
 }
 
-export function PantryItemRow({ item, onToggle }: PantryItemRowProps) {
+const LONG_PRESS_MS = 500;
+
+export function PantryItemRow({ item, onToggle, onLongPress }: PantryItemRowProps) {
+  // Long-press handling — same pattern as ShoppingItemRow so the UX is
+  // consistent between Compra and Despensa.
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longFired = useRef(false);
+
+  function clearTimer() {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+  }
+  function handlePointerDown() {
+    if (!onLongPress) return;
+    longFired.current = false;
+    clearTimer();
+    timer.current = setTimeout(() => {
+      longFired.current = true;
+      onLongPress(item);
+    }, LONG_PRESS_MS);
+  }
+  function handlePointerEnd() { clearTimer(); }
+  function handleClick() {
+    if (longFired.current) { longFired.current = false; return; }
+    onToggle(item.id);
+  }
+
   return (
     <button
       type="button"
-      onClick={() => onToggle(item.id)}
+      onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerEnd}
+      onPointerLeave={handlePointerEnd}
+      onPointerCancel={handlePointerEnd}
+      onContextMenu={(e) => {
+        if (onLongPress) { e.preventDefault(); onLongPress(item); }
+      }}
+      onSelectCapture={(e) => e.preventDefault()}
       aria-pressed={item.in_stock}
-      className="flex w-full items-center gap-3 rounded-item bg-white px-3 py-2.5 text-left shadow-item transition-transform duration-150 active:scale-[0.99]"
+      style={{
+        WebkitTouchCallout: 'none',
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
+      }}
+      className="flex w-full items-center gap-3 rounded-item bg-white px-3 py-2.5 text-left shadow-item transition-transform duration-150 active:scale-[0.99] touch-manipulation"
     >
       <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center text-ink">
         {item.in_stock

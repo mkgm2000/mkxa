@@ -69,7 +69,7 @@ export default function MealsHubPage() {
     cookAllToday,
   } = useMealPlan(weekStart);
   const { items: shoppingItems, toggleChecked, editItem: editShopping, deleteItem: deleteShopping, addManual, finish } = useShoppingList(weekStart);
-  const { items: pantryItems, toggleInStock, addItem: addPantry } = usePantry();
+  const { items: pantryItems, toggleInStock, addItem: addPantry, editItem: editPantry, deleteItem: deletePantry } = usePantry();
 
   const [editingRecipes, setEditingRecipes] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<Recipe | null>(null);
@@ -80,7 +80,21 @@ export default function MealsHubPage() {
 
   // Search query + collapse state for the Recetas tab.
   const [recipesQuery, setRecipesQuery] = useState('');
-  const [collapsedBuckets, setCollapsedBuckets] = useState<Set<string>>(() => new Set());
+  // Default: every category collapsed EXCEPT lunch ("Comida"). When the user
+  // leaves the Recetas tab and comes back this state resets — see the effect
+  // below — so they always land on the same predictable view.
+  const defaultCollapsed = () => new Set(['breakfast', 'dinner', 'snack', 'dessert', 'untyped']);
+  const [collapsedBuckets, setCollapsedBuckets] = useState<Set<string>>(defaultCollapsed);
+
+  // Reset to default whenever the active tab is not 'recetas'. The next time
+  // the user opens Recetas the state is fresh.
+  useEffect(() => {
+    if (tab !== 'recetas') {
+      setRecipesQuery('');
+      setCollapsedBuckets(defaultCollapsed());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
 
   // Group recipes by meal_type for the Recetas tab, filtered by the
   // search query against title and tags. Empty groups are skipped at render.
@@ -373,7 +387,7 @@ export default function MealsHubPage() {
       )}
 
       {tab === 'despensa' && (
-        <PantryList items={pantryItems} onToggle={toggleInStock} onAdd={addPantry} />
+        <PantryList items={pantryItems} onToggle={toggleInStock} onAdd={addPantry} onEdit={editPantry} onDelete={deletePantry} />
       )}
 
       {tab === 'pases' && <MealPassesSection />}

@@ -59,5 +59,31 @@ export function usePantry() {
     saveState.getState().set('saved');
   }, []);
 
-  return { items, loading, refresh, toggleInStock, addItem };
+  const editItem = useCallback(async (id: string, patch: { name?: string; units?: number | null }) => {
+    saveState.getState().set('saving');
+    const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (typeof patch.name === 'string') payload.name = patch.name.trim().toLowerCase();
+    if (patch.units !== undefined) {
+      payload.units = typeof patch.units === 'number' && patch.units > 0 ? Math.trunc(patch.units) : null;
+    }
+    const { data, error } = await supabaseClient()
+      .from('pantry_items')
+      .update(payload)
+      .eq('id', id)
+      .select('*')
+      .single();
+    if (error || !data) { saveState.getState().set('error'); return; }
+    setItems((prev) => prev.map((i) => (i.id === id ? (data as PantryItem) : i)));
+    saveState.getState().set('saved');
+  }, []);
+
+  const deleteItem = useCallback(async (id: string) => {
+    saveState.getState().set('saving');
+    const { error } = await supabaseClient().from('pantry_items').delete().eq('id', id);
+    if (error) { saveState.getState().set('error'); return; }
+    setItems((prev) => prev.filter((i) => i.id !== id));
+    saveState.getState().set('saved');
+  }, []);
+
+  return { items, loading, refresh, toggleInStock, addItem, editItem, deleteItem };
 }

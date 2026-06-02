@@ -1,22 +1,20 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 
-// Server-side proxy to TikTok's oEmbed endpoint. We hit it from the
-// edge (Node runtime) instead of the browser to avoid CORS rejection,
-// and to keep the call non-authenticated. oEmbed is rate-limited
-// per-IP — if it 404s or 429s we return { error } and the client just
-// skips the thumbnail (gracefully shows the emoji fallback).
+// POST /api/recipes/tiktok-meta  { url: string }
+//   → { thumbnail_url, title, author_name }
+//
+// Strategy: hit tikwm first because (a) for photo-slideshows it returns
+// `images[]` and we want `images[0]` as the recipe cover, and (b) it also
+// covers regular video posts via `origin_cover`. Fall back to TikTok's
+// oEmbed only if tikwm doesn't yield a usable image — oEmbed 404s for
+// slideshow posts, which is the bug that left "Ideas de snack Mercadona"
+// without a cover.
 export const runtime = 'nodejs';
 
 const RequestSchema = z.object({
   url: z.string().min(1).max(2048),
 });
-
-interface OEmbedShape {
-  thumbnail_url?: string;
-  title?: string;
-  author_name?: string;
-}
 
 export interface TikTokMetaResponse {
   thumbnail_url: string | null;
@@ -24,77 +22,95 @@ export interface TikTokMetaResponse {
   author_name: string | null;
 }
 
-export interface TikTokMetaError {
-  error: string;
+interface TikwmResponse {
+  code?: number;
+  data?: {
+    title?: string;
+    cover?: string;
+    origin_cover?: string;
+    images?: string[];
+    author?: { unique_id?: string; nickname?: string };
+  };
 }
 
-export async function POST(req: NextRequest): Promise<NextResponse<TikTokMetaResponse | TikTokMetaError>> {
-  let body: unknown;
+interface OEmbedShape {
+  thumbnail_url?: string;
+  title?: string;
+  author_name?: string;
+}
+
+async function viaTikwm(url: string): Promise<TikTokMetaResponse | null> {
   try {
-    body = await req.json();
+    const res = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as TikwmResponse;
+    if (data.code !== 0 || !data.data) return null;
+    const d = data.data;
+    const thumb =
+      (Array.isArray(d.images) && d.images.length > 0 ? d.images[0] : null) ||
+      d.origin_cover ||
+      d.cover ||
+      null;
+    if (!thumb) return null;
+    return {
+      thumbnail_url: thumb,
+      title: d.title ?? null,
+      author_name: d.author?.unique_id || d.author?.nickname || null,
+    };
   } catch {
-    return NextResponse.json({ error: 'invalid json' }, { status: 400 });
+    return null;
   }
+}
+
+async function viaOembed(url: string): Promise<TikTokMetaResponse | null> {
+  try {
+    const res = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as OEmbedShape;
+    return {
+      thumbnail_url: data.thumbnail_url ?? null,
+      title: data.title ?? null,
+      author_name: data.author_name ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function POST(req: NextRequest) {
+  let body: unknown;
+  try { body = await req.json(); }
+  catch { return NextResponse.json({ error: 'invalid json' }, { status: 400 }); }
 
   const parsed = RequestSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'invalid request' }, { status: 400 });
-  }
+  if (!parsed.success) return NextResponse.json({ error: 'invalid request' }, { status: 400 });
 
   const url = parsed.data.url.trim();
   if (!/tiktok\.com/i.test(url)) {
     return NextResponse.json({ error: 'not a tiktok url' }, { status: 400 });
   }
 
-  let res: Response;
-  try {
-    res = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`, {
-      signal: AbortSignal.timeout(8000),
-      headers: { Accept: 'application/json' },
+  const tikwm = await viaTikwm(url);
+  if (tikwm?.thumbnail_url) {
+    return NextResponse.json(tikwm);
+  }
+
+  const oembed = await viaOembed(url);
+  if (oembed?.thumbnail_url) {
+    // Merge what tikwm got us (it may have title/author even when image
+    // came from oembed) so we lose as little as possible.
+    return NextResponse.json({
+      thumbnail_url: oembed.thumbnail_url,
+      title: tikwm?.title ?? oembed.title,
+      author_name: tikwm?.author_name ?? oembed.author_name,
     });
-  } catch {
-    // Network failure / abort. Return 200 so the client falls back to
-    // its emoji card; the upstream is best-effort metadata, not core.
-    return NextResponse.json({ error: 'oembed unreachable' });
   }
 
-  // TikTok answers 404 for private/deleted videos. Surface as a soft
-  // error (HTTP 200, body has `error`) so the client skips quietly.
-  if (!res.ok) {
-    return NextResponse.json({ error: 'no metadata' });
-  }
-
-  let data: OEmbedShape;
-  try {
-    data = (await res.json()) as OEmbedShape;
-  } catch {
-    return NextResponse.json({ error: 'invalid oembed response' });
-  }
-
-  // TikTok's oEmbed thumbnail is the video cover, which is fine for video
-  // posts but for photo-slideshows it points at a generic player frame and
-  // misses the actual first slide. Try tikwm: if the post is a slideshow,
-  // swap the cover for the first slide so the recipe card shows the real
-  // image the user expects. Best-effort, silent on failure.
-  let firstImage: string | null = null;
-  try {
-    const tikwm = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`, {
-      headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (tikwm.ok) {
-      const t = (await tikwm.json()) as { data?: { images?: string[] } };
-      if (Array.isArray(t.data?.images) && t.data!.images!.length > 0) {
-        firstImage = t.data!.images![0];
-      }
-    }
-  } catch {
-    // ignore — fall back to oembed
-  }
-
-  return NextResponse.json({
-    thumbnail_url: firstImage ?? data.thumbnail_url ?? null,
-    title: data.title ?? null,
-    author_name: data.author_name ?? null,
-  });
+  return NextResponse.json({ thumbnail_url: null, title: null, author_name: null, error: 'no metadata' });
 }
