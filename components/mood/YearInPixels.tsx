@@ -1,5 +1,6 @@
 'use client';
 
+import clsx from 'clsx';
 import { MOOD_ORDER, getMoodTokens, type Mood } from '@/lib/moods';
 
 export type RangeKind = 'week' | 'month' | 'year';
@@ -25,10 +26,9 @@ function toISO(d: Date): string {
 function todayISO(): string {
   return toISO(new Date());
 }
-// Monday-start week index (matches the rest of the app).
 function startOfWeek(d: Date): Date {
   const x = new Date(d);
-  const dow = x.getDay(); // 0 = Sun
+  const dow = x.getDay();
   const back = dow === 0 ? 6 : dow - 1;
   x.setDate(x.getDate() - back);
   x.setHours(0, 0, 0, 0);
@@ -38,39 +38,47 @@ function daysInMonth(y: number, m0: number): number {
   return new Date(y, m0 + 1, 0).getDate();
 }
 
-const DOW_LABELS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-const MONTH_LABELS_LONG = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-const MONTH_LABELS_SHORT = ['E', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+const DOW = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+const MONTH_LONG = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const MONTH_SHORT = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
 
-function MoodCell({
+// Mood cell. The visual is the app's pastel mood gradient (cardFrom → cardTo)
+// the same one used as the page background in the mood check-in flow — so the
+// year-in-pixels reads as a recap of those days rather than a foreign chart.
+function Cell({
   mood,
   size,
+  radius,
   isToday,
   title,
+  className,
 }: {
   mood: Mood | undefined;
   size: number;
+  radius?: number;
   isToday?: boolean;
   title: string;
+  className?: string;
 }) {
-  const tokens = mood ? getMoodTokens(mood) : null;
+  const t = mood ? getMoodTokens(mood) : null;
+  const r = radius ?? Math.max(4, Math.round(size * 0.22));
   return (
-    <div
+    <span
       title={title}
       aria-label={title}
+      className={clsx('block transition-transform duration-150 active:scale-95', className)}
       style={{
         width: size,
         height: size,
-        borderRadius: Math.max(3, Math.round(size * 0.15)),
-        background: tokens
-          ? `linear-gradient(135deg, ${tokens.bodyTop} 0%, ${tokens.bodyMid} 60%, ${tokens.bodyBottom} 100%)`
-          : 'transparent',
-        boxShadow: tokens
-          ? 'inset 0 0 0 1px rgba(0,0,0,0.06), inset 0 -1px 2px rgba(0,0,0,0.08)'
-          : 'inset 0 0 0 1px rgba(27,29,31,0.12)',
-        filter: tokens ? 'url(#mkxa-crayon)' : undefined,
-        outline: isToday ? '2px solid #1b1d1f' : undefined,
-        outlineOffset: isToday ? 1 : undefined,
+        borderRadius: r,
+        background: t
+          ? `linear-gradient(135deg, ${t.cardFrom} 0%, ${t.cardTo} 100%)`
+          : 'rgba(27,29,31,0.05)',
+        boxShadow: isToday
+          ? '0 0 0 2px #1b1d1f, 0 0 0 4px rgba(255,255,255,0.95)'
+          : t
+            ? 'inset 0 -1px 2px rgba(0,0,0,0.06)'
+            : undefined,
       }}
     />
   );
@@ -78,36 +86,36 @@ function MoodCell({
 
 export function YearInPixels({ logsByDate, range, anchorISO }: Props) {
   const anchor = anchorISO ? parseISO(anchorISO) : new Date();
-  const today = todayISO();
-
-  if (range === 'week') return <WeekGrid anchor={anchor} logsByDate={logsByDate} today={today} />;
-  if (range === 'month') return <MonthGrid anchor={anchor} logsByDate={logsByDate} today={today} />;
-  return <YearGrid anchor={anchor} logsByDate={logsByDate} today={today} />;
+  if (range === 'week') return <WeekView anchor={anchor} logsByDate={logsByDate} />;
+  if (range === 'month') return <MonthView anchor={anchor} logsByDate={logsByDate} />;
+  return <YearView anchor={anchor} logsByDate={logsByDate} />;
 }
 
-function WeekGrid({ anchor, logsByDate, today }: { anchor: Date; logsByDate: Record<string, Mood>; today: string }) {
+function WeekView({ anchor, logsByDate }: { anchor: Date; logsByDate: Record<string, Mood> }) {
   const start = startOfWeek(anchor);
+  const today = todayISO();
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
     return d;
   });
   return (
-    <div className="grid grid-cols-7 gap-2">
+    <div className="grid grid-cols-7 gap-2.5">
       {days.map((d, i) => {
         const iso = toISO(d);
+        const t = logsByDate[iso] ? getMoodTokens(logsByDate[iso]) : null;
         return (
-          <div key={iso} className="flex flex-col items-center gap-1.5">
+          <div key={iso} className="flex flex-col items-center gap-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">
-              {DOW_LABELS[i]}
+              {DOW[i]}
             </span>
-            <MoodCell
+            <Cell
               mood={logsByDate[iso]}
-              size={40}
+              size={44}
               isToday={iso === today}
-              title={`${iso} · ${logsByDate[iso] ? getMoodTokens(logsByDate[iso]).label : 'sin registro'}`}
+              title={`${iso} · ${t ? t.label : 'sin registro'}`}
             />
-            <span className="text-[10px] font-bold tabular-nums text-ink">{d.getDate()}</span>
+            <span className="text-[11px] font-bold tabular-nums text-ink">{d.getDate()}</span>
           </div>
         );
       })}
@@ -115,40 +123,47 @@ function WeekGrid({ anchor, logsByDate, today }: { anchor: Date; logsByDate: Rec
   );
 }
 
-function MonthGrid({ anchor, logsByDate, today }: { anchor: Date; logsByDate: Record<string, Mood>; today: string }) {
+function MonthView({ anchor, logsByDate }: { anchor: Date; logsByDate: Record<string, Mood> }) {
+  const today = todayISO();
   const y = anchor.getFullYear();
   const m0 = anchor.getMonth();
   const total = daysInMonth(y, m0);
-  // Leading blanks so day 1 lands on the right column based on weekday.
-  const first = new Date(y, m0, 1).getDay();
-  const leading = first === 0 ? 6 : first - 1;
+  const firstDow = new Date(y, m0, 1).getDay();
+  const leading = firstDow === 0 ? 6 : firstDow - 1;
 
   return (
-    <div className="flex flex-col gap-2">
-      <p className="px-1 font-sans text-[18px] font-extrabold capitalize tracking-tightest text-ink">
-        {MONTH_LABELS_LONG[m0]} {y}
+    <div className="flex flex-col gap-3">
+      <p className="font-sans text-[20px] font-extrabold capitalize tracking-tightest text-ink">
+        {MONTH_LONG[m0]}{' '}
+        <span className="text-ink-muted">{y}</span>
       </p>
-      <div className="grid grid-cols-7 gap-1.5 px-1">
-        {DOW_LABELS.map((l) => (
-          <span key={l} className="text-center text-[10px] font-bold uppercase tracking-wider text-ink-muted">
+      <div className="grid grid-cols-7 gap-2">
+        {DOW.map((l) => (
+          <span key={l} className="pb-1 text-center text-[10px] font-bold uppercase tracking-wider text-ink-muted">
             {l}
           </span>
         ))}
         {Array.from({ length: leading }).map((_, i) => (
-          <div key={`b${i}`} aria-hidden style={{ width: 36, height: 36 }} />
+          <span key={`b${i}`} aria-hidden className="block" style={{ height: 44 }} />
         ))}
         {Array.from({ length: total }).map((_, i) => {
           const day = i + 1;
           const iso = `${y}-${String(m0 + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const t = logsByDate[iso] ? getMoodTokens(logsByDate[iso]) : null;
           return (
-            <div key={iso} className="flex flex-col items-center gap-0.5">
-              <MoodCell
+            <div key={iso} className="relative" style={{ height: 44 }}>
+              <Cell
                 mood={logsByDate[iso]}
-                size={36}
+                size={44}
                 isToday={iso === today}
-                title={`${iso} · ${logsByDate[iso] ? getMoodTokens(logsByDate[iso]).label : 'sin registro'}`}
+                title={`${iso} · ${t ? t.label : 'sin registro'}`}
               />
-              <span className="text-[9px] font-bold tabular-nums text-ink-muted">{day}</span>
+              <span
+                className="pointer-events-none absolute inset-x-0 top-1 text-center text-[10px] font-bold tabular-nums"
+                style={{ color: t ? 'rgba(27,29,31,0.55)' : 'rgba(27,29,31,0.35)' }}
+              >
+                {day}
+              </span>
             </div>
           );
         })}
@@ -157,117 +172,110 @@ function MonthGrid({ anchor, logsByDate, today }: { anchor: Date; logsByDate: Re
   );
 }
 
-function YearGrid({ anchor, logsByDate, today }: { anchor: Date; logsByDate: Record<string, Mood>; today: string }) {
+function YearView({ anchor, logsByDate }: { anchor: Date; logsByDate: Record<string, Mood> }) {
+  const today = todayISO();
   const y = anchor.getFullYear();
-  // 31 rows × 12 cols. Cells outside actual day count are blank placeholders.
-  const cell = 14;
+
+  // GitHub-contributions-style: months as rows, days 1..31 as columns. Reads
+  // left-to-right like a calendar, scrolls horizontally on narrow phones.
+  const cell = 13;
   const gap = 3;
 
   return (
-    <div>
-      <p className="mb-2 px-1 font-sans text-[18px] font-extrabold tracking-tightest text-ink">
+    <div className="flex flex-col gap-2">
+      <p className="font-sans text-[20px] font-extrabold tracking-tightest text-ink">
         {y}
       </p>
-      <div
-        className="grid"
-        style={{
-          gridTemplateColumns: `18px repeat(12, ${cell}px)`,
-          columnGap: gap,
-          rowGap: gap,
-        }}
-      >
-        {/* Top-left empty cell */}
-        <span aria-hidden />
-        {/* Month labels */}
-        {MONTH_LABELS_SHORT.map((l, i) => (
-          <span
-            key={`mh${i}`}
-            className="text-center text-[10px] font-bold uppercase tracking-wider text-ink-muted"
-            style={{ width: cell }}
+      <div className="overflow-x-auto pb-1">
+        <div className="flex flex-col gap-1.5">
+          {/* Day-number header strip */}
+          <div
+            className="grid items-center"
+            style={{
+              gridTemplateColumns: `32px repeat(31, ${cell}px)`,
+              columnGap: gap,
+            }}
           >
-            {l}
-          </span>
-        ))}
-
-        {/* Rows: day 1..31 */}
-        {Array.from({ length: 31 }).map((_, row) => {
-          const day = row + 1;
-          return (
-            <Row
-              key={day}
-              day={day}
-              year={y}
-              logsByDate={logsByDate}
-              today={today}
-              cell={cell}
-            />
-          );
-        })}
+            <span />
+            {Array.from({ length: 31 }).map((_, i) => {
+              const day = i + 1;
+              // Only label every 5th day to keep the header light.
+              const show = day === 1 || day % 5 === 0;
+              return (
+                <span
+                  key={day}
+                  className="text-center text-[9px] font-bold tabular-nums text-ink-muted"
+                  style={{ width: cell }}
+                >
+                  {show ? day : ''}
+                </span>
+              );
+            })}
+          </div>
+          {/* One row per month */}
+          {Array.from({ length: 12 }).map((_, m0) => {
+            const dim = daysInMonth(y, m0);
+            return (
+              <div
+                key={m0}
+                className="grid items-center"
+                style={{
+                  gridTemplateColumns: `32px repeat(31, ${cell}px)`,
+                  columnGap: gap,
+                  rowGap: 0,
+                }}
+              >
+                <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">
+                  {MONTH_SHORT[m0]}
+                </span>
+                {Array.from({ length: 31 }).map((_, di) => {
+                  const day = di + 1;
+                  if (day > dim) {
+                    return <span key={`b-${m0}-${day}`} aria-hidden style={{ width: cell, height: cell }} />;
+                  }
+                  const iso = `${y}-${String(m0 + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                  const t = logsByDate[iso] ? getMoodTokens(logsByDate[iso]) : null;
+                  return (
+                    <Cell
+                      key={iso}
+                      mood={logsByDate[iso]}
+                      size={cell}
+                      radius={3}
+                      isToday={iso === today}
+                      title={`${iso} · ${t ? t.label : 'sin registro'}`}
+                    />
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 }
 
-function Row({
-  day,
-  year,
-  logsByDate,
-  today,
-  cell,
-}: {
-  day: number;
-  year: number;
-  logsByDate: Record<string, Mood>;
-  today: string;
-  cell: number;
-}) {
-  return (
-    <>
-      <span
-        className="text-right text-[9px] font-bold tabular-nums text-ink-muted"
-        style={{ lineHeight: `${cell}px` }}
-      >
-        {day}
-      </span>
-      {Array.from({ length: 12 }).map((_, m0) => {
-        const dim = daysInMonth(year, m0);
-        if (day > dim) {
-          return <div key={`b-${day}-${m0}`} aria-hidden style={{ width: cell, height: cell }} />;
-        }
-        const iso = `${year}-${String(m0 + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        return (
-          <MoodCell
-            key={iso}
-            mood={logsByDate[iso]}
-            size={cell}
-            isToday={iso === today}
-            title={`${iso} · ${logsByDate[iso] ? getMoodTokens(logsByDate[iso]).label : 'sin registro'}`}
-          />
-        );
-      })}
-    </>
-  );
-}
-
+// Compact horizontal legend strip. Sits under the grid the same way the
+// mood-check-in chips sit under the headline blob — same visual rhythm.
 export function MoodLegend() {
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-wrap gap-x-3 gap-y-2">
       {MOOD_ORDER.map((m) => {
         const t = getMoodTokens(m);
         return (
-          <li key={m} className="flex items-center gap-2">
+          <li key={m} className="flex items-center gap-1.5">
             <span
               aria-hidden
+              className="block"
               style={{
-                width: 18,
-                height: 18,
+                width: 14,
+                height: 14,
                 borderRadius: 4,
-                background: `linear-gradient(135deg, ${t.bodyTop} 0%, ${t.bodyMid} 60%, ${t.bodyBottom} 100%)`,
-                boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)',
-                filter: 'url(#mkxa-crayon)',
+                background: `linear-gradient(135deg, ${t.cardFrom} 0%, ${t.cardTo} 100%)`,
+                boxShadow: 'inset 0 -1px 1px rgba(0,0,0,0.05)',
               }}
             />
-            <span className="text-[12px] font-medium text-ink">{t.label}</span>
+            <span className="text-[11px] font-medium text-ink">{t.label}</span>
           </li>
         );
       })}
