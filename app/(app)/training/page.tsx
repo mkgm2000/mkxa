@@ -24,18 +24,27 @@ export default function TrainingPage() {
   // arrows don't take user to empty future weeks that just show stale fallback.
   const maxAvailableWeek = useMaxAvailableWeek(athlete);
   const currentWeek = useMemo(() => Math.min(getCurrentWeek(), MAX_WEEK), []);
-  const initialWeek = useMemo(() => {
+  // null = "follow latest available". Set to a number only when the URL pins
+  // a specific week or the user manually navigates via arrows.
+  const initialWeekOrNull = useMemo<number | null>(() => {
     const raw = searchParams.get('week');
     const n = raw ? parseInt(raw, 10) : NaN;
     if (Number.isFinite(n) && n >= 1 && n <= MAX_WEEK) return n;
-    return Math.min(currentWeek, maxAvailableWeek);
+    return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const [week, setWeek] = useState<number>(initialWeek);
+  const [week, setWeek] = useState<number | null>(initialWeekOrNull);
+
+  // When no week is pinned, follow maxAvailableWeek as it loads/changes.
+  useEffect(() => {
+    if (week === null && maxAvailableWeek >= 1) {
+      setWeek(maxAvailableWeek);
+    }
+  }, [maxAvailableWeek, week]);
 
   // If maxAvailableWeek loads and current week is beyond it, clamp down.
   useEffect(() => {
-    if (week > maxAvailableWeek) setWeek(maxAvailableWeek);
+    if (week !== null && week > maxAvailableWeek) setWeek(maxAvailableWeek);
   }, [maxAvailableWeek, week]);
 
   // Sync URL ?week= when user changes week via navigation
@@ -48,8 +57,12 @@ export default function TrainingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  const { byKey, setLog, setWeekNote } = useTraining(athlete, week);
-  const { plan: confirmedPlan, refresh: refreshConfirmed } = useConfirmedWeek(athlete, week);
+  // Effective week for downstream hooks/render. Falls back to maxAvailableWeek
+  // (which is at minimum the last baseline PLAN week) so hooks never see null.
+  const effectiveWeek = week ?? Math.max(1, maxAvailableWeek);
+
+  const { byKey, setLog, setWeekNote } = useTraining(athlete, effectiveWeek);
+  const { plan: confirmedPlan, refresh: refreshConfirmed } = useConfirmedWeek(athlete, effectiveWeek);
 
   // Force refetch when arriving from /training/adjust (the URL will have
   // ?week=N after confirm). Without this, useConfirmedWeek's [athlete, week]
@@ -68,8 +81,8 @@ export default function TrainingPage() {
           return rest as Day;
         })
       : undefined;
-    return getDays(week, athlete, override);
-  }, [week, athlete, confirmedPlan]);
+    return getDays(effectiveWeek, athlete, override);
+  }, [effectiveWeek, athlete, confirmedPlan]);
   const done = useMemo(() => days.filter((d) => byKey[d.key]?.completed).length, [days, byKey]);
 
   // RPE modal state
@@ -95,7 +108,7 @@ export default function TrainingPage() {
   useEffect(() => {
     const wn = days[0] ? byKey[days[0].key]?.weekNote ?? '' : '';
     setWeekNoteDraft(wn);
-  }, [week, athlete, byKey, days]);
+  }, [effectiveWeek, athlete, byKey, days]);
 
   useEffect(() => {
     if (!athlete) return;
@@ -109,8 +122,8 @@ export default function TrainingPage() {
 
   if (!athlete) return null;
 
-  const meta = `${getWeekDates(week)}`;
-  const todayBadge = week === currentWeek;
+  const meta = `${getWeekDates(effectiveWeek)}`;
+  const todayBadge = effectiveWeek === currentWeek;
 
   return (
     <main className="flex flex-col gap-5 pt-2 pb-12">
@@ -140,18 +153,18 @@ export default function TrainingPage() {
       </div>
 
       <WeekHeader
-        week={week}
+        week={effectiveWeek}
         maxWeek={maxAvailableWeek}
         done={done}
         total={days.length}
         meta={meta}
-        onPrev={() => setWeek((w) => Math.max(1, w - 1))}
-        onNext={() => setWeek((w) => Math.min(maxAvailableWeek, w + 1))}
+        onPrev={() => setWeek((w) => Math.max(1, (w ?? maxAvailableWeek) - 1))}
+        onNext={() => setWeek((w) => Math.min(maxAvailableWeek, (w ?? maxAvailableWeek) + 1))}
       />
 
       {confirmedPlan && (
         <div className="mx-5 rounded-card bg-ink/8 px-3 py-2 text-[12px] font-medium text-ink" style={{ background: 'rgba(27,29,31,0.06)' }}>
-          Plan ajustado por Claude · S{week} v actualizada
+          Plan ajustado por Claude · S{effectiveWeek} v actualizada
         </div>
       )}
 
@@ -193,7 +206,7 @@ export default function TrainingPage() {
       </section>
 
       {(() => {
-        const next = Math.min(23, Math.max(week + 1, getCurrentWeek() + 1));
+        const next = Math.min(23, Math.max(effectiveWeek + 1, getCurrentWeek() + 1));
         return (
           <Link
             href={`/training/adjust?week=${next}`}
