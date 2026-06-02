@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Star, Pencil, Trash2 } from 'lucide-react';
+import { MapPin, Star, Pencil, Check } from 'lucide-react';
 import {
   cuisineMeta,
   formatVisitedAt,
@@ -10,10 +10,10 @@ import {
 interface Props {
   r: Restaurant;
   onEdit: (r: Restaurant) => void;
-  onDelete: (r: Restaurant) => void;
+  onMarkVisited?: (r: Restaurant) => void;
 }
 
-export function RestaurantCard({ r, onEdit, onDelete }: Props) {
+export function RestaurantCard({ r, onEdit, onMarkVisited }: Props) {
   const c = cuisineMeta(r.cuisine);
   const visited = r.status === 'visited';
 
@@ -67,7 +67,7 @@ export function RestaurantCard({ r, onEdit, onDelete }: Props) {
           )}
         </div>
 
-        <div className="flex shrink-0 flex-col gap-1.5">
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
           {r.added_by && (
             <span
               className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"
@@ -84,16 +84,21 @@ export function RestaurantCard({ r, onEdit, onDelete }: Props) {
           >
             <Pencil size={12} strokeWidth={1.75} aria-hidden />
           </button>
-          <button
-            type="button"
-            aria-label="Eliminar restaurante"
-            onClick={() => onDelete(r)}
-            className="flex h-7 w-7 items-center justify-center rounded-full text-ink-muted hover:bg-danger/10 hover:text-danger active:scale-95"
-          >
-            <Trash2 size={12} strokeWidth={1.75} aria-hidden />
-          </button>
         </div>
       </div>
+
+      {!visited && onMarkVisited && (
+        <button
+          type="button"
+          onClick={() => onMarkVisited(r)}
+          aria-label={`Marcar ${r.name} como visitado`}
+          className="flex w-full items-center justify-center gap-1.5 border-t border-ink-soft/40 py-2.5 text-[13px] font-bold text-ink transition-colors active:bg-ink-soft/40"
+          style={{ backgroundColor: `${c.color}10` }}
+        >
+          <Check size={14} strokeWidth={2.2} aria-hidden />
+          Marcar como visitado
+        </button>
+      )}
     </article>
   );
 }
