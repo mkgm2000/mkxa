@@ -4,6 +4,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { weekDays, todayISO as computeTodayISO } from '@/lib/date';
 import { getMoodTokens, type Mood } from '@/lib/moods';
+import { CrayonFilter } from '@/components/mood/CrayonFilter';
 
 const LABELS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
@@ -21,12 +22,17 @@ export function WidgetMoodChart({ weekStartISO, todayISO, logsByDate }: Props) {
 
   return (
     <Link
-      href="/profile"
+      href="/mood"
       className="block rounded-card bg-white p-4 shadow-card transition-transform duration-150 active:scale-[0.99]"
     >
-      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
-        Mood semana
-      </p>
+      <CrayonFilter />
+
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
+          Mood semana
+        </p>
+        <p className="text-[11px] font-bold text-ink-muted">Ver historial →</p>
+      </div>
 
       <div className="mt-3 grid grid-cols-7 gap-1.5">
         {days.map((iso, i) => {
@@ -38,19 +44,23 @@ export function WidgetMoodChart({ weekStartISO, todayISO, logsByDate }: Props) {
               <span className="text-[9px] font-bold text-ink-muted">{LABELS[i]}</span>
               <span
                 className={clsx(
-                  'flex h-7 w-7 items-center justify-center rounded-full leading-none',
+                  'block h-8 w-8',
                   !m && 'border border-dashed border-ink-soft',
-                  isToday && 'ring-2 ring-ink ring-offset-1 ring-offset-white',
                 )}
-                style={{ backgroundColor: tokens ? tokens.bodyMid : 'transparent' }}
+                style={{
+                  borderRadius: 6,
+                  background: tokens
+                    ? `linear-gradient(135deg, ${tokens.bodyTop} 0%, ${tokens.bodyMid} 60%, ${tokens.bodyBottom} 100%)`
+                    : 'transparent',
+                  boxShadow: tokens
+                    ? 'inset 0 0 0 1px rgba(0,0,0,0.06), inset 0 -1px 2px rgba(0,0,0,0.08)'
+                    : undefined,
+                  filter: tokens ? 'url(#mkxa-crayon)' : undefined,
+                  outline: isToday ? '2px solid #1b1d1f' : undefined,
+                  outlineOffset: isToday ? 1 : undefined,
+                }}
                 aria-label={tokens ? `${LABELS[i]} ${tokens.label}` : `${LABELS[i]} sin registro`}
-              >
-                {tokens && (
-                  <span aria-hidden="true" className="text-[14px] leading-none">
-                    {tokens.emoji}
-                  </span>
-                )}
-              </span>
+              />
             </div>
           );
         })}

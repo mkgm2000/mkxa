@@ -1,9 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import clsx from 'clsx';
+import { ArrowUpRight } from 'lucide-react';
 import { supabaseClient } from '@/lib/supabase/client';
 import { getMoodTokens, type Mood } from '@/lib/moods';
+import { CrayonFilter } from '@/components/mood/CrayonFilter';
 import type { Athlete } from '@/lib/athlete-context';
 
 interface MoodRow { date: string; mood: Mood }
@@ -57,19 +60,23 @@ export function MoodHistoryChart({ athlete }: { athlete: Athlete }) {
               <span
                 data-testid="mood-cell"
                 className={clsx(
-                  'flex h-9 w-9 items-center justify-center rounded-full leading-none',
+                  'block h-9 w-9',
                   !m && 'border border-dashed border-ink-soft',
-                  isToday && 'ring-2 ring-ink ring-offset-1 ring-offset-white',
                 )}
-                style={{ backgroundColor: tokens ? tokens.bodyMid : 'transparent' }}
+                style={{
+                  borderRadius: 6,
+                  background: tokens
+                    ? `linear-gradient(135deg, ${tokens.bodyTop} 0%, ${tokens.bodyMid} 60%, ${tokens.bodyBottom} 100%)`
+                    : 'transparent',
+                  boxShadow: tokens
+                    ? 'inset 0 0 0 1px rgba(0,0,0,0.06), inset 0 -1px 2px rgba(0,0,0,0.08)'
+                    : undefined,
+                  filter: tokens ? 'url(#mkxa-crayon)' : undefined,
+                  outline: isToday ? '2px solid #1b1d1f' : undefined,
+                  outlineOffset: isToday ? 1 : undefined,
+                }}
                 aria-label={tokens ? `${iso} ${tokens.label}` : `${iso} sin registro`}
-              >
-                {tokens && (
-                  <span aria-hidden="true" className="text-[18px] leading-none">
-                    {tokens.emoji}
-                  </span>
-                )}
-              </span>
+              />
               <span className="text-[9px] font-bold text-ink-muted">{dayNum(iso)}</span>
             </div>
           );
@@ -79,17 +86,25 @@ export function MoodHistoryChart({ athlete }: { athlete: Athlete }) {
   }
 
   return (
-    <section className="mx-5 rounded-card bg-white p-4 shadow-card">
-      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
-        Mood últimas 2 semanas
-      </p>
+    <Link
+      href="/mood"
+      className="mx-5 block rounded-card bg-white p-4 shadow-card transition-transform duration-150 active:scale-[0.99]"
+    >
+      <CrayonFilter />
+
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
+          Mood últimas 2 semanas
+        </p>
+        <ArrowUpRight size={14} strokeWidth={1.5} className="text-ink-muted" aria-hidden />
+      </div>
       <div className="mt-3 flex flex-col gap-3">
         <DayRow row={firstRow} />
         <DayRow row={secondRow} />
       </div>
       <p className="mt-3 text-[12px] text-ink-muted">
-        {logged} de 14 días con registro
+        {logged} de 14 días con registro · <span className="font-medium text-ink">Ver año completo</span>
       </p>
-    </section>
+    </Link>
   );
 }
