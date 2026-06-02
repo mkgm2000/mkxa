@@ -34,6 +34,10 @@ async function backfillVideoThumbnail(recipe: Recipe): Promise<void> {
     if (!res.ok) return;
     const data = (await res.json()) as { thumbnail_url?: string | null; error?: string };
     if (data.error || !data.thumbnail_url) return;
+    // Only PATCH the DB when the endpoint actually returned something
+    // different — avoids a row update on every page load for TikTok video
+    // posts whose oembed thumbnail already matches.
+    if (data.thumbnail_url === recipe.thumbnail_url) return;
     await setRecipeThumbnail(recipe.id, data.thumbnail_url);
     // Parent (useRecipes) refetches on next focus; no manual refresh here.
   } catch {
@@ -45,13 +49,15 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
   const isVideo = recipe.source_type === 'tiktok' || recipe.source_type === 'instagram';
   const hasThumb = Boolean(recipe.thumbnail_url);
 
-  // Lazy backfill: only for video recipes (TikTok or Instagram) that don't
-  // yet have a thumbnail and do have a source_url. Fires once per recipe id
-  // per page lifetime (module-level Set), best-effort.
+  // Lazy revalidation: for every video recipe, fire the meta endpoint once
+  // per page lifetime. The Set dedups; the endpoint itself short-circuits
+  // (no DB write) when the result matches the existing thumbnail. This
+  // self-heals old TikTok slideshow recipes that were saved with the
+  // oembed video frame before slideshow detection landed.
   useEffect(() => {
-    if (!isVideo || hasThumb) return;
+    if (!isVideo) return;
     void backfillVideoThumbnail(recipe);
-  }, [isVideo, hasThumb, recipe]);
+  }, [isVideo, recipe]);
 
   if (isVideo && hasThumb && recipe.thumbnail_url) {
     return <TikTokPosterCard recipe={recipe} />;

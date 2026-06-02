@@ -293,11 +293,11 @@ export default function MealsHubPage() {
                         {list.length}
                       </span>
                     </button>
-                    <div
-                      id={`recipes-bucket-${bucket}`}
-                      hidden={collapsed}
-                      className="grid grid-cols-2 gap-3"
-                    >
+                    {!collapsed && (
+                      <div
+                        id={`recipes-bucket-${bucket}`}
+                        className="grid grid-cols-2 gap-3"
+                      >
                       {list.map((r, idx) => (
                         <div
                           key={r.id}
@@ -337,7 +337,8 @@ export default function MealsHubPage() {
                           )}
                         </div>
                       ))}
-                    </div>
+                      </div>
+                    )}
                   </section>
                 );
               })}

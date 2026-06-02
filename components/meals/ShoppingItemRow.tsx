@@ -65,9 +65,20 @@ export function ShoppingItemRow({ item, onToggle, onLongPress, recipeNamesById, 
         // and stop the browser's default menu from intercepting.
         if (onLongPress) { e.preventDefault(); onLongPress(item); }
       }}
+      // iOS Safari shows a text-selection loupe + the "Copy/Look up"
+      // callout on any long-press, even on a <button>. The Tailwind
+      // `select-none` class only sets `user-select`, not the WebKit
+      // callout/touch-callout, so we need these inline.
+      onSelectCapture={(e) => e.preventDefault()}
       aria-pressed={item.checked}
+      style={{
+        WebkitTouchCallout: 'none',
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
+      }}
       className={clsx(
-        'flex w-full items-center gap-3 rounded-item bg-white px-3 py-2.5 text-left shadow-item transition-transform duration-150 active:scale-[0.99] touch-manipulation select-none',
+        'flex w-full items-center gap-3 rounded-item bg-white px-3 py-2.5 text-left shadow-item transition-transform duration-150 active:scale-[0.99] touch-manipulation',
         alreadyAtHome && 'opacity-60',
       )}
     >
