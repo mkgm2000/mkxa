@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAthlete } from '@/lib/athlete-context';
 import { useMoodRange } from '@/lib/hooks/use-mood-range';
@@ -24,6 +24,7 @@ const TABS: { value: RangeKind; label: string }[] = [
 const MONTHS_LONG = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
 export default function MoodPage() {
+  const router = useRouter();
   const athlete = useAthlete();
   const [range, setRange] = useState<RangeKind>('month');
   const [anchor, setAnchor] = useState<Date>(() => new Date());
@@ -92,13 +93,20 @@ export default function MoodPage() {
             </p>
           )}
         </div>
-        <Link
-          href="/profile"
+        <button
+          type="button"
           aria-label="Volver"
+          onClick={() => {
+            // Walk back through history so /home → /mood → back returns to
+            // /home, and /profile → /mood → back returns to /profile.
+            // Falls back to /home if there is no entry to pop (deep link).
+            if (typeof window !== 'undefined' && window.history.length > 1) router.back();
+            else router.push('/home');
+          }}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-action active:scale-95"
         >
           <ChevronLeft size={20} strokeWidth={1.5} className="text-ink" aria-hidden />
-        </Link>
+        </button>
       </header>
 
       <div className="px-5">

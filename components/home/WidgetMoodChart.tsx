@@ -31,18 +31,20 @@ export function WidgetMoodChart({ weekStartISO, todayISO, logsByDate }: Props) {
         <p className="text-[11px] font-bold text-ink-muted">Ver historial →</p>
       </div>
 
+      {/* Use aspect-square + w-full so cells flex to the column width. Fixed
+          h-8 w-8 was overflowing the card on phones < 400px wide. */}
       <div className="mt-3 grid grid-cols-7 gap-1.5">
         {days.map((iso, i) => {
           const m = logsByDate[iso];
           const isToday = iso === resolvedTodayISO;
           const t = m ? getMoodTokens(m) : null;
           return (
-            <div key={iso} className="flex flex-col items-center gap-1">
+            <div key={iso} className="flex min-w-0 flex-col items-center gap-1">
               <span className="text-[9px] font-bold text-ink-muted">{LABELS[i]}</span>
               <span
-                className={clsx('block h-8 w-8', !t && 'bg-ink-soft')}
+                className={clsx('block aspect-square w-full', !t && 'bg-ink-soft')}
                 style={{
-                  borderRadius: 7,
+                  borderRadius: 6,
                   background: t
                     ? `linear-gradient(135deg, ${t.cardFrom} 0%, ${t.cardTo} 100%)`
                     : undefined,

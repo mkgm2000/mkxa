@@ -58,7 +58,7 @@ export function MoodHistoryChart({ athlete }: { athlete: Athlete }) {
             <div key={iso} className="flex flex-col items-center gap-1">
               <span
                 data-testid="mood-cell"
-                className={clsx('block h-9 w-9', !t && 'bg-ink-soft')}
+                className={clsx('block aspect-square w-full', !t && 'bg-ink-soft')}
                 style={{
                   borderRadius: 8,
                   background: t
