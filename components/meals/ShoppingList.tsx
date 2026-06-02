@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { ShoppingSectionHeader } from './ShoppingSectionHeader';
 import { ShoppingItemRow } from './ShoppingItemRow';
 import { AddItemRow } from './AddItemRow';
+import { ShoppingItemActions } from './ShoppingItemActions';
 import {
   type Aisle,
   type PantryItem,
@@ -16,11 +17,15 @@ interface ShoppingListProps {
   items: ShoppingItem[];
   onToggle: (id: string) => void;
   onAddManual: (input: { name: string; quantity: number | null; unit: string | null; aisle: Aisle }) => Promise<void> | void;
+  /** Optional — when provided, long-press on an item opens an edit/delete sheet. */
+  onEdit?: (id: string, patch: Partial<ShoppingItem>) => Promise<void> | void;
+  onDelete?: (id: string) => Promise<void> | void;
   recipeNamesById?: Record<string, string>;
   pantryItems?: PantryItem[];
 }
 
-export function ShoppingList({ items, onToggle, onAddManual, recipeNamesById, pantryItems = [] }: ShoppingListProps) {
+export function ShoppingList({ items, onToggle, onAddManual, onEdit, onDelete, recipeNamesById, pantryItems = [] }: ShoppingListProps) {
+  const [actionItem, setActionItem] = useState<ShoppingItem | null>(null);
   const inStockNames = useMemo(() => {
     const set = new Set<string>();
     for (const p of pantryItems) {
@@ -88,7 +93,13 @@ export function ShoppingList({ items, onToggle, onAddManual, recipeNamesById, pa
           <ShoppingSectionHeader aisle={aisle} />
           <div className="flex flex-col gap-1.5 px-2">
             {rows.map((it) => (
-              <ShoppingItemRow key={it.id} item={it} onToggle={onToggle} recipeNamesById={recipeNamesById} />
+              <ShoppingItemRow
+                key={it.id}
+                item={it}
+                onToggle={onToggle}
+                onLongPress={onEdit && onDelete ? setActionItem : undefined}
+                recipeNamesById={recipeNamesById}
+              />
             ))}
           </div>
         </div>
@@ -106,6 +117,7 @@ export function ShoppingList({ items, onToggle, onAddManual, recipeNamesById, pa
                 key={it.id}
                 item={it}
                 onToggle={onToggle}
+                onLongPress={onEdit && onDelete ? setActionItem : undefined}
                 recipeNamesById={recipeNamesById}
                 alreadyAtHome
               />
@@ -115,6 +127,14 @@ export function ShoppingList({ items, onToggle, onAddManual, recipeNamesById, pa
       )}
       {bothEmpty && (
         <p className="px-2 pt-4 text-center text-[13px] text-ink-muted">Lista vacía. Genera desde el plan o añade items.</p>
+      )}
+      {actionItem && onEdit && onDelete && (
+        <ShoppingItemActions
+          item={actionItem}
+          onClose={() => setActionItem(null)}
+          onSave={(patch) => onEdit(actionItem.id, patch)}
+          onDelete={() => onDelete(actionItem.id)}
+        />
       )}
     </div>
   );

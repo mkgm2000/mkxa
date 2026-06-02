@@ -68,7 +68,7 @@ export default function MealsHubPage() {
     setEaten,
     cookAllToday,
   } = useMealPlan(weekStart);
-  const { items: shoppingItems, toggleChecked, addManual, finish } = useShoppingList(weekStart);
+  const { items: shoppingItems, toggleChecked, editItem: editShopping, deleteItem: deleteShopping, addManual, finish } = useShoppingList(weekStart);
   const { items: pantryItems, toggleInStock, addItem: addPantry } = usePantry();
 
   const [editingRecipes, setEditingRecipes] = useState(false);
@@ -285,6 +285,8 @@ export default function MealsHubPage() {
             items={shoppingItems}
             onToggle={toggleChecked}
             onAddManual={addManual}
+            onEdit={editShopping}
+            onDelete={deleteShopping}
             recipeNamesById={recipeNamesById}
             pantryItems={pantryItems}
           />

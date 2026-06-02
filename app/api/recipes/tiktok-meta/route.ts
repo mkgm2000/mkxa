@@ -71,8 +71,29 @@ export async function POST(req: NextRequest): Promise<NextResponse<TikTokMetaRes
     return NextResponse.json({ error: 'invalid oembed response' });
   }
 
+  // TikTok's oEmbed thumbnail is the video cover, which is fine for video
+  // posts but for photo-slideshows it points at a generic player frame and
+  // misses the actual first slide. Try tikwm: if the post is a slideshow,
+  // swap the cover for the first slide so the recipe card shows the real
+  // image the user expects. Best-effort, silent on failure.
+  let firstImage: string | null = null;
+  try {
+    const tikwm = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (tikwm.ok) {
+      const t = (await tikwm.json()) as { data?: { images?: string[] } };
+      if (Array.isArray(t.data?.images) && t.data!.images!.length > 0) {
+        firstImage = t.data!.images![0];
+      }
+    }
+  } catch {
+    // ignore — fall back to oembed
+  }
+
   return NextResponse.json({
-    thumbnail_url: data.thumbnail_url ?? null,
+    thumbnail_url: firstImage ?? data.thumbnail_url ?? null,
     title: data.title ?? null,
     author_name: data.author_name ?? null,
   });

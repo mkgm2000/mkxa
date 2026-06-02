@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { Circle, CheckCircle2 } from 'lucide-react';
 import clsx from 'clsx';
 import type { ShoppingItem } from '@/lib/meals/recipes';
@@ -7,9 +8,13 @@ import type { ShoppingItem } from '@/lib/meals/recipes';
 interface ShoppingItemRowProps {
   item: ShoppingItem;
   onToggle: (id: string) => void;
+  /** Long-press (≥500ms) handler used to open the edit/delete action sheet. */
+  onLongPress?: (item: ShoppingItem) => void;
   recipeNamesById?: Record<string, string>;
   alreadyAtHome?: boolean;
 }
+
+const LONG_PRESS_MS = 500;
 
 function formatQty(quantity: number | null, unit: string | null): string {
   if (quantity == null) return unit ?? '';
@@ -17,19 +22,52 @@ function formatQty(quantity: number | null, unit: string | null): string {
   return `${q}${unit ? ` ${unit}` : ''}`;
 }
 
-export function ShoppingItemRow({ item, onToggle, recipeNamesById, alreadyAtHome = false }: ShoppingItemRowProps) {
+export function ShoppingItemRow({ item, onToggle, onLongPress, recipeNamesById, alreadyAtHome = false }: ShoppingItemRowProps) {
   const qty = formatQty(item.quantity, item.unit);
   const recipes = (item.recipe_ids ?? [])
     .map((id) => recipeNamesById?.[id])
     .filter(Boolean) as string[];
 
+  // Long-press handling: pointerDown starts a timer; pointerUp/pointerMove/cancel
+  // aborts it. If the timer fires, we trip a flag so the next `click` no-ops
+  // (otherwise the toggle would fire when the user releases).
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longFired = useRef(false);
+
+  function clearTimer() {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+  }
+  function handlePointerDown() {
+    if (!onLongPress) return;
+    longFired.current = false;
+    clearTimer();
+    timer.current = setTimeout(() => {
+      longFired.current = true;
+      onLongPress(item);
+    }, LONG_PRESS_MS);
+  }
+  function handlePointerEnd() { clearTimer(); }
+  function handleClick() {
+    if (longFired.current) { longFired.current = false; return; }
+    onToggle(item.id);
+  }
+
   return (
     <button
       type="button"
-      onClick={() => onToggle(item.id)}
+      onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerEnd}
+      onPointerLeave={handlePointerEnd}
+      onPointerCancel={handlePointerEnd}
+      onContextMenu={(e) => {
+        // Desktop right-click should open the same sheet as long-press —
+        // and stop the browser's default menu from intercepting.
+        if (onLongPress) { e.preventDefault(); onLongPress(item); }
+      }}
       aria-pressed={item.checked}
       className={clsx(
-        'flex w-full items-center gap-3 rounded-item bg-white px-3 py-2.5 text-left shadow-item transition-transform duration-150 active:scale-[0.99]',
+        'flex w-full items-center gap-3 rounded-item bg-white px-3 py-2.5 text-left shadow-item transition-transform duration-150 active:scale-[0.99] touch-manipulation select-none',
         alreadyAtHome && 'opacity-60',
       )}
     >
