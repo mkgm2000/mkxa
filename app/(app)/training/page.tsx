@@ -12,6 +12,7 @@ import { RpeModal } from '@/components/training/RpeModal';
 import { useAthlete } from '@/lib/athlete-context';
 import { useTraining } from '@/lib/hooks/use-training';
 import { useConfirmedWeek } from '@/lib/hooks/use-confirmed-week';
+import { useMaxAvailableWeek } from '@/lib/hooks/use-available-weeks';
 import { getCurrentWeek, getDays, getWeekDates, MAX_WEEK } from '@/lib/plan-hyrox';
 import type { Day, DayKey } from '@/lib/plan-hyrox';
 
@@ -19,15 +20,23 @@ export default function TrainingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const athlete = useAthlete();
+  // Highest week with content (baseline PLAN or confirmed in DB). Caps nav so
+  // arrows don't take user to empty future weeks that just show stale fallback.
+  const maxAvailableWeek = useMaxAvailableWeek(athlete);
   const currentWeek = useMemo(() => Math.min(getCurrentWeek(), MAX_WEEK), []);
   const initialWeek = useMemo(() => {
     const raw = searchParams.get('week');
     const n = raw ? parseInt(raw, 10) : NaN;
     if (Number.isFinite(n) && n >= 1 && n <= MAX_WEEK) return n;
-    return currentWeek;
+    return Math.min(currentWeek, maxAvailableWeek);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [week, setWeek] = useState<number>(initialWeek);
+
+  // If maxAvailableWeek loads and current week is beyond it, clamp down.
+  useEffect(() => {
+    if (week > maxAvailableWeek) setWeek(maxAvailableWeek);
+  }, [maxAvailableWeek, week]);
 
   // Sync URL ?week= when user changes week via navigation
   useEffect(() => {
@@ -132,12 +141,12 @@ export default function TrainingPage() {
 
       <WeekHeader
         week={week}
-        maxWeek={MAX_WEEK}
+        maxWeek={maxAvailableWeek}
         done={done}
         total={days.length}
         meta={meta}
         onPrev={() => setWeek((w) => Math.max(1, w - 1))}
-        onNext={() => setWeek((w) => Math.min(MAX_WEEK, w + 1))}
+        onNext={() => setWeek((w) => Math.min(maxAvailableWeek, w + 1))}
       />
 
       {confirmedPlan && (
