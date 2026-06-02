@@ -4,23 +4,34 @@ import { z } from 'zod';
 export const runtime = 'nodejs';
 
 // POST /api/recipes/tiktok-video  { url: string }
-//   → { play_url: string, cover: string | null }
+//   → { kind: 'video',  play_url: string, cover: string | null }
+//   → { kind: 'images', images:  string[], cover: string | null }
 //
-// Returns a directly-playable MP4 URL for a TikTok page URL. Uses tikwm's
-// public extraction API, which rewrites TikTok's Akamai-protected CDN URLs
-// onto tiktokcdn-us.com — a non-Akamai variant that serves the same MP4
-// with permissive CORS (Access-Control-Allow-Origin: *), so the browser can
-// load it straight into <video src=…> without an additional same-origin
-// proxy.
+// TikTok posts come in two shapes: regular videos and photo-slideshows.
+// We hit tikwm.com which normalises both shapes. For videos it returns
+// `data.play` (a non-Akamai mirror that browsers can play directly). For
+// slideshows it returns `data.images` — an array of full-resolution image
+// URLs. We auto-detect by checking which field is populated.
 
 const ReqSchema = z.object({ url: z.string().min(1).max(2048) });
 
 interface TikwmResponse {
   code?: number;
-  data?: { play?: string; wmplay?: string; hdplay?: string; cover?: string; origin_cover?: string };
+  data?: {
+    play?: string;
+    wmplay?: string;
+    hdplay?: string;
+    cover?: string;
+    origin_cover?: string;
+    images?: string[];
+  };
 }
 
-async function viaTikwm(url: string): Promise<{ play_url: string; cover: string | null } | null> {
+type ExtractResult =
+  | { kind: 'video';  play_url: string; cover: string | null }
+  | { kind: 'images'; images: string[]; cover: string | null };
+
+async function viaTikwm(url: string): Promise<ExtractResult | null> {
   try {
     const res = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`, {
       headers: { Accept: 'application/json' },
@@ -29,9 +40,17 @@ async function viaTikwm(url: string): Promise<{ play_url: string; cover: string 
     if (!res.ok) return null;
     const data = (await res.json()) as TikwmResponse;
     if (data.code !== 0 || !data.data) return null;
+    const cover = data.data.origin_cover ?? data.data.cover ?? null;
+
+    // Slideshow first: if there are any images, treat the post as a
+    // photo carousel even if `play` is set (TikTok adds the music track
+    // as `play` for slideshows and that'd be misleading to embed as video).
+    if (Array.isArray(data.data.images) && data.data.images.length > 0) {
+      return { kind: 'images', images: data.data.images, cover };
+    }
     const play = data.data.hdplay || data.data.play || data.data.wmplay;
-    if (!play) return null;
-    return { play_url: play, cover: data.data.origin_cover ?? data.data.cover ?? null };
+    if (play) return { kind: 'video', play_url: play, cover };
+    return null;
   } catch {
     return null;
   }

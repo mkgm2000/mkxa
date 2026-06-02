@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, X, Check } from 'lucide-react';
+import { Plus, X, Check, Minus } from 'lucide-react';
 import { AISLES, aisleLabel, type Aisle } from '@/lib/meals/recipes';
 
 interface AddItemRowProps {
@@ -11,20 +11,33 @@ interface AddItemRowProps {
 export function AddItemRow({ onAdd }: AddItemRowProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
-  const [qty, setQty] = useState('');
-  const [unit, setUnit] = useState('');
+  const [units, setUnits] = useState(1);
   const [aisle, setAisle] = useState<Aisle>('otros');
+
+  function reset() {
+    setName('');
+    setUnits(1);
+    setAisle('otros');
+    setOpen(false);
+  }
 
   async function submit() {
     if (!name.trim()) return;
-    const quantity = qty.trim() === '' ? null : Number(qty.replace(',', '.'));
+    const safeUnits = Number.isFinite(units) && units > 0 ? Math.trunc(units) : 1;
     await onAdd({
       name,
-      quantity: Number.isFinite(quantity as number) ? (quantity as number) : null,
-      unit: unit.trim() === '' ? null : unit.trim(),
+      quantity: safeUnits,
+      unit: 'uds',
       aisle,
     });
-    setName(''); setQty(''); setUnit(''); setAisle('otros'); setOpen(false);
+    reset();
+  }
+
+  function handleUnitsChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value.replace(/[^\d]/g, '');
+    if (raw === '') { setUnits(0); return; }
+    const n = parseInt(raw, 10);
+    setUnits(Number.isFinite(n) ? n : 0);
   }
 
   if (!open) {
@@ -48,24 +61,40 @@ export function AddItemRow({ onAdd }: AddItemRowProps) {
         onChange={(e) => setName(e.target.value)}
         placeholder="Nombre"
         aria-label="Nombre del item"
-        className="mb-2 w-full border-b border-ink-soft py-1 text-[14px] outline-none focus:border-ink"
+        className="mb-3 w-full border-b border-ink-soft py-1 text-[14px] outline-none focus:border-ink"
       />
-      <div className="mb-2 flex gap-2">
-        <input
-          value={qty}
-          onChange={(e) => setQty(e.target.value)}
-          placeholder="Cant."
-          aria-label="Cantidad"
-          inputMode="decimal"
-          className="w-20 border-b border-ink-soft py-1 text-[14px] tabular-nums outline-none focus:border-ink"
-        />
-        <input
-          value={unit}
-          onChange={(e) => setUnit(e.target.value)}
-          placeholder="Unidad"
-          aria-label="Unidad"
-          className="flex-1 border-b border-ink-soft py-1 text-[14px] outline-none focus:border-ink"
-        />
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <span className="text-[12px] font-bold uppercase tracking-[0.06em] text-ink-muted">Unidades</span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setUnits((u) => Math.max(1, (Number.isFinite(u) ? u : 1) - 1))}
+            aria-label="Restar unidad"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-ink-soft text-ink active:scale-[0.97]"
+          >
+            <Minus size={16} strokeWidth={1.5} aria-hidden />
+          </button>
+          <input
+            type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            min={1}
+            step={1}
+            value={units === 0 ? '' : units}
+            onChange={handleUnitsChange}
+            onBlur={() => { if (!units || units < 1) setUnits(1); }}
+            aria-label="Unidades"
+            className="w-14 rounded-md border border-ink-soft bg-white py-1 text-center text-[16px] font-bold tabular-nums text-ink outline-none focus:border-ink"
+          />
+          <button
+            type="button"
+            onClick={() => setUnits((u) => (Number.isFinite(u) ? u : 0) + 1)}
+            aria-label="Sumar unidad"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-ink-soft text-ink active:scale-[0.97]"
+          >
+            <Plus size={16} strokeWidth={1.5} aria-hidden />
+          </button>
+        </div>
       </div>
       <select
         value={aisle}
@@ -76,7 +105,7 @@ export function AddItemRow({ onAdd }: AddItemRowProps) {
         {AISLES.map((a) => <option key={a} value={a}>{aisleLabel(a)}</option>)}
       </select>
       <div className="flex justify-end gap-2">
-        <button type="button" onClick={() => setOpen(false)} aria-label="Cancelar"
+        <button type="button" onClick={reset} aria-label="Cancelar"
           className="flex h-9 w-9 items-center justify-center rounded-full border border-ink-soft text-ink-muted">
           <X size={16} strokeWidth={1.5} aria-hidden />
         </button>

@@ -24,6 +24,9 @@ export function PantryItemRow({ item, onToggle }: PantryItemRowProps) {
       </span>
       <span className={clsx('flex-1 text-[14px] font-medium', item.in_stock ? 'text-ink' : 'text-ink-muted')}>
         {item.name}
+        {typeof item.units === 'number' && item.units > 0 && (
+          <span className="ml-2 text-[12px] font-normal text-ink-muted">{item.units} uds</span>
+        )}
       </span>
     </button>
   );

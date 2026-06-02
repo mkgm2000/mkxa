@@ -143,8 +143,8 @@ describe('aggregateShoppingList', () => {
       recipes: [r],
       ingredients,
       pantry: [
-        { id: 'pi1', name: ' sal ', aisle: 'despensa', in_stock: true,  updated_at: '' },
-        { id: 'pi2', name: 'arroz', aisle: 'despensa', in_stock: false, updated_at: '' },
+        { id: 'pi1', name: ' sal ', aisle: 'despensa', in_stock: true,  units: null, updated_at: '' },
+        { id: 'pi2', name: 'arroz', aisle: 'despensa', in_stock: false, units: null, updated_at: '' },
       ],
       weekStart: '2026-05-25',
     });
