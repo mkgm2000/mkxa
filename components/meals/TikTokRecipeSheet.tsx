@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Play } from 'lucide-react';
-import { TikTokEmbed } from '@/components/meals/TikTokEmbed';
+import { MediaEmbed } from '@/components/meals/MediaEmbed';
 import { mealSlotLabel } from '@/lib/meals/recipes';
 import type { Recipe } from '@/lib/meals/recipes';
 
@@ -14,7 +14,7 @@ interface TikTokRecipeSheetProps {
 
 export function TikTokRecipeSheet({ recipe, onClose }: TikTokRecipeSheetProps) {
   const router = useRouter();
-  const open = recipe !== null && recipe.source_type === 'tiktok';
+  const open = recipe !== null && (recipe.source_type === 'tiktok' || recipe.source_type === 'instagram');
 
   // Body scroll lock while open.
   useEffect(() => {
@@ -71,7 +71,11 @@ export function TikTokRecipeSheet({ recipe, onClose }: TikTokRecipeSheetProps) {
         </div>
 
         <div className="max-h-[70vh] overflow-hidden">
-          <TikTokEmbed url={recipe.source_url} poster={recipe.thumbnail_url} />
+          <MediaEmbed
+            url={recipe.source_url}
+            poster={recipe.thumbnail_url}
+            sourceType={recipe.source_type}
+          />
         </div>
 
         <div className="flex flex-col gap-1 px-1 text-center">

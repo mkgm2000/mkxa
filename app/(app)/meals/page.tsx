@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, X, Utensils } from 'lucide-react';
+import { Plus, X, Utensils, Search, ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
 import { RecipeCard } from '@/components/meals/RecipeCard';
@@ -78,17 +78,36 @@ export default function MealsHubPage() {
   const [finishOpen, setFinishOpen] = useState(false);
   const [tiktokSheet, setTiktokSheet] = useState<Recipe | null>(null);
 
-  // Group recipes by meal_type for the Recetas tab. Empty groups skipped.
+  // Search query + collapse state for the Recetas tab.
+  const [recipesQuery, setRecipesQuery] = useState('');
+  const [collapsedBuckets, setCollapsedBuckets] = useState<Set<string>>(() => new Set());
+
+  // Group recipes by meal_type for the Recetas tab, filtered by the
+  // search query against title and tags. Empty groups are skipped at render.
   const recipesByType = useMemo(() => {
     const buckets: Record<MealSlot | 'untyped', Recipe[]> = {
       breakfast: [], lunch: [], dinner: [], snack: [], dessert: [], untyped: [],
     };
+    const q = recipesQuery.trim().toLowerCase();
     for (const r of recipes) {
+      if (q) {
+        const hay = `${r.title} ${(r.tags ?? []).join(' ')}`.toLowerCase();
+        if (!hay.includes(q)) continue;
+      }
       const key = r.meal_type ?? 'untyped';
       buckets[key].push(r);
     }
     return buckets;
-  }, [recipes]);
+  }, [recipes, recipesQuery]);
+
+  function toggleBucket(bucket: string) {
+    setCollapsedBuckets((prev) => {
+      const next = new Set(prev);
+      if (next.has(bucket)) next.delete(bucket);
+      else next.add(bucket);
+      return next;
+    });
+  }
 
   const recipeNamesById = useMemo(() => {
     const m: Record<string, string> = {};
@@ -200,6 +219,34 @@ export default function MealsHubPage() {
             </div>
           ) : (
             <>
+              {/* Search bar — instant filter against title + tags */}
+              <div className="relative">
+                <Search
+                  size={16}
+                  strokeWidth={1.75}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
+                  aria-hidden
+                />
+                <input
+                  type="search"
+                  value={recipesQuery}
+                  onChange={(e) => setRecipesQuery(e.target.value)}
+                  placeholder="Buscar receta…"
+                  aria-label="Buscar receta"
+                  className="w-full rounded-full bg-white px-10 py-2.5 text-[14px] text-ink shadow-action placeholder:text-ink-muted focus:outline-none"
+                />
+                {recipesQuery && (
+                  <button
+                    type="button"
+                    aria-label="Limpiar búsqueda"
+                    onClick={() => setRecipesQuery('')}
+                    className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-ink-soft text-ink active:scale-95"
+                  >
+                    <X size={14} strokeWidth={2} aria-hidden />
+                  </button>
+                )}
+              </div>
+
               <div className="flex items-center justify-between px-1">
                 <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
                   {recipes.length} {recipes.length === 1 ? 'receta' : 'recetas'}
@@ -220,17 +267,37 @@ export default function MealsHubPage() {
                 const list = recipesByType[bucket];
                 if (list.length === 0) return null;
                 const label = bucket === 'untyped' ? 'Sin tipo' : mealSlotLabel(bucket);
+                const collapsed = collapsedBuckets.has(bucket);
                 return (
                   <section key={bucket} className="flex flex-col gap-3">
-                    <header className="flex items-center justify-between px-1">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
-                        {label}
-                      </p>
-                      <p className="text-[11px] font-bold tabular-nums text-ink-muted">
+                    <button
+                      type="button"
+                      onClick={() => toggleBucket(bucket)}
+                      aria-expanded={!collapsed}
+                      aria-controls={`recipes-bucket-${bucket}`}
+                      className="flex items-center justify-between rounded-full bg-white px-3 py-1.5 shadow-action transition-transform duration-150 active:scale-[0.99]"
+                    >
+                      <span className="flex items-center gap-2">
+                        <ChevronDown
+                          size={14}
+                          strokeWidth={2}
+                          className="text-ink transition-transform duration-200"
+                          style={{ transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}
+                          aria-hidden
+                        />
+                        <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink">
+                          {label}
+                        </span>
+                      </span>
+                      <span className="rounded-full bg-ink-soft px-2 py-0.5 text-[11px] font-bold tabular-nums text-ink">
                         {list.length}
-                      </p>
-                    </header>
-                    <div className="grid grid-cols-2 gap-3">
+                      </span>
+                    </button>
+                    <div
+                      id={`recipes-bucket-${bucket}`}
+                      hidden={collapsed}
+                      className="grid grid-cols-2 gap-3"
+                    >
                       {list.map((r, idx) => (
                         <div
                           key={r.id}
@@ -254,7 +321,7 @@ export default function MealsHubPage() {
                             <div className="block">
                               <RecipeCard recipe={r} />
                             </div>
-                          ) : r.source_type === 'tiktok' ? (
+                          ) : r.source_type === 'tiktok' || r.source_type === 'instagram' ? (
                             <button
                               type="button"
                               onClick={() => setTiktokSheet(r)}

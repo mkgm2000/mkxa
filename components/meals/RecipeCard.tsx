@@ -17,12 +17,16 @@ import { setRecipeThumbnail } from '@/lib/hooks/use-recipes';
 // get rate-limited by TikTok.
 const tiktokMetaLookupAttempted = new Set<string>();
 
-async function backfillTikTokThumbnail(recipe: Recipe): Promise<void> {
+async function backfillVideoThumbnail(recipe: Recipe): Promise<void> {
   if (!recipe.source_url) return;
   if (tiktokMetaLookupAttempted.has(recipe.id)) return;
   tiktokMetaLookupAttempted.add(recipe.id);
+  const endpoint =
+    recipe.source_type === 'instagram'
+      ? '/api/recipes/instagram-meta'
+      : '/api/recipes/tiktok-meta';
   try {
-    const res = await fetch('/api/recipes/tiktok-meta', {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: recipe.source_url }),
@@ -38,18 +42,18 @@ async function backfillTikTokThumbnail(recipe: Recipe): Promise<void> {
 }
 
 export function RecipeCard({ recipe }: { recipe: Recipe }) {
-  const isTikTok = recipe.source_type === 'tiktok';
+  const isVideo = recipe.source_type === 'tiktok' || recipe.source_type === 'instagram';
   const hasThumb = Boolean(recipe.thumbnail_url);
 
-  // Lazy backfill: only for TikTok recipes that don't yet have a
-  // thumbnail and do have a source_url. Fires once per recipe id per
-  // page lifetime (module-level Set), best-effort.
+  // Lazy backfill: only for video recipes (TikTok or Instagram) that don't
+  // yet have a thumbnail and do have a source_url. Fires once per recipe id
+  // per page lifetime (module-level Set), best-effort.
   useEffect(() => {
-    if (!isTikTok || hasThumb) return;
-    void backfillTikTokThumbnail(recipe);
-  }, [isTikTok, hasThumb, recipe]);
+    if (!isVideo || hasThumb) return;
+    void backfillVideoThumbnail(recipe);
+  }, [isVideo, hasThumb, recipe]);
 
-  if (isTikTok && hasThumb && recipe.thumbnail_url) {
+  if (isVideo && hasThumb && recipe.thumbnail_url) {
     return <TikTokPosterCard recipe={recipe} />;
   }
 

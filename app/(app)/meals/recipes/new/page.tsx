@@ -31,10 +31,18 @@ const BLANK: ExtractedRecipe = {
   steps: [],
 };
 
-type Mode = 'gallery' | 'tiktok' | 'template';
+type Mode = 'gallery' | 'video' | 'template';
 
 function isTikTokUrl(url: string): boolean {
   return /tiktok\.com/i.test(url.trim());
+}
+function isInstagramUrl(url: string): boolean {
+  return /instagram\.com/i.test(url.trim());
+}
+function detectSource(url: string): 'tiktok' | 'instagram' | null {
+  if (isTikTokUrl(url)) return 'tiktok';
+  if (isInstagramUrl(url)) return 'instagram';
+  return null;
 }
 
 export default function NewRecipePage() {
@@ -45,7 +53,7 @@ export default function NewRecipePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Solo TikTok form state.
+  // Quick-create video form state (TikTok or Instagram).
   const [ttUrl, setTtUrl] = useState('');
   const [ttTitle, setTtTitle] = useState('');
   const [ttSlot, setTtSlot] = useState<MealSlot>('lunch');
@@ -76,25 +84,26 @@ export default function NewRecipePage() {
     else setError(res.error);
   }
 
-  async function saveTikTokOnly() {
+  async function saveVideoOnly() {
     setTtError(null);
     if (!athlete) return;
     const url = ttUrl.trim();
     let title = ttTitle.trim();
-    // Title is optional now — if MK leaves it blank we'll try to
-    // backfill it from the oEmbed `title` field (which TikTok returns
-    // as `@username video description`). If oEmbed also fails we
-    // gate-keep with a friendly message.
-    if (!url || !isTikTokUrl(url)) { setTtError('El link debe ser de tiktok.com'); return; }
+    const source = detectSource(url);
+    if (!url || !source) {
+      setTtError('El link debe ser de tiktok.com o instagram.com');
+      return;
+    }
     setBusy(true);
 
     // Best-effort metadata fetch — never blocks the save. Timeouts and
     // 4xx/5xx all collapse into "no thumbnail" with the recipe still
-    // persisted so MK doesn't lose the link.
+    // persisted so the link isn't lost.
+    const endpoint = source === 'instagram' ? '/api/recipes/instagram-meta' : '/api/recipes/tiktok-meta';
     let thumbnail_url: string | null = null;
     let author_name: string | null = null;
     try {
-      const metaRes = await fetch('/api/recipes/tiktok-meta', {
+      const metaRes = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
@@ -126,7 +135,7 @@ export default function NewRecipePage() {
       recipe: {
         title,
         source_url: url,
-        source_type: 'tiktok',
+        source_type: source,
         image_url: null,
         prep_minutes: null,
         servings: null,
@@ -154,7 +163,7 @@ export default function NewRecipePage() {
   }
 
   const title =
-    mode === 'tiktok' ? 'Solo TikTok' :
+    mode === 'video' ? 'Subir vídeo' :
     picked ? 'Nueva receta' :
     'Elige una plantilla';
 
@@ -179,10 +188,10 @@ export default function NewRecipePage() {
 
       {mode === 'gallery' && !picked && (
         <section className="flex flex-col gap-4 px-4 pb-6">
-          {/* Prominent Solo TikTok quick-create */}
+          {/* Quick-create from a video link (TikTok or Instagram) */}
           <button
             type="button"
-            onClick={() => setMode('tiktok')}
+            onClick={() => setMode('video')}
             className="flex items-center gap-4 rounded-card bg-ink p-4 text-left text-white shadow-card transition-transform duration-150 active:scale-[0.98]"
           >
             <span
@@ -192,8 +201,8 @@ export default function NewRecipePage() {
               <Play size={22} strokeWidth={2} fill="currentColor" className="ml-0.5" />
             </span>
             <span className="flex flex-col">
-              <span className="font-sans text-[16px] font-extrabold leading-tight">Solo TikTok</span>
-              <span className="text-[12px] text-white/70">Para cuando solo necesitas el video</span>
+              <span className="font-sans text-[16px] font-extrabold leading-tight">Subir con vídeo</span>
+              <span className="text-[12px] text-white/70">Pega un link de TikTok o Instagram</span>
             </span>
           </button>
 
@@ -243,12 +252,12 @@ export default function NewRecipePage() {
             href="/meals/scan"
             className="rounded-card bg-ink/90 py-3 text-center text-[13px] font-bold text-white"
           >
-            O importar desde TikTok / web
+            O importar desde TikTok / Instagram / web
           </Link>
         </section>
       )}
 
-      {mode === 'tiktok' && (
+      {mode === 'video' && (
         <section className="flex flex-col gap-5 px-5 pb-8">
           <div className="flex flex-col items-center gap-2 pt-4">
             <span
@@ -258,10 +267,10 @@ export default function NewRecipePage() {
               <Play size={32} strokeWidth={2} fill="currentColor" className="ml-1" />
             </span>
             <h2 className="font-sans text-[24px] font-extrabold tracking-tightest text-ink">
-              Solo TikTok
+              Subir con vídeo
             </h2>
             <p className="text-center text-[13px] text-ink-muted">
-              Para cuando solo necesitas el video
+              Pega un link de TikTok o Instagram
             </p>
           </div>
 
@@ -273,18 +282,23 @@ export default function NewRecipePage() {
 
           <div className="flex flex-col gap-2">
             <label htmlFor="tt-url" className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
-              Pega el link de TikTok
+              Pega el link del vídeo
             </label>
             <input
               id="tt-url"
               type="url"
               inputMode="url"
               autoComplete="off"
-              placeholder="https://www.tiktok.com/..."
+              placeholder="tiktok.com/... o instagram.com/reel/..."
               value={ttUrl}
               onChange={(e) => setTtUrl(e.target.value)}
               className="rounded-action border border-ink-soft bg-white px-4 py-3 text-[14px] text-ink placeholder:text-ink-muted/60 focus:border-ink focus:outline-none"
             />
+            {ttUrl && detectSource(ttUrl) && (
+              <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">
+                Detectado: {detectSource(ttUrl)}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-2">
@@ -330,7 +344,7 @@ export default function NewRecipePage() {
 
           <button
             type="button"
-            onClick={saveTikTokOnly}
+            onClick={saveVideoOnly}
             disabled={busy}
             className="mt-2 rounded-action bg-ink py-4 text-[14px] font-bold text-white disabled:opacity-60"
           >
