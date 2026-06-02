@@ -87,7 +87,7 @@ export function RestaurantForm({ initial, defaultStatus, onClose, onSubmit }: Pr
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[92vh] w-full max-w-md flex-col overflow-y-auto rounded-t-3xl bg-bg-soft p-5 shadow-2xl sm:rounded-3xl"
+        className="flex max-h-[92vh] w-full max-w-md flex-col overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl"
       >
         <div className="flex items-center justify-between">
           <h2 className="font-sans text-[20px] font-extrabold text-ink">
@@ -207,7 +207,7 @@ export function RestaurantForm({ initial, defaultStatus, onClose, onSubmit }: Pr
                       <Star
                         size={28}
                         strokeWidth={1.5}
-                        className={n <= (rating ?? 0) ? 'text-warning' : 'text-ink-soft'}
+                        className={n <= (rating ?? 0) ? 'text-amber-400' : 'text-ink-soft'}
                         fill={n <= (rating ?? 0) ? 'currentColor' : 'none'}
                         aria-hidden
                       />

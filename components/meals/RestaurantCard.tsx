@@ -52,7 +52,7 @@ export function RestaurantCard({ r, onEdit, onMarkVisited }: Props) {
                   key={i}
                   size={12}
                   strokeWidth={1.5}
-                  className={i < (r.rating ?? 0) ? 'text-warning' : 'text-ink-soft'}
+                  className={i < (r.rating ?? 0) ? 'text-amber-400' : 'text-ink-soft'}
                   fill={i < (r.rating ?? 0) ? 'currentColor' : 'none'}
                   aria-hidden
                 />
