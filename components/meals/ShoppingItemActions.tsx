@@ -116,28 +116,17 @@ export function ShoppingItemActions({ item, onClose, onSave, onDelete }: Props) 
               />
             </label>
 
-            <div>
-              <p className="mb-1.5 text-[13px] text-ink">Categoría</p>
-              <div className="flex flex-wrap gap-1.5">
-                {AISLES.map((a) => {
-                  const active = aisle === a;
-                  return (
-                    <button
-                      key={a}
-                      type="button"
-                      onClick={() => setAisle(a)}
-                      className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition-transform active:scale-95 ${
-                        active
-                          ? 'bg-ink text-white'
-                          : 'border border-ink-soft bg-white text-ink'
-                      }`}
-                    >
-                      {aisleLabel(a)}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <label className="flex flex-col gap-1 text-[13px] text-ink">
+              Categoría
+              <select
+                value={aisle}
+                onChange={(e) => setAisle(e.target.value as Aisle)}
+                aria-label="Sección"
+                className="rounded-md border border-ink-soft bg-white px-2 py-2 text-[14px] text-ink"
+              >
+                {AISLES.map((a) => <option key={a} value={a}>{aisleLabel(a)}</option>)}
+              </select>
+            </label>
 
             <div>
               <p className="mb-1.5 text-[13px] text-ink">Unidades</p>
