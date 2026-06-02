@@ -41,7 +41,7 @@ export function MediaEmbed({ url, poster, sourceType }: MediaEmbedProps) {
   return <TikTokEmbed url={url} poster={poster} />;
 }
 
-function InstagramEmbed({ url, poster: _poster }: { url: string | null; poster?: string | null }) {
+function InstagramEmbed({ url }: { url: string | null; poster?: string | null }) {
   const embedUrl = url ? instagramEmbedUrl(url) : null;
   if (!embedUrl) {
     return (
