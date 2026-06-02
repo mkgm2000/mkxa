@@ -81,7 +81,7 @@ export default function MealsHubPage() {
   // Group recipes by meal_type for the Recetas tab. Empty groups skipped.
   const recipesByType = useMemo(() => {
     const buckets: Record<MealSlot | 'untyped', Recipe[]> = {
-      breakfast: [], lunch: [], dinner: [], snack: [], untyped: [],
+      breakfast: [], lunch: [], dinner: [], snack: [], dessert: [], untyped: [],
     };
     for (const r of recipes) {
       const key = r.meal_type ?? 'untyped';

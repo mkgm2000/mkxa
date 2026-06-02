@@ -18,13 +18,14 @@ const SLOT_LABELS: Record<MealSlot, string> = {
   lunch: 'Comida',
   dinner: 'Cena',
   snack: 'Snack',
+  dessert: 'Postres',
 };
 
 const DAY_ORDER: Record<MealDay, number> = {
   mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6,
 };
 const SLOT_ORDER: Record<MealSlot, number> = {
-  breakfast: 0, lunch: 1, snack: 2, dinner: 3,
+  breakfast: 0, lunch: 1, snack: 2, dessert: 3, dinner: 4,
 };
 
 export function FridgeSection({ plan, onEat }: FridgeSectionProps) {

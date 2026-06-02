@@ -16,7 +16,7 @@ interface DaySlotCardProps {
 }
 
 const SLOT_LABELS: Record<MealSlot, string> = {
-  breakfast: 'Desayuno', lunch: 'Comida', dinner: 'Cena', snack: 'Snack',
+  breakfast: 'Desayuno', lunch: 'Comida', dinner: 'Cena', snack: 'Snack', dessert: 'Postres',
 };
 
 export function DaySlotCard({

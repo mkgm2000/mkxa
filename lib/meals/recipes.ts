@@ -138,15 +138,16 @@ export function recipeFallbackGradient(title: string): string {
   return RECIPE_FALLBACK_GRADIENTS[idx];
 }
 
-export type MealSlot = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+export type MealSlot = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'dessert';
 
-export const MEAL_SLOTS: readonly MealSlot[] = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
+export const MEAL_SLOTS: readonly MealSlot[] = ['breakfast', 'lunch', 'dinner', 'snack', 'dessert'] as const;
 
 const MEAL_SLOT_LABELS_MAP: Record<MealSlot, string> = {
   breakfast: 'Desayuno',
   lunch: 'Comida',
   dinner: 'Cena',
   snack: 'Snack',
+  dessert: 'Postres',
 };
 
 export function mealSlotLabel(slot: MealSlot): string {
@@ -180,6 +181,7 @@ export interface PantryItem {
   name: string;
   aisle: Aisle;
   in_stock: boolean;
+  units: number | null;
   updated_at: string;
 }
 
