@@ -55,7 +55,14 @@ REGLAS ESTRICTAS:
 14. BLOQUE POTENCIA VIERNES S13-S20 (v12): además de la sesión Fuerza tradicional, añade +10 min de bloque potencia con KB Swing / Push Press / Snatch KB (alternando). Reduce volumen accesorio para mantener duración ≤ 90 min.
 15. SOBRECARGA S15 y S19 (v11): semanas de pico — usar cargas SUPRA-HYROX (WB +2kg, Farmer +4kg, Sled + placa extra). Cita "Excel Vision Macro S15/S19" o "Tema 7 §pico de forma".
 16. SESIONES HYROX (RECORDATORIO v11, formato explícito): para CADA bloque HYROX en pareja, etiqueta inequívocamente la distribución. Ski/Row/BBJ/WB → "(pareja: ~50% cada uno, TOTAL Xm)". Sled Push/Pull/Farmer/Lunges → "(pareja: un atleta lo completa antes del relevo)". NO uses formulación ambigua como "1000m Ski" sin indicar reparto.
-17. Output: JSON puro siguiendo el schema descrito. Sin markdown, sin prosa fuera del JSON, sin "explicaciones" antes o después.
+17. FORMATO CONCISO (CRÍTICO — replica el estilo de las semanas baseline S1-S3):
+    - title: SOLO el tipo de sesión. Ej. válidos: "Fuerza", "Z2 Suave", "HYROX Técnico", "Series Carrera", "Fuerza + Trineo". PROHIBIDO incluir el día de la semana ("Miércoles", "Jueves"), PROHIBIDO duración ("~60'"), PROHIBIDO subtítulo descriptivo. La UI ya muestra D1/D2/D3/D4.
+    - rpe: solo "RPE X" o "RPE X-Y". Sin texto extra.
+    - blocks.name: nombre corto del ejercicio (Sentadilla, Sled Push, Wall Balls). PROHIBIDO añadir códigos de batería (F01, H03), PROHIBIDO meter anotaciones "(pareja: ...)" — esas van en load o se omiten si son obvias.
+    - blocks.sets: compacto. Ej. "4x5", "3x250m", "30'", "5x400m". Una cifra.
+    - blocks.load: VERY corto. Solo carga + opcional cue de 3-4 palabras max. Ej. válidos: "35kg", "6:20-6:35/km", "Banda M", "BW", "Técnica", "2x12kg", "Ligero". PROHIBIDO párrafos, descansos en este campo, técnica detallada, citas a registros, anotaciones de pareja largas. Esa info va a "rationale".
+    - rationale: aquí SÍ va el contexto largo, citas, ajustes vs registros, fuentes UFV/Rulebook. La UI lo oculta por defecto.
+18. Output: JSON puro siguiendo el schema descrito. Sin markdown, sin prosa fuera del JSON, sin "explicaciones" antes o después.
 
 JSON SCHEMA esperado (salida COMÚN con ambos atletas):
 {
