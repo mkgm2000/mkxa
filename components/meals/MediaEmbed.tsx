@@ -41,7 +41,7 @@ export function MediaEmbed({ url, poster, sourceType }: MediaEmbedProps) {
   return <TikTokEmbed url={url} poster={poster} />;
 }
 
-function InstagramEmbed({ url, poster }: { url: string | null; poster?: string | null }) {
+function InstagramEmbed({ url, poster: _poster }: { url: string | null; poster?: string | null }) {
   const embedUrl = url ? instagramEmbedUrl(url) : null;
   if (!embedUrl) {
     return (
@@ -50,24 +50,33 @@ function InstagramEmbed({ url, poster }: { url: string | null; poster?: string |
       </div>
     );
   }
+  // Instagram's official embed iframe renders the video flanked by a
+  // profile header (~64 px) and a footer with likes/share/save (~150 px),
+  // and we can't restyle a cross-origin iframe. So we render the iframe at
+  // a height that's the sum of header + video + footer, then offset it
+  // upward inside a `overflow-hidden` container so only the central video
+  // area is visible. The fixed pixel offsets are tuned to IG's current
+  // embed layout; if they redesign we'll need to retune.
+  const HEADER_PX = 64;
+  const FOOTER_PX = 160;
   return (
     <div className="relative mx-auto w-full max-w-[420px] overflow-hidden rounded-card bg-black shadow-card">
-      <div className="relative w-full" style={{ aspectRatio: '9/16', maxHeight: '70vh' }}>
-        {/* The IG embed is responsive height-wise; we frame it in 9:16 like
-            the TikTok player so the layout doesn't jump between embeds. */}
+      <div className="relative w-full" style={{ aspectRatio: '9/16', maxHeight: '78vh' }}>
         <iframe
           src={embedUrl}
           allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; autoplay; fullscreen"
           allowFullScreen
-          className="absolute inset-0 h-full w-full rounded-card border-0 bg-white"
+          className="absolute left-0 right-0 border-0 bg-white"
+          style={{
+            top: `-${HEADER_PX}px`,
+            width: '100%',
+            height: `calc(100% + ${HEADER_PX + FOOTER_PX}px)`,
+          }}
           title="Instagram video"
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
+          scrolling="no"
         />
-        {poster ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={poster} alt="" className="hidden" />
-        ) : null}
       </div>
     </div>
   );

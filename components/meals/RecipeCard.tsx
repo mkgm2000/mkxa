@@ -39,7 +39,13 @@ async function backfillVideoThumbnail(recipe: Recipe): Promise<void> {
     // posts whose oembed thumbnail already matches.
     if (data.thumbnail_url === recipe.thumbnail_url) return;
     await setRecipeThumbnail(recipe.id, data.thumbnail_url);
-    // Parent (useRecipes) refetches on next focus; no manual refresh here.
+    // Tell anyone listening (useRecipes mainly) so the card re-renders
+    // immediately instead of waiting for the next page focus to re-fetch.
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('recipes:thumbnail-updated', {
+        detail: { id: recipe.id, url: data.thumbnail_url },
+      }));
+    }
   } catch {
     // Silent — the next mount can retry after a page navigation.
   }

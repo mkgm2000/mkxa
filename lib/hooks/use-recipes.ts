@@ -38,6 +38,28 @@ export function useRecipes() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  // Optimistic local update when RecipeCard backfills a missing thumbnail.
+  // The card writes to DB and then dispatches this event so we don't have
+  // to re-query just to surface the new URL on the next render.
+  useEffect(() => {
+    function onUpdate(e: Event) {
+      const detail = (e as CustomEvent).detail as { id?: string; url?: string };
+      if (!detail?.id || !detail?.url) return;
+      setRecipes((prev) => prev.map((r) => (r.id === detail.id ? { ...r, thumbnail_url: detail.url! } : r)));
+    }
+    window.addEventListener('recipes:thumbnail-updated', onUpdate);
+    // Re-fetch when the tab regains focus / becomes visible — picks up
+    // any changes the user (or another device) made elsewhere.
+    function onFocus() { if (document.visibilityState === 'visible') void refresh(); }
+    document.addEventListener('visibilitychange', onFocus);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      window.removeEventListener('recipes:thumbnail-updated', onUpdate);
+      document.removeEventListener('visibilitychange', onFocus);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [refresh]);
+
   return { recipes, loading, refresh };
 }
 

@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { Pencil, Trash2, X, Minus, Plus } from 'lucide-react';
-import type { ShoppingItem } from '@/lib/meals/recipes';
+import { AISLES, aisleLabel, type Aisle, type ShoppingItem } from '@/lib/meals/recipes';
 
 interface Props {
   item: ShoppingItem;
   onClose: () => void;
-  onSave: (patch: { name: string; quantity: number | null }) => Promise<void> | void;
+  onSave: (patch: { name: string; quantity: number | null; aisle: Aisle }) => Promise<void> | void;
   onDelete: () => Promise<void> | void;
 }
 
@@ -19,6 +19,7 @@ export function ShoppingItemActions({ item, onClose, onSave, onDelete }: Props) 
   const [mode, setMode] = useState<'choose' | 'edit' | 'confirmDelete'>('choose');
   const [name, setName] = useState(item.name);
   const [qty, setQty] = useState<number>(item.quantity ?? 1);
+  const [aisle, setAisle] = useState<Aisle>(item.aisle);
   const [saving, setSaving] = useState(false);
 
   // Body scroll lock — same pattern other meals sheets use.
@@ -39,7 +40,7 @@ export function ShoppingItemActions({ item, onClose, onSave, onDelete }: Props) 
     if (!name.trim()) return;
     setSaving(true);
     try {
-      await onSave({ name: name.trim(), quantity: Math.max(1, Math.trunc(qty || 1)) });
+      await onSave({ name: name.trim(), quantity: Math.max(1, Math.trunc(qty || 1)), aisle });
       onClose();
     } finally {
       setSaving(false);
@@ -114,6 +115,29 @@ export function ShoppingItemActions({ item, onClose, onSave, onDelete }: Props) 
                 className="rounded-action border border-ink-soft bg-white px-3 py-2.5 text-[14px] outline-none focus:border-ink"
               />
             </label>
+
+            <div>
+              <p className="mb-1.5 text-[13px] text-ink">Categoría</p>
+              <div className="flex flex-wrap gap-1.5">
+                {AISLES.map((a) => {
+                  const active = aisle === a;
+                  return (
+                    <button
+                      key={a}
+                      type="button"
+                      onClick={() => setAisle(a)}
+                      className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition-transform active:scale-95 ${
+                        active
+                          ? 'bg-ink text-white'
+                          : 'border border-ink-soft bg-white text-ink'
+                      }`}
+                    >
+                      {aisleLabel(a)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
             <div>
               <p className="mb-1.5 text-[13px] text-ink">Unidades</p>
