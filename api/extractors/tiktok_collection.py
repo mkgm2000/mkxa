@@ -12,6 +12,8 @@ private to the account that saved them), so this endpoint is TikTok-only.
 """
 from http.server import BaseHTTPRequestHandler
 import json
+import os
+import urllib.error
 import urllib.request
 
 import yt_dlp
@@ -82,6 +84,53 @@ def _normalise_item(entry: dict) -> dict | None:
     }
 
 
+def _insert_collection(
+    *,
+    title: str,
+    source_url: str,
+    items: list,
+    cover_url: str | None,
+    created_by: str | None,
+) -> dict | None:
+    """Insert directly into Supabase via PostgREST. Lives server-side so the
+    save can't be cut by the browser closing or backgrounding mid-upload.
+    Returns the new row {id} on success, None on failure (the client can
+    still retry from its end as a fallback).
+    """
+    base = os.environ.get('NEXT_PUBLIC_SUPABASE_URL')
+    key = os.environ.get('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+    if not base or not key:
+        return None
+    payload = json.dumps({
+        'title': title,
+        'source_url': source_url,
+        'source_type': 'tiktok',
+        'items': items,
+        'cover_url': cover_url,
+        'created_by': created_by,
+    }).encode('utf-8')
+    req = urllib.request.Request(
+        f'{base}/rest/v1/recipe_collections',
+        data=payload,
+        method='POST',
+        headers={
+            'apikey': key,
+            'Authorization': f'Bearer {key}',
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation',
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            body = r.read().decode('utf-8')
+            rows = json.loads(body)
+            if isinstance(rows, list) and rows:
+                return {'id': rows[0].get('id')}
+            return None
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+        return None
+
+
 class handler(BaseHTTPRequestHandler):  # noqa: N801 — Vercel entry point name
     def do_POST(self) -> None:  # noqa: N802
         length = int(self.headers.get('content-length') or '0')
@@ -124,9 +173,28 @@ class handler(BaseHTTPRequestHandler):  # noqa: N801 — Vercel entry point name
         if not entries_out:
             return _json_response(self, 502, {'error': 'no videos found in collection'})
 
+        collection_title = info.get('title') or info.get('playlist') or 'Colección sin título'
+        cover_url = entries_out[0].get('thumbnail') if entries_out else None
+
+        # Persist the collection server-side so a flaky browser connection
+        # (mobile backgrounding the tab, navigation, network blip) can't
+        # cut the upload. The client just polls for the row to appear.
+        created_by = body.get('created_by')
+        source_url = body.get('original_url') or url
+        save_result = _insert_collection(
+            title=collection_title,
+            source_url=source_url,
+            items=entries_out,
+            cover_url=cover_url,
+            created_by=created_by if created_by in ('MK', 'Xabi') else None,
+        )
+
         return _json_response(self, 200, {
             'items': entries_out,
-            'collection_title': info.get('title') or info.get('playlist') or None,
+            'collection_title': collection_title,
+            'collection_id': save_result.get('id') if save_result else None,
+            'saved': bool(save_result),
+            'save_error': None if save_result else 'persist failed (will need client-side retry)',
         })
 
     def do_OPTIONS(self) -> None:  # noqa: N802
