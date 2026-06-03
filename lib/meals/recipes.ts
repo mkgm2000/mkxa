@@ -85,6 +85,13 @@ export interface Recipe {
   // user-uploaded primary photo. Renders as the 9:16 background in the
   // TikTok-style recipe card.
   thumbnail_url: string | null;
+  /** When this recipe was promoted from a collection, links back to it.
+   *  Optional so legacy callers (saveRecipe sites) don't have to spell it
+   *  out — Supabase will default the column to NULL. */
+  source_collection_id?: string | null;
+  /** Identifies which item in the collection this recipe came from (the
+   *  video_url). Same optional treatment as `source_collection_id`. */
+  source_collection_item?: string | null;
   created_at: string;
   updated_at: string;
 }

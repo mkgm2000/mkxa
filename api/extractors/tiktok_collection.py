@@ -44,7 +44,7 @@ YDL_OPTS = {
     'noplaylist': False,
 }
 
-MAX_ITEMS = 60  # protect against gigantic collections
+MAX_ITEMS = 2000  # MK's biggest collection has ~1000; cap is a sanity rail
 
 
 def _json_response(handler: BaseHTTPRequestHandler, status: int, body: dict) -> None:

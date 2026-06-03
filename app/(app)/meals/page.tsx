@@ -17,6 +17,7 @@ import { PantryList } from '@/components/meals/PantryList';
 import { MealPassesSection } from '@/components/meals/MealPassesSection';
 import { TikTokRecipeSheet } from '@/components/meals/TikTokRecipeSheet';
 import { EditRecipeSheet } from '@/components/meals/EditRecipeSheet';
+import { CollectionsRow } from '@/components/meals/CollectionsRow';
 import { useRecipes, deleteRecipe } from '@/lib/hooks/use-recipes';
 import type { Recipe } from '@/lib/meals/recipes';
 import { useMealPlan, currentWeekStart } from '@/lib/hooks/use-meal-plan';
@@ -235,6 +236,7 @@ export default function MealsHubPage() {
             </div>
           ) : (
             <>
+              <CollectionsRow />
               {/* Search bar — instant filter against title + tags */}
               <div className="relative">
                 <Search
