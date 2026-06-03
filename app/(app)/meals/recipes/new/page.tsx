@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, Plus, Play } from 'lucide-react';
+import { ChevronLeft, Plus, Play, Layers } from 'lucide-react';
 import clsx from 'clsx';
 import { RecipeReview, type ExtractedRecipe } from '@/components/meals/RecipeReview';
+import { CollectionImport } from '@/components/meals/CollectionImport';
 import { saveRecipe } from '@/lib/hooks/use-recipes';
 import { useAthlete } from '@/lib/athlete-context';
 import { RECIPE_TEMPLATES, type RecipeTemplate } from '@/lib/meals/recipe-templates';
@@ -31,7 +32,7 @@ const BLANK: ExtractedRecipe = {
   steps: [],
 };
 
-type Mode = 'gallery' | 'video' | 'template';
+type Mode = 'gallery' | 'video' | 'template' | 'collection';
 
 function isTikTokUrl(url: string): boolean {
   return /tiktok\.com/i.test(url.trim());
@@ -164,6 +165,7 @@ export default function NewRecipePage() {
 
   const title =
     mode === 'video' ? 'Subir vídeo' :
+    mode === 'collection' ? 'Importar colección' :
     picked ? 'Nueva receta' :
     'Elige una plantilla';
 
@@ -203,6 +205,24 @@ export default function NewRecipePage() {
             <span className="flex flex-col">
               <span className="font-sans text-[16px] font-extrabold leading-tight">Subir con vídeo</span>
               <span className="text-[12px] text-white/70">Pega un link de TikTok o Instagram</span>
+            </span>
+          </button>
+
+          {/* Bulk import from a TikTok collection */}
+          <button
+            type="button"
+            onClick={() => setMode('collection')}
+            className="flex items-center gap-4 rounded-card bg-white p-4 text-left text-ink shadow-card transition-transform duration-150 active:scale-[0.98]"
+          >
+            <span
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-ink text-white"
+              aria-hidden
+            >
+              <Layers size={22} strokeWidth={2} />
+            </span>
+            <span className="flex flex-col">
+              <span className="font-sans text-[16px] font-extrabold leading-tight">Importar colección</span>
+              <span className="text-[12px] text-ink-muted">Saca cada vídeo de una colección de TikTok</span>
             </span>
           </button>
 
@@ -356,6 +376,8 @@ export default function NewRecipePage() {
       {mode === 'gallery' && picked && athlete && (
         <RecipeReview initial={picked} athlete={athlete} busy={busy} onSave={save} />
       )}
+
+      {mode === 'collection' && <CollectionImport />}
     </main>
   );
 }

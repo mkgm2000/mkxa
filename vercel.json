@@ -3,6 +3,9 @@
   "functions": {
     "api/extractors/instagram.py": {
       "maxDuration": 30
+    },
+    "api/extractors/tiktok_collection.py": {
+      "maxDuration": 60
     }
   }
 }
