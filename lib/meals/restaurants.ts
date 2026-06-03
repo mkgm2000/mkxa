@@ -38,8 +38,73 @@ export interface Restaurant {
   price_tier: PriceTier | null;
   notes: string | null;
   visited_at: string | null; // YYYY-MM-DD
+  // Optional Google Places attributes — null for manual entries.
+  image_url: string | null;
+  google_place_id: string | null;
+  maps_url: string | null;
+  website: string | null;
   created_at: string;
   updated_at: string;
+}
+
+// Map Google Places "primary type" to our CUISINES catalog. Falls back to
+// "otros" so the chip stays valid.
+const PLACES_TYPE_TO_CUISINE: Record<string, CuisineValue> = {
+  italian_restaurant: 'italiana',
+  pizza_restaurant: 'italiana',
+  japanese_restaurant: 'japonesa',
+  sushi_restaurant: 'japonesa',
+  ramen_restaurant: 'japonesa',
+  mexican_restaurant: 'mexicana',
+  taco_restaurant: 'mexicana',
+  chinese_restaurant: 'asiatica',
+  thai_restaurant: 'asiatica',
+  vietnamese_restaurant: 'asiatica',
+  korean_restaurant: 'asiatica',
+  asian_restaurant: 'asiatica',
+  indian_restaurant: 'india',
+  spanish_restaurant: 'espanola',
+  tapas_bar: 'espanola',
+  mediterranean_restaurant: 'mediterranea',
+  greek_restaurant: 'mediterranea',
+  lebanese_restaurant: 'mediterranea',
+  middle_eastern_restaurant: 'mediterranea',
+  american_restaurant: 'americana',
+  hamburger_restaurant: 'americana',
+  breakfast_restaurant: 'brunch',
+  brunch_restaurant: 'brunch',
+  steak_house: 'parrilla',
+  barbecue_restaurant: 'parrilla',
+  brazilian_restaurant: 'parrilla',
+  argentinian_restaurant: 'parrilla',
+  vegetarian_restaurant: 'vegetariana',
+  vegan_restaurant: 'vegetariana',
+  dessert_restaurant: 'postres',
+  ice_cream_shop: 'postres',
+  bakery: 'postres',
+  cafe: 'cafe',
+  coffee_shop: 'cafe',
+  fusion_restaurant: 'fusion',
+};
+
+export function cuisineFromPlacesTypes(types: string[] | null | undefined): CuisineValue | null {
+  if (!types || types.length === 0) return null;
+  for (const t of types) {
+    const v = PLACES_TYPE_TO_CUISINE[t];
+    if (v) return v;
+  }
+  return null;
+}
+
+// Google PRICE_LEVEL_* enum → our '€'/'€€'/'€€€'/'€€€€' tiers.
+export function priceTierFromGoogle(level: string | null | undefined): PriceTier | null {
+  switch (level) {
+    case 'PRICE_LEVEL_INEXPENSIVE':    return '€';
+    case 'PRICE_LEVEL_MODERATE':       return '€€';
+    case 'PRICE_LEVEL_EXPENSIVE':      return '€€€';
+    case 'PRICE_LEVEL_VERY_EXPENSIVE': return '€€€€';
+    default: return null;
+  }
 }
 
 export function cuisineMeta(value: string | null) {

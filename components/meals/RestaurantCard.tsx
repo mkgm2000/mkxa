@@ -24,6 +24,21 @@ export function RestaurantCard({ r, onEdit, onMarkVisited, onNavigate }: Props) 
       className="relative overflow-hidden rounded-card bg-white shadow-card"
       style={{ borderLeft: `4px solid ${c.color}` }}
     >
+      {r.image_url && (
+        // Hero photo from Google Places, served via our proxy so the API
+        // key stays server-only. Only renders when present so manual
+        // entries keep the compact layout.
+        <div className="relative aspect-[16/9] w-full bg-ink-soft">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={r.image_url}
+            alt={r.name}
+            className="h-full w-full object-cover"
+            loading="lazy"
+            referrerPolicy="no-referrer"
+          />
+        </div>
+      )}
       <div className="flex items-start gap-3 p-3.5">
         <div
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-[24px]"

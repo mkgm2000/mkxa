@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { X, Star } from 'lucide-react';
+import { X, Star, Search as SearchIcon } from 'lucide-react';
 import {
   CUISINES,
   PRICE_TIERS,
@@ -11,6 +11,7 @@ import {
   type RestaurantStatus,
 } from '@/lib/meals/restaurants';
 import { useAthlete } from '@/lib/athlete-context';
+import { PlaceSearchSheet, type PlacePick } from './PlaceSearchSheet';
 
 interface Props {
   initial?: Restaurant | null;
@@ -31,6 +32,25 @@ export function RestaurantForm({ initial, defaultStatus, onClose, onSubmit }: Pr
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [visitedAt, setVisitedAt] = useState(initial?.visited_at ?? '');
   const [saving, setSaving] = useState(false);
+  // Google Places metadata — only set when the user picks via the search
+  // sheet; manual entries leave these null.
+  const [imageUrl, setImageUrl] = useState<string | null>(initial?.image_url ?? null);
+  const [placeId, setPlaceId] = useState<string | null>(initial?.google_place_id ?? null);
+  const [mapsUrl, setMapsUrl] = useState<string | null>(initial?.maps_url ?? null);
+  const [website, setWebsite] = useState<string | null>(initial?.website ?? null);
+  const [placeSearchOpen, setPlaceSearchOpen] = useState(false);
+
+  function applyPlacePick(p: PlacePick) {
+    setName(p.name);
+    if (p.cuisine) setCuisine(p.cuisine);
+    if (p.location) setLocation(p.location);
+    if (p.price_tier) setPriceTier(p.price_tier);
+    setImageUrl(p.image_url);
+    setPlaceId(p.google_place_id);
+    setMapsUrl(p.maps_url);
+    setWebsite(p.website);
+    setPlaceSearchOpen(false);
+  }
 
   // When the user toggles to "visited" for a brand-new entry, prefill today
   // as the visit date — saves them a tap, still editable.
@@ -69,6 +89,10 @@ export function RestaurantForm({ initial, defaultStatus, onClose, onSubmit }: Pr
         price_tier: priceTier || null,
         notes: notes.trim() || null,
         visited_at: status === 'visited' ? (visitedAt || null) : null,
+        image_url: imageUrl,
+        google_place_id: placeId,
+        maps_url: mapsUrl,
+        website,
       });
       onClose();
     } finally {
@@ -104,6 +128,40 @@ export function RestaurantForm({ initial, defaultStatus, onClose, onSubmit }: Pr
         </div>
 
         <div className="mt-4 flex flex-col gap-4">
+          {/* Google search — only on new entries. Pre-fills name, cuisine,
+              location, price and attaches a photo so MK + Xabi don't have
+              to type the address by hand. */}
+          {!initial && (
+            <button
+              type="button"
+              onClick={() => setPlaceSearchOpen(true)}
+              className="flex items-center justify-center gap-2 rounded-action border border-ink-soft bg-white py-3 text-[13px] font-bold text-ink active:scale-[0.99]"
+            >
+              <SearchIcon size={16} strokeWidth={1.75} aria-hidden />
+              Buscar en Google
+            </button>
+          )}
+
+          {imageUrl && (
+            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-card bg-ink-soft">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageUrl}
+                alt={name || 'Restaurante'}
+                className="h-full w-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+              <button
+                type="button"
+                aria-label="Quitar foto"
+                onClick={() => { setImageUrl(null); setPlaceId(null); setMapsUrl(null); setWebsite(null); }}
+                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-ink shadow-action active:scale-95"
+              >
+                <X size={14} strokeWidth={2} aria-hidden />
+              </button>
+            </div>
+          )}
+
           {/* Status toggle */}
           <div role="tablist" aria-label="Estado" className="relative grid grid-cols-2 rounded-full bg-white p-1.5 shadow-action">
             <span
@@ -260,6 +318,13 @@ export function RestaurantForm({ initial, defaultStatus, onClose, onSubmit }: Pr
           </button>
         </div>
       </form>
+
+      {placeSearchOpen && (
+        <PlaceSearchSheet
+          onClose={() => setPlaceSearchOpen(false)}
+          onPick={applyPlacePick}
+        />
+      )}
     </div>
   );
 }
