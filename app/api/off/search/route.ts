@@ -85,7 +85,11 @@ export async function GET(req: Request) {
     .filter((r) => r._score >= tokens.length);
 
   scored.sort((a, b) => b._score - a._score);
-  const results = scored.slice(0, 20).map(({ _score, ...rest }) => rest);
+  const results = scored.slice(0, 20).map((r) => {
+    const { _score: _ignored, ...rest } = r;
+    void _ignored;
+    return rest;
+  });
 
   return NextResponse.json({ results });
 }
