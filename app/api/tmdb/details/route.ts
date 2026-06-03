@@ -48,7 +48,7 @@ export async function GET(req: Request) {
     episode_run_time?: number[];
     genres?: { id: number; name: string }[];
   };
-  let providers: ('netflix' | 'prime' | 'disney' | 'hbo' | 'other')[] = [];
+  const providers: ('netflix' | 'prime' | 'disney' | 'hbo' | 'other')[] = [];
   if (provRes.ok) {
     const pd = (await provRes.json()) as {
       results?: Record<string, { flatrate?: FlatrateProvider[] }>;
