@@ -98,8 +98,13 @@ def _insert_collection(
     Returns the new row {id} on success, None on failure (the client can
     still retry from its end as a fallback).
     """
-    base = os.environ.get('NEXT_PUBLIC_SUPABASE_URL')
-    key = os.environ.get('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+    # Env vars set via the Vercel UI sometimes ship with a trailing newline.
+    # `http.client` raises InvalidURL on any control character in the host,
+    # so we trim aggressively before composing the URL.
+    raw_base = os.environ.get('NEXT_PUBLIC_SUPABASE_URL') or ''
+    raw_key = os.environ.get('NEXT_PUBLIC_SUPABASE_ANON_KEY') or ''
+    base = raw_base.strip().rstrip('/')
+    key = raw_key.strip()
     if not base or not key:
         return None
     payload = json.dumps({
@@ -128,7 +133,9 @@ def _insert_collection(
             if isinstance(rows, list) and rows:
                 return {'id': rows[0].get('id')}
             return None
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+    # Catch-all: InvalidURL, ssl errors, ConnectionReset, etc. are not
+    # subclasses of URLError, so a tighter except would silently 500.
+    except Exception:  # noqa: BLE001
         return None
 
 
@@ -142,7 +149,11 @@ class handler(BaseHTTPRequestHandler):  # noqa: N801 — Vercel entry point name
         except json.JSONDecodeError:
             return _json_response(self, 400, {'error': 'invalid json'})
 
-        url = (body.get('url') or '').strip()
+        raw = (body.get('url') or '').strip()
+        # Strip control characters and zero-width joiners that creep in via
+        # copy-paste from TikTok's share sheet — `http.client` rejects them
+        # with InvalidURL otherwise.
+        url = ''.join(c for c in raw if c.isprintable() and c not in ('​', '‌', '‍', '﻿'))
         if not url or 'tiktok.com' not in url.lower():
             return _json_response(self, 400, {'error': 'not a tiktok url'})
 
