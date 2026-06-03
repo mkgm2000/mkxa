@@ -12,8 +12,28 @@ private to the account that saved them), so this endpoint is TikTok-only.
 """
 from http.server import BaseHTTPRequestHandler
 import json
+import urllib.request
 
 import yt_dlp
+
+
+def _resolve_short_url(url: str) -> str:
+    """Follow the redirect chain on vm.tiktok.com / tiktok.com/t/ shortlinks.
+    yt-dlp's flat playlist extractor doesn't expand collection short URLs
+    on its own, so we resolve them with a HEAD request before passing the
+    canonical URL into the extractor.
+    """
+    lowered = url.lower()
+    if 'vm.tiktok.com' not in lowered and '/t/' not in lowered:
+        return url
+    try:
+        req = urllib.request.Request(url, method='GET', headers={
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) AppleWebKit/605.1.15',
+        })
+        with urllib.request.urlopen(req, timeout=8) as r:
+            return r.geturl()
+    except Exception:
+        return url
 
 
 YDL_OPTS = {
@@ -75,6 +95,8 @@ class handler(BaseHTTPRequestHandler):  # noqa: N801 — Vercel entry point name
         url = (body.get('url') or '').strip()
         if not url or 'tiktok.com' not in url.lower():
             return _json_response(self, 400, {'error': 'not a tiktok url'})
+
+        url = _resolve_short_url(url)
 
         try:
             with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
