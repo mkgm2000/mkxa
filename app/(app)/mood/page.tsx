@@ -9,6 +9,7 @@ import { supabaseClient } from '@/lib/supabase/client';
 import { saveState } from '@/lib/save-state';
 import { getMoodTokens, MOODS, MOOD_ORDER, type Mood } from '@/lib/moods';
 import { MoodLegend } from '@/components/mood/YearInPixels';
+import { MoodFace } from '@/components/mood/MoodFace';
 
 type ViewKind = 'week' | 'month';
 
@@ -195,18 +196,16 @@ export default function MoodPage() {
                     onClick={() => setPickerDate(iso)}
                     aria-label={`Día ${dayNumber}${mood ? `, ${tokens?.label}` : ''}`}
                     className={clsx(
-                      'flex h-12 w-12 items-center justify-center rounded-full transition-transform duration-150 active:scale-95 sm:h-14 sm:w-14',
-                      tokens ? 'shadow-card' : 'border border-ink-soft bg-white text-ink-muted shadow-action',
+                      'relative rounded-full transition-transform duration-150 active:scale-95',
                       isToday && 'ring-2 ring-ink ring-offset-2 ring-offset-[var(--mood-bg,#ffffff)]',
                     )}
-                    style={tokens ? {
-                      background: `linear-gradient(180deg, ${tokens.cardFrom} 0%, ${tokens.cardTo} 100%)`,
-                    } : undefined}
                   >
-                    {tokens ? (
-                      <span className="text-[22px] leading-none" aria-hidden>{tokens.emoji}</span>
+                    {mood ? (
+                      <MoodFace mood={mood} size={48} />
                     ) : (
-                      <Plus size={18} strokeWidth={1.75} aria-hidden />
+                      <span className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-ink-soft bg-white text-ink-muted shadow-action">
+                        <Plus size={18} strokeWidth={1.75} aria-hidden />
+                      </span>
                     )}
                   </button>
                   <span className="text-[12px] font-bold tabular-nums text-ink">{dayNumber}</span>
@@ -325,14 +324,11 @@ function MoodPickerSheet({
                   onClick={() => void onPick(m)}
                   aria-pressed={active}
                   className={clsx(
-                    'flex w-full flex-col items-center gap-1 rounded-2xl py-3 transition-transform duration-150 active:scale-[0.97]',
-                    active ? 'ring-2 ring-ink' : '',
+                    'flex w-full flex-col items-center gap-1.5 rounded-2xl py-3 transition-transform duration-150 active:scale-[0.97]',
+                    active ? 'bg-ink-soft/40 ring-2 ring-ink' : 'bg-white/0',
                   )}
-                  style={{
-                    background: `linear-gradient(180deg, ${t.cardFrom} 0%, ${t.cardTo} 100%)`,
-                  }}
                 >
-                  <span className="text-[26px] leading-none" aria-hidden>{t.emoji}</span>
+                  <MoodFace mood={m} size={52} />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-ink">
                     {t.label}
                   </span>
