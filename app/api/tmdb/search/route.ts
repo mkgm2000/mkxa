@@ -27,7 +27,9 @@ export async function GET(req: Request) {
   const q = (url.searchParams.get('q') ?? '').trim();
   if (!q) return NextResponse.json({ results: [] });
 
-  const key = process.env.TMDB_API_KEY;
+  // Strip whitespace — env values added via `echo ... | vercel env add`
+  // carry a trailing newline which TMDB rejects as invalid auth.
+  const key = (process.env.TMDB_API_KEY ?? '').trim();
   if (!key) {
     return NextResponse.json({ error: 'TMDB key missing' }, { status: 500 });
   }

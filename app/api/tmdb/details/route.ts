@@ -31,7 +31,8 @@ export async function GET(req: Request) {
   if (!id || (type !== 'movie' && type !== 'tv')) {
     return NextResponse.json({ error: 'bad params' }, { status: 400 });
   }
-  const key = process.env.TMDB_API_KEY;
+  // Same trim as /search — env from `echo | vercel env add` has \n suffix.
+  const key = (process.env.TMDB_API_KEY ?? '').trim();
   if (!key) return NextResponse.json({ error: 'TMDB key missing' }, { status: 500 });
 
   const base = `https://api.themoviedb.org/3/${type}/${id}`;

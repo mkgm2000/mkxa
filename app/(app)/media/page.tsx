@@ -217,7 +217,8 @@ export default function MediaPage() {
         type="button"
         aria-label="Buscar peli o serie"
         onClick={() => setSearchOpen(true)}
-        className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white shadow-2xl active:scale-95"
+        className="fixed bottom-28 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white shadow-2xl active:scale-95"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 16px) + 96px)' }}
       >
         <Plus size={24} strokeWidth={2} aria-hidden />
       </button>
