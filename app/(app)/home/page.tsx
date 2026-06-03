@@ -83,7 +83,7 @@ export default function HomePage() {
         return {
           key: r.id,
           href: '/meals/restaurants',
-          image: null,
+          image: r.image_url,
           fallbackEmoji: c.emoji,
           fallbackBg: `${c.color}1F`,
           badge: r.price_tier ?? undefined,
