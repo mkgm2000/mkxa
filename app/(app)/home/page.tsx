@@ -8,6 +8,7 @@ import { NotificationBell } from '@/components/home/NotificationBell';
 import { HorizontalCardRow } from '@/components/home/HorizontalCardRow';
 import { WeekStrip } from '@/components/home/WeekStrip';
 import { GastosCard } from '@/components/home/GastosCard';
+import { CinemaWidget } from '@/components/home/CinemaWidget';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
 import { useAthlete } from '@/lib/athlete-context';
 import { useAthleteProfile } from '@/lib/hooks/use-athlete-profile';
@@ -139,6 +140,8 @@ export default function HomePage() {
           <GastosCard />
         </section>
       )}
+
+      <CinemaWidget />
 
       <HorizontalCardRow
         title="Recetas"
