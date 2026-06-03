@@ -47,7 +47,11 @@ export function useRecipes() {
       if (!detail?.id || !detail?.url) return;
       setRecipes((prev) => prev.map((r) => (r.id === detail.id ? { ...r, thumbnail_url: detail.url! } : r)));
     }
+    // recipes:updated has no payload — just trigger a fresh DB read so we
+    // pick up arbitrary field changes (title, source_url, meal_type, …).
+    function onRecipeUpdated() { void refresh(); }
     window.addEventListener('recipes:thumbnail-updated', onUpdate);
+    window.addEventListener('recipes:updated', onRecipeUpdated);
     // Re-fetch when the tab regains focus / becomes visible — picks up
     // any changes the user (or another device) made elsewhere.
     function onFocus() { if (document.visibilityState === 'visible') void refresh(); }
@@ -55,6 +59,7 @@ export function useRecipes() {
     window.addEventListener('focus', onFocus);
     return () => {
       window.removeEventListener('recipes:thumbnail-updated', onUpdate);
+      window.removeEventListener('recipes:updated', onRecipeUpdated);
       document.removeEventListener('visibilitychange', onFocus);
       window.removeEventListener('focus', onFocus);
     };
@@ -159,6 +164,33 @@ export async function saveRecipe(input: NewRecipeInput): Promise<{ id: string } 
 
   saveState.getState().set('saved');
   return { id: recipeId };
+}
+
+export async function updateRecipe(
+  id: string,
+  patch: Partial<{
+    title: string;
+    source_url: string | null;
+    source_type: 'tiktok' | 'instagram' | 'manual' | 'web' | 'other' | null;
+    meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'dessert' | null;
+    notes: string | null;
+    thumbnail_url: string | null;
+    tags: string[];
+  }>,
+): Promise<{ ok: true } | { error: string }> {
+  const supa = supabaseClient();
+  saveState.getState().set('saving');
+  const { error } = await supa
+    .from('recipes')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) { saveState.getState().set('error'); return { error: error.message }; }
+  saveState.getState().set('saved');
+  // Tell the list to refresh in-place so the card reflects the change.
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('recipes:updated', { detail: { id } }));
+  }
+  return { ok: true };
 }
 
 // Lazy backfill helper used by the TikTok card: when an older recipe

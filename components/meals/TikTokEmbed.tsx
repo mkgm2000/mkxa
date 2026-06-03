@@ -69,7 +69,7 @@ export function TikTokEmbed({ url, poster }: TikTokEmbedProps) {
 
   if (!url) {
     return (
-      <div className="mx-auto flex w-full max-w-[420px] items-center justify-center rounded-card bg-ink-soft px-4 py-8 text-center text-[13px] text-ink-muted">
+      <div className="mx-auto flex w-full max-w-[460px] items-center justify-center rounded-card bg-ink-soft px-4 py-8 text-center text-[13px] text-ink-muted">
         Sin video TikTok asociado
       </div>
     );
@@ -81,7 +81,7 @@ export function TikTokEmbed({ url, poster }: TikTokEmbedProps) {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="mx-auto flex w-full max-w-[420px] items-center justify-center gap-2 rounded-card bg-white px-4 py-6 text-[14px] font-bold text-ink shadow-card"
+        className="mx-auto flex w-full max-w-[460px] items-center justify-center gap-2 rounded-card bg-white px-4 py-6 text-[14px] font-bold text-ink shadow-card"
       >
         <ExternalLink size={16} strokeWidth={1.5} aria-hidden />
         Abrir en TikTok
@@ -90,8 +90,8 @@ export function TikTokEmbed({ url, poster }: TikTokEmbedProps) {
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-[420px] overflow-hidden rounded-card bg-black shadow-card">
-      <div className="relative aspect-[9/16] w-full max-h-[70vh]">
+    <div className="relative mx-auto w-full max-w-[460px] overflow-hidden rounded-2xl bg-black shadow-card">
+      <div className="relative aspect-[9/16] w-full max-h-[75vh]">
         {state.kind === 'video' ? (
           <video
             // eslint-disable-next-line jsx-a11y/media-has-caption
@@ -102,7 +102,7 @@ export function TikTokEmbed({ url, poster }: TikTokEmbedProps) {
             autoPlay
             muted
             loop
-            className="absolute inset-0 h-full w-full rounded-card object-contain"
+            className="absolute inset-0 h-full w-full object-contain"
           />
         ) : state.kind === 'images' ? (
           <ImageCarousel images={state.images} poster={poster} />

@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, X, Utensils, Search, ChevronDown } from 'lucide-react';
+import { Plus, X, Utensils, Search, ChevronDown, Pencil } from 'lucide-react';
 import clsx from 'clsx';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
 import { RecipeCard } from '@/components/meals/RecipeCard';
@@ -16,6 +16,7 @@ import { FinishShoppingSheet } from '@/components/meals/FinishShoppingSheet';
 import { PantryList } from '@/components/meals/PantryList';
 import { MealPassesSection } from '@/components/meals/MealPassesSection';
 import { TikTokRecipeSheet } from '@/components/meals/TikTokRecipeSheet';
+import { EditRecipeSheet } from '@/components/meals/EditRecipeSheet';
 import { useRecipes, deleteRecipe } from '@/lib/hooks/use-recipes';
 import type { Recipe } from '@/lib/meals/recipes';
 import { useMealPlan, currentWeekStart } from '@/lib/hooks/use-meal-plan';
@@ -73,6 +74,7 @@ export default function MealsHubPage() {
 
   const [editingRecipes, setEditingRecipes] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<Recipe | null>(null);
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState<{ day: MealDay; slot: MealSlot } | null>(null);
   const [finishOpen, setFinishOpen] = useState(false);
@@ -322,19 +324,34 @@ export default function MealsHubPage() {
                           style={editingRecipes ? { animationDelay: `${(idx % 4) * 70}ms` } : undefined}
                         >
                           {editingRecipes && (
-                            <button
-                              type="button"
-                              aria-label={`Eliminar ${r.title}`}
-                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPendingDelete(r); }}
-                              className="absolute -right-2 -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-danger text-white shadow-action active:scale-95"
-                            >
-                              <X size={14} strokeWidth={2.2} aria-hidden />
-                            </button>
+                            <>
+                              <button
+                                type="button"
+                                aria-label={`Eliminar ${r.title}`}
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPendingDelete(r); }}
+                                className="absolute -right-2 -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-danger text-white shadow-action active:scale-95"
+                              >
+                                <X size={14} strokeWidth={2.2} aria-hidden />
+                              </button>
+                              <button
+                                type="button"
+                                aria-label={`Editar ${r.title}`}
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingRecipe(r); }}
+                                className="absolute -left-2 -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-ink text-white shadow-action active:scale-95"
+                              >
+                                <Pencil size={12} strokeWidth={2} aria-hidden />
+                              </button>
+                            </>
                           )}
                           {editingRecipes ? (
-                            <div className="block">
+                            <button
+                              type="button"
+                              onClick={() => setEditingRecipe(r)}
+                              className="block w-full text-left"
+                              aria-label={`Editar ${r.title}`}
+                            >
                               <RecipeCard recipe={r} />
-                            </div>
+                            </button>
                           ) : r.source_type === 'tiktok' || r.source_type === 'instagram' ? (
                             <button
                               type="button"
@@ -441,6 +458,9 @@ export default function MealsHubPage() {
       )}
 
       <TikTokRecipeSheet recipe={tiktokSheet} onClose={() => setTiktokSheet(null)} />
+      {editingRecipe && (
+        <EditRecipeSheet recipe={editingRecipe} onClose={() => setEditingRecipe(null)} />
+      )}
 
       <RecipePickerSheet
         open={pickerOpen}

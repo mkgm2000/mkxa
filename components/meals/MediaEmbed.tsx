@@ -79,7 +79,7 @@ function InstagramEmbed({ url, poster }: { url: string | null; poster?: string |
 
   if (!url) {
     return (
-      <div className="mx-auto flex w-full max-w-[420px] items-center justify-center rounded-card bg-ink-soft px-4 py-8 text-center text-[13px] text-ink-muted">
+      <div className="mx-auto flex w-full max-w-[460px] items-center justify-center rounded-card bg-ink-soft px-4 py-8 text-center text-[13px] text-ink-muted">
         Sin video Instagram asociado
       </div>
     );
@@ -91,7 +91,7 @@ function InstagramEmbed({ url, poster }: { url: string | null; poster?: string |
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="mx-auto flex w-full max-w-[420px] items-center justify-center gap-2 rounded-card bg-white px-4 py-6 text-[14px] font-bold text-ink shadow-card"
+        className="mx-auto flex w-full max-w-[460px] items-center justify-center gap-2 rounded-card bg-white px-4 py-6 text-[14px] font-bold text-ink shadow-card"
       >
         <ExternalLink size={16} strokeWidth={1.5} aria-hidden />
         Abrir en Instagram
@@ -100,8 +100,8 @@ function InstagramEmbed({ url, poster }: { url: string | null; poster?: string |
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-[420px] overflow-hidden rounded-card bg-black shadow-card">
-      <div className="relative aspect-[9/16] w-full max-h-[70vh]">
+    <div className="relative mx-auto w-full max-w-[460px] overflow-hidden rounded-2xl bg-black shadow-card">
+      <div className="relative aspect-[9/16] w-full max-h-[75vh]">
         {state.kind === 'ready' ? (
           <video
             // eslint-disable-next-line jsx-a11y/media-has-caption
@@ -112,7 +112,7 @@ function InstagramEmbed({ url, poster }: { url: string | null; poster?: string |
             autoPlay
             muted
             loop
-            className="absolute inset-0 h-full w-full rounded-card object-contain"
+            className="absolute inset-0 h-full w-full object-contain"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-white">
