@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Sliders, Search, Plus, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ChevronLeft, ChevronRight, Sliders, Plus, X } from 'lucide-react';
 import clsx from 'clsx';
 import { useAthlete } from '@/lib/athlete-context';
 import { useMoodRange } from '@/lib/hooks/use-mood-range';
@@ -30,6 +31,7 @@ function daysInMonth(year: number, monthIdx: number): number {
 }
 
 export default function MoodPage() {
+  const router = useRouter();
   const athlete = useAthlete();
   const [view, setView] = useState<ViewKind>('month');
   const [anchor, setAnchor] = useState<Date>(() => new Date());
@@ -112,15 +114,18 @@ export default function MoodPage() {
 
   return (
     <main className="flex flex-col gap-6 pt-2">
-      {/* Top row: filter | tabs | search */}
+      {/* Top row: back | tabs | legend */}
       <header className="flex items-center justify-between gap-3 px-5 pt-6">
         <button
           type="button"
-          aria-label="Leyenda"
-          onClick={() => setLegendOpen(true)}
+          aria-label="Volver"
+          onClick={() => {
+            if (typeof window !== 'undefined' && window.history.length > 1) router.back();
+            else router.push('/home');
+          }}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-action active:scale-95"
         >
-          <Sliders size={18} strokeWidth={1.75} className="text-ink" aria-hidden />
+          <ChevronLeft size={20} strokeWidth={1.5} className="text-ink" aria-hidden />
         </button>
 
         <div role="tablist" className="relative grid grid-cols-2 rounded-full bg-white p-1 shadow-action" style={{ minWidth: 168 }}>
@@ -148,11 +153,11 @@ export default function MoodPage() {
 
         <button
           type="button"
-          aria-label="Ir a hoy"
-          onClick={() => setAnchor(new Date())}
+          aria-label="Leyenda"
+          onClick={() => setLegendOpen(true)}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-action active:scale-95"
         >
-          <Search size={18} strokeWidth={1.75} className="text-ink" aria-hidden />
+          <Sliders size={18} strokeWidth={1.75} className="text-ink" aria-hidden />
         </button>
       </header>
 

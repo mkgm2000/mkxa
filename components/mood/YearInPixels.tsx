@@ -2,6 +2,7 @@
 
 import clsx from 'clsx';
 import { MOOD_ORDER, getMoodTokens, type Mood } from '@/lib/moods';
+import { MoodFace } from './MoodFace';
 
 export type RangeKind = 'week' | 'month' | 'year';
 
@@ -255,27 +256,18 @@ function YearView({ anchor, logsByDate }: { anchor: Date; logsByDate: Record<str
   );
 }
 
-// Compact horizontal legend strip. Sits under the grid the same way the
-// mood-check-in chips sit under the headline blob — same visual rhythm.
+// Legend showing each mood's hand-drawn face + Spanish label. Matches the
+// MoodFace renderer used in the /mood calendar so what users see in the
+// legend is exactly what fills a logged day.
 export function MoodLegend() {
   return (
-    <ul className="flex flex-wrap gap-x-3 gap-y-2">
+    <ul className="grid grid-cols-3 gap-x-2 gap-y-3 sm:grid-cols-4">
       {MOOD_ORDER.map((m) => {
         const t = getMoodTokens(m);
         return (
-          <li key={m} className="flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className="block"
-              style={{
-                width: 14,
-                height: 14,
-                borderRadius: 4,
-                background: `linear-gradient(135deg, ${t.cardFrom} 0%, ${t.cardTo} 100%)`,
-                boxShadow: 'inset 0 -1px 1px rgba(0,0,0,0.05)',
-              }}
-            />
-            <span className="text-[11px] font-medium text-ink">{t.label}</span>
+          <li key={m} className="flex flex-col items-center gap-1">
+            <MoodFace mood={m} size={44} />
+            <span className="text-[11px] font-bold text-ink">{t.label}</span>
           </li>
         );
       })}
