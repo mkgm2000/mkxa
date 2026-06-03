@@ -11,9 +11,11 @@ interface Props {
   r: Restaurant;
   onEdit: (r: Restaurant) => void;
   onMarkVisited?: (r: Restaurant) => void;
+  /** Tap on the location row opens a Maps/Waze chooser. */
+  onNavigate?: (r: Restaurant) => void;
 }
 
-export function RestaurantCard({ r, onEdit, onMarkVisited }: Props) {
+export function RestaurantCard({ r, onEdit, onMarkVisited, onNavigate }: Props) {
   const c = cuisineMeta(r.cuisine);
   const visited = r.status === 'visited';
 
@@ -40,10 +42,23 @@ export function RestaurantCard({ r, onEdit, onMarkVisited }: Props) {
             {r.price_tier && <span className="ml-2 text-ink-muted">{r.price_tier}</span>}
           </p>
           {r.location && (
-            <p className="mt-1 flex items-center gap-1 truncate text-[12px] text-ink-muted">
-              <MapPin size={11} strokeWidth={1.5} aria-hidden />
-              <span className="truncate">{r.location}</span>
-            </p>
+            onNavigate ? (
+              <button
+                type="button"
+                onClick={() => onNavigate(r)}
+                aria-label={`Cómo llegar a ${r.name}`}
+                className="mt-1 inline-flex max-w-full items-center gap-1 truncate rounded-full text-[12px] font-medium text-ink-muted hover:text-ink active:scale-[0.98]"
+                style={{ color: c.color }}
+              >
+                <MapPin size={11} strokeWidth={1.75} aria-hidden />
+                <span className="truncate underline-offset-2 underline">{r.location}</span>
+              </button>
+            ) : (
+              <p className="mt-1 flex items-center gap-1 truncate text-[12px] text-ink-muted">
+                <MapPin size={11} strokeWidth={1.5} aria-hidden />
+                <span className="truncate">{r.location}</span>
+              </p>
+            )
           )}
           {visited && r.rating != null && (
             <div className="mt-1.5 flex items-center gap-0.5">

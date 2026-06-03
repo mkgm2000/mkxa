@@ -7,6 +7,7 @@ import { ChevronLeft, Plus, Heart, CheckCircle2, X, Star } from 'lucide-react';
 import { useRestaurants } from '@/lib/hooks/use-restaurants';
 import { RestaurantCard } from '@/components/meals/RestaurantCard';
 import { RestaurantForm } from '@/components/meals/RestaurantForm';
+import { RestaurantNavSheet } from '@/components/meals/RestaurantNavSheet';
 import type { Restaurant, RestaurantStatus } from '@/lib/meals/restaurants';
 
 export default function RestaurantsPage() {
@@ -20,6 +21,7 @@ export default function RestaurantsPage() {
   const [visitRating, setVisitRating] = useState<number | null>(null);
   const [visitNotes, setVisitNotes] = useState('');
   const [savingVisit, setSavingVisit] = useState(false);
+  const [navTarget, setNavTarget] = useState<Restaurant | null>(null);
 
   const filtered = useMemo(() => items.filter((r) => r.status === tab), [items, tab]);
   const wishCount = items.filter((r) => r.status === 'wishlist').length;
@@ -164,6 +166,7 @@ export default function RestaurantsPage() {
                 r={r}
                 onEdit={openEdit}
                 onMarkVisited={!editMode && r.status === 'wishlist' ? openMarkVisited : undefined}
+                onNavigate={!editMode && r.location ? setNavTarget : undefined}
               />
             </div>
           ))
@@ -310,6 +313,14 @@ export default function RestaurantsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {navTarget && navTarget.location && (
+        <RestaurantNavSheet
+          name={navTarget.name}
+          location={navTarget.location}
+          onClose={() => setNavTarget(null)}
+        />
       )}
     </main>
   );
