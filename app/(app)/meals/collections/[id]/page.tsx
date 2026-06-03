@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import clsx from 'clsx';
-import { ChevronLeft, Search, X, Check, ChefHat } from 'lucide-react';
-import { useCollection } from '@/lib/hooks/use-collections';
+import { ChevronLeft, Search, X, Check, ChefHat, Trash2 } from 'lucide-react';
+import { useCollection, deleteCollection } from '@/lib/hooks/use-collections';
 import { saveRecipe } from '@/lib/hooks/use-recipes';
 import { useAthlete } from '@/lib/athlete-context';
 import { MEAL_SLOTS, mealSlotLabel, type MealSlot } from '@/lib/meals/recipes';
@@ -15,6 +15,7 @@ type Filter = 'all' | 'pending' | 'promoted';
 
 export default function CollectionDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const id = params?.id ?? null;
   const athlete = useAthlete();
   const { collection, promotedItems, loading, refresh } = useCollection(id);
@@ -22,6 +23,8 @@ export default function CollectionDetailPage() {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('pending');
   const [promoting, setPromoting] = useState<RecipeCollectionItem | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const filtered = useMemo(() => {
     if (!collection) return [];
@@ -72,13 +75,23 @@ export default function CollectionDetailPage() {
             {promotedItems.size} pasados · {pendingCount} pendientes
           </p>
         </div>
-        <Link
-          href="/meals?tab=recetas"
-          aria-label="Volver"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-action active:scale-95"
-        >
-          <ChevronLeft size={20} strokeWidth={1.5} className="text-ink" aria-hidden />
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            aria-label="Eliminar colección"
+            onClick={() => setConfirmDelete(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-danger shadow-action active:scale-95"
+          >
+            <Trash2 size={18} strokeWidth={1.75} aria-hidden />
+          </button>
+          <Link
+            href="/meals?tab=recetas"
+            aria-label="Volver"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-action active:scale-95"
+          >
+            <ChevronLeft size={20} strokeWidth={1.5} className="text-ink" aria-hidden />
+          </Link>
+        </div>
       </header>
 
       <div className="px-5">
@@ -201,6 +214,58 @@ export default function CollectionDetailPage() {
           onClose={() => setPromoting(null)}
           onDone={() => { setPromoting(null); void refresh(); }}
         />
+      )}
+
+      {confirmDelete && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 px-4 pb-8"
+          onClick={() => !deleting && setConfirmDelete(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-card bg-white p-5 shadow-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
+              Eliminar colección
+            </p>
+            <p className="mt-2 font-sans text-[18px] font-extrabold leading-tight text-ink">
+              ¿Borrar “{collection.title}”?
+            </p>
+            <p className="mt-1 text-[12px] text-ink-muted">
+              Se eliminan los {collection.item_count} vídeos guardados. Las recetas
+              ya pasadas se mantienen, sólo pierden la referencia a esta colección.
+              Es definitivo.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                disabled={deleting}
+                className="flex-1 rounded-action border border-ink-soft py-3 text-[13px] font-bold text-ink disabled:opacity-40"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={async () => {
+                  setDeleting(true);
+                  const res = await deleteCollection(collection.id);
+                  setDeleting(false);
+                  if ('ok' in res) {
+                    setConfirmDelete(false);
+                    router.push('/meals?tab=recetas');
+                  }
+                }}
+                className="flex-1 rounded-action bg-danger py-3 text-[13px] font-bold text-white disabled:opacity-40"
+              >
+                {deleting ? 'Eliminando…' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );

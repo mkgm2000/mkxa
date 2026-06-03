@@ -48,6 +48,16 @@ export function useCollections() {
   return { collections, loading, refresh, remove };
 }
 
+// Standalone delete helper — mirrors deleteRecipe in use-recipes.ts so
+// pages that don't load the full list can drop a collection in one call.
+// FK on recipes.source_collection_id is `ON DELETE SET NULL`, so promoted
+// recipes survive and only lose their collection back-reference.
+export async function deleteCollection(id: string): Promise<{ ok: true } | { error: string }> {
+  const { error } = await supabaseClient().from('recipe_collections').delete().eq('id', id);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export function useCollection(id: string | null) {
   const [collection, setCollection] = useState<RecipeCollection | null>(null);
   const [promotedItems, setPromotedItems] = useState<Set<string>>(new Set());
