@@ -19,7 +19,12 @@
    intentional and is hidden by the fixed BottomNav anyway. */
 html, body {
   height: 100%;
+  /* `overscroll-behavior: none` kills iOS Safari rubber-band on both axes;
+     `overflow-x: hidden` clips any element whose horizontal extent leaks
+     past the viewport (the home feed's card rows have inner scroll but
+     the page itself must stay locked left/right). */
   overscroll-behavior: none;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: auto;
   /* Neutral white fallback while MoodGradientBg loads. The previous cream
      (#fff4d8 = happy cardFrom) bled into iOS status-bar chrome on first

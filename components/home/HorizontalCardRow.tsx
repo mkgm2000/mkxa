@@ -46,8 +46,8 @@ export function HorizontalCardRow({
   if (items.length === 0 && !emptyText) return null;
 
   return (
-    <section className="-mx-4 flex flex-col gap-2 pl-5">
-      <div className="flex items-center justify-between pr-5">
+    <section className="flex flex-col gap-2">
+      <div className="flex items-center justify-between px-5">
         <h2 className="font-sans text-[20px] font-extrabold tracking-tightest text-ink">
           {title}
         </h2>
@@ -63,11 +63,14 @@ export function HorizontalCardRow({
       </div>
 
       {items.length === 0 ? (
-        <p className="mr-5 rounded-card bg-white p-5 text-center text-[13px] text-ink-muted shadow-card">
+        <p className="mx-5 rounded-card bg-white p-5 text-center text-[13px] text-ink-muted shadow-card">
           {emptyText}
         </p>
       ) : (
-        <div className="flex gap-3 overflow-x-auto pb-1 pr-5" style={{ scrollbarWidth: 'none' }}>
+        <div
+          className="flex gap-3 overflow-x-auto px-5 pb-1"
+          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+        >
           {items.map((c) => (
             <CardOrLink key={c.key} item={c} width={cardWidth} />
           ))}

@@ -2,10 +2,12 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Flame, MapPin } from 'lucide-react';
+import { ArrowUpRight, Flame } from 'lucide-react';
 import { AvatarCircle } from '@/components/profile/AvatarCircle';
 import { NotificationBell } from '@/components/home/NotificationBell';
 import { HorizontalCardRow } from '@/components/home/HorizontalCardRow';
+import { WeekStrip } from '@/components/home/WeekStrip';
+import { GastosCard } from '@/components/home/GastosCard';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
 import { useAthlete } from '@/lib/athlete-context';
 import { useAthleteProfile } from '@/lib/hooks/use-athlete-profile';
@@ -23,10 +25,6 @@ const DAY_LABELS: Record<MealDay, string> = {
 };
 const SLOT_ORDER: MealSlot[] = ['breakfast', 'lunch', 'dinner', 'snack', 'dessert'];
 
-// Card-feed layout (redesign 2026-06-03): avatar + bell up top with no
-// greeting, then horizontally-scrolling sections for recipes, week meals,
-// restaurants and the next training session. Mirrors the pet-store
-// reference the user shared, kept in the mkxa palette.
 export default function HomePage() {
   const athlete = useAthlete();
   const { profile } = useAthleteProfile(athlete);
@@ -40,7 +38,6 @@ export default function HomePage() {
   const { byKey } = useTraining(athlete, week);
   const nextSession = days.find((d) => !byKey[d.key]?.completed) ?? days[0];
 
-  // Take last 10 recipes the user (or partner) added.
   const recipeCards = useMemo(
     () => recipes.slice(0, 10).map((r) => ({
       key: r.id,
@@ -54,9 +51,6 @@ export default function HomePage() {
     [recipes],
   );
 
-  // Week-plan view: each row in the flat MealPlanRow[] that has a recipe
-  // attached becomes a card. Sorted by day-of-week order then slot order
-  // so the row reads left → right as the week unfolds.
   const weekCards = useMemo(() => {
     const dayOrder: MealDay[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const rows = (plan as MealPlanRow[]) ?? [];
@@ -79,7 +73,6 @@ export default function HomePage() {
       }));
   }, [plan]);
 
-  // Restaurants the couple still want to visit.
   const restaurantCards = useMemo(
     () => restaurants
       .filter((r) => r.status === 'wishlist')
@@ -103,7 +96,10 @@ export default function HomePage() {
   if (!athlete) return null;
 
   return (
-    <main className="flex flex-col gap-5 pt-2">
+    // overflow-x-hidden locks the page to the viewport width so the inner
+    // horizontal-scroll rows don't bleed sideways. Without this the cards'
+    // own padding/edges drag the whole page left/right.
+    <main className="flex flex-col gap-5 overflow-x-hidden pt-2">
       <header className="flex items-center justify-between px-5 pt-6">
         <Link href="/profile" aria-label="Ir al perfil" className="shrink-0">
           <AvatarCircle athlete={athlete} src={profile?.avatar_url ?? null} size={44} />
@@ -113,29 +109,34 @@ export default function HomePage() {
 
       <div className="px-5"><InlineSaveText /></div>
 
-      {/* Hero — Próxima sesión as the big card the user opens first */}
+      <WeekStrip />
+
+      {/* 2-col hero row: training session left, expenses right.
+          On phones the columns scale 60/40-ish so the action card stays the
+          primary thing the user notices. */}
       {nextSession && (
-        <section className="px-5">
+        <section className="grid grid-cols-[3fr_2fr] gap-3 px-5">
           <Link
             href="/training"
-            className="flex items-center justify-between rounded-card bg-ink p-4 text-white shadow-card transition-transform duration-150 active:scale-[0.99]"
+            className="flex flex-col justify-between rounded-card bg-ink p-4 text-white shadow-card transition-transform duration-150 active:scale-[0.99]"
           >
             <div className="min-w-0">
-              <p className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white/65">
+              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em] text-white/65">
                 <Flame size={11} strokeWidth={1.75} aria-hidden />
                 Próxima sesión
               </p>
-              <h2 className="mt-1 truncate font-sans text-[22px] font-extrabold leading-tight tracking-tightest">
+              <h2 className="mt-1.5 truncate font-sans text-[20px] font-extrabold leading-tight tracking-tightest">
                 {nextSession.title}
               </h2>
-              <p className="mt-0.5 text-[12px] text-white/70">
+              <p className="mt-0.5 text-[11px] text-white/70">
                 {nextSession.key} · S{week} · {nextSession.rpe}
               </p>
             </div>
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-ink">
-              <ArrowUpRight size={20} strokeWidth={2} aria-hidden />
+            <span className="mt-3 self-end flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink">
+              <ArrowUpRight size={16} strokeWidth={2} aria-hidden />
             </span>
           </Link>
+          <GastosCard />
         </section>
       )}
 
@@ -159,16 +160,6 @@ export default function HomePage() {
         items={restaurantCards}
         emptyText="No tenéis restaurantes en lista. Añade uno desde Restaurantes."
       />
-
-      <section className="px-5 pb-2 text-center">
-        <Link
-          href="/mood"
-          className="inline-flex items-center gap-1 text-[12px] font-bold text-ink-muted underline-offset-2 hover:underline"
-        >
-          <MapPin size={12} strokeWidth={1.75} aria-hidden />
-          Ver año en mood
-        </Link>
-      </section>
     </main>
   );
 }

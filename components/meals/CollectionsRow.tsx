@@ -12,8 +12,8 @@ export function CollectionsRow() {
   if (loading || collections.length === 0) return null;
 
   return (
-    <section className="-mx-4 flex flex-col gap-2 pl-4">
-      <div className="flex items-center justify-between pr-4">
+    <section className="flex flex-col gap-2">
+      <div className="flex items-center justify-between px-1">
         <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
           <Layers size={12} strokeWidth={1.75} aria-hidden />
           Colecciones
@@ -22,7 +22,7 @@ export function CollectionsRow() {
           {collections.length}
         </p>
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-1 pr-4" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex gap-3 overflow-x-auto px-1 pb-1" style={{ scrollbarWidth: 'none' }}>
         {collections.map((c) => (
           <Link
             key={c.id}
