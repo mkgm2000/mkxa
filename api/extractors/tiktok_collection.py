@@ -11,6 +11,7 @@ Instagram has no equivalent public-collection concept (saved posts are
 private to the account that saved them), so this endpoint is TikTok-only.
 """
 from http.server import BaseHTTPRequestHandler
+from typing import Optional
 import json
 import os
 import urllib.error
@@ -57,7 +58,7 @@ def _json_response(handler: BaseHTTPRequestHandler, status: int, body: dict) -> 
     handler.wfile.write(json.dumps(body).encode('utf-8'))
 
 
-def _normalise_item(entry: dict) -> dict | None:
+def _normalise_item(entry: dict) -> Optional[dict]:
     """Map a yt-dlp playlist entry to the shape the client expects."""
     if not isinstance(entry, dict):
         return None
@@ -89,9 +90,9 @@ def _insert_collection(
     title: str,
     source_url: str,
     items: list,
-    cover_url: str | None,
-    created_by: str | None,
-) -> dict | None:
+    cover_url: Optional[str],
+    created_by: Optional[str],
+) -> Optional[dict]:
     """Insert directly into Supabase via PostgREST. Lives server-side so the
     save can't be cut by the browser closing or backgrounding mid-upload.
     Returns the new row {id} on success, None on failure (the client can
