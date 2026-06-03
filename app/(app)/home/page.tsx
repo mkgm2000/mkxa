@@ -1,228 +1,174 @@
 'use client';
 
 import { useMemo } from 'react';
-import { ArrowUpRight, Flame } from 'lucide-react';
-import { GreetingHeader } from '@/components/home/GreetingHeader';
-import { StickerCard } from '@/components/home/StickerCard';
+import Link from 'next/link';
+import { ArrowUpRight, Flame, MapPin } from 'lucide-react';
+import { AvatarCircle } from '@/components/profile/AvatarCircle';
+import { NotificationBell } from '@/components/home/NotificationBell';
+import { HorizontalCardRow } from '@/components/home/HorizontalCardRow';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
 import { useAthlete } from '@/lib/athlete-context';
-import { useMoodToday } from '@/lib/hooks/use-mood-today';
-import { useMoodWeek } from '@/lib/hooks/use-mood-week';
-import { useTrainingAll } from '@/lib/hooks/use-training-all';
-import { useTraining } from '@/lib/hooks/use-training';
-import { useExpenses } from '@/lib/hooks/use-expenses';
+import { useAthleteProfile } from '@/lib/hooks/use-athlete-profile';
+import { useRecipes } from '@/lib/hooks/use-recipes';
+import { useRestaurants } from '@/lib/hooks/use-restaurants';
+import { useMealPlan, currentWeekStart } from '@/lib/hooks/use-meal-plan';
 import { getCurrentWeek, getDays } from '@/lib/plan-hyrox';
-import { getMoodTokens } from '@/lib/moods';
-import { todayISO } from '@/lib/date';
+import { useTraining } from '@/lib/hooks/use-training';
+import { cuisineMeta } from '@/lib/meals/restaurants';
+import { mealSlotLabel } from '@/lib/meals/recipes';
+import type { MealDay, MealPlanRow, MealSlot } from '@/lib/meals/recipes';
 
-const KEYS = ['D1', 'D2', 'D3', 'D4'] as const;
-const DOW_LABELS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+const DAY_LABELS: Record<MealDay, string> = {
+  mon: 'Lun', tue: 'Mar', wed: 'Mié', thu: 'Jue', fri: 'Vie', sat: 'Sáb', sun: 'Dom',
+};
+const SLOT_ORDER: MealSlot[] = ['breakfast', 'lunch', 'dinner', 'snack', 'dessert'];
 
-function monthRange(): { from: string; to: string; label: string } {
-  const now = new Date();
-  const y = now.getUTCFullYear();
-  const m = now.getUTCMonth();
-  const from = new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10);
-  const to = new Date(Date.UTC(y, m + 1, 1)).toISOString().slice(0, 10);
-  const label = now.toLocaleString('es-ES', { month: 'short' }).replace('.', '');
-  return { from, to, label };
-}
-
-// Sticker-collage layout (redesign option C, picked 2026-06-03):
-// the page is the gradient canvas, each widget is a tilted "sticker"
-// that visually feels pegged on. Slight rotations + a soft drop-shadow
-// sell the hand-placed vibe while keeping the bold Mona Sans typography.
+// Card-feed layout (redesign 2026-06-03): avatar + bell up top with no
+// greeting, then horizontally-scrolling sections for recipes, week meals,
+// restaurants and the next training session. Mirrors the pet-store
+// reference the user shared, kept in the mkxa palette.
 export default function HomePage() {
   const athlete = useAthlete();
-  const { mood } = useMoodToday(athlete);
-  const { weekStartISO, logsByDate } = useMoodWeek(athlete);
+  const { profile } = useAthleteProfile(athlete);
+  const { recipes } = useRecipes();
+  const { items: restaurants } = useRestaurants();
+  const weekStart = useMemo(() => currentWeekStart(), []);
+  const { plan } = useMealPlan(weekStart);
 
   const week = getCurrentWeek();
-  const { rows } = useTrainingAll(athlete, week);
+  const days = getDays(week, athlete);
   const { byKey } = useTraining(athlete, week);
+  const nextSession = days.find((d) => !byKey[d.key]?.completed) ?? days[0];
 
-  const { from, to, label: monthLabel } = useMemo(monthRange, []);
-  const { total: monthTotal } = useExpenses({ from, to });
+  // Take last 10 recipes the user (or partner) added.
+  const recipeCards = useMemo(
+    () => recipes.slice(0, 10).map((r) => ({
+      key: r.id,
+      href: `/meals?tab=recetas`,
+      image: r.thumbnail_url ?? r.image_url ?? null,
+      fallbackEmoji: '🍽️',
+      badge: r.meal_type ? mealSlotLabel(r.meal_type) : undefined,
+      title: r.title,
+      meta: r.created_by ? `por ${r.created_by}` : undefined,
+    })),
+    [recipes],
+  );
 
-  const totalSessions = useMemo(() => {
-    let n = 0;
-    for (const r of rows) for (const k of KEYS) if (r[k]?.completed) n++;
-    return n;
-  }, [rows]);
+  // Week-plan view: each row in the flat MealPlanRow[] that has a recipe
+  // attached becomes a card. Sorted by day-of-week order then slot order
+  // so the row reads left → right as the week unfolds.
+  const weekCards = useMemo(() => {
+    const dayOrder: MealDay[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    const rows = (plan as MealPlanRow[]) ?? [];
+    return rows
+      .filter((r) => r.recipe)
+      .slice()
+      .sort((a, b) => {
+        const da = dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day);
+        if (da !== 0) return da;
+        return SLOT_ORDER.indexOf(a.slot) - SLOT_ORDER.indexOf(b.slot);
+      })
+      .map((r) => ({
+        key: r.id,
+        href: '/meals?tab=semana',
+        image: r.recipe?.thumbnail_url ?? r.recipe?.image_url ?? null,
+        fallbackEmoji: '🍳',
+        badge: DAY_LABELS[r.day],
+        title: r.recipe?.title ?? 'Receta',
+        meta: mealSlotLabel(r.slot),
+      }));
+  }, [plan]);
 
-  const weekStats = useMemo(() => {
-    if (!athlete) return { done: 0, total: 4, nextTitle: '—', nextKey: '', rpe: '' };
-    const days = getDays(week, athlete);
-    const done = days.filter((d) => byKey[d.key]?.completed).length;
-    const next = days.find((d) => !byKey[d.key]?.completed) ?? days[0];
-    return {
-      done,
-      total: days.length,
-      nextTitle: next?.title ?? '—',
-      nextKey: next?.key ?? '',
-      rpe: next?.rpe ?? '',
-    };
-  }, [athlete, week, byKey]);
+  // Restaurants the couple still want to visit.
+  const restaurantCards = useMemo(
+    () => restaurants
+      .filter((r) => r.status === 'wishlist')
+      .slice(0, 10)
+      .map((r) => {
+        const c = cuisineMeta(r.cuisine);
+        return {
+          key: r.id,
+          href: '/meals/restaurants',
+          image: null,
+          fallbackEmoji: c.emoji,
+          fallbackBg: `${c.color}1F`,
+          badge: r.price_tier ?? undefined,
+          title: r.name,
+          meta: r.location ?? c.label,
+        };
+      }),
+    [restaurants],
+  );
 
-  if (!athlete || !mood) return null;
-
-  const moodTokens = getMoodTokens(mood.mood);
-  const eur = new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'EUR',
-    maximumFractionDigits: 0,
-  }).format(monthTotal || 0);
-  const today = todayISO();
-  const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(weekStartISO);
-    d.setDate(d.getDate() + i);
-    return d.toISOString().slice(0, 10);
-  });
+  if (!athlete) return null;
 
   return (
-    <main className="flex flex-col gap-4 pt-2">
-      <GreetingHeader athlete={athlete} todayMood={mood.mood} />
+    <main className="flex flex-col gap-5 pt-2">
+      <header className="flex items-center justify-between px-5 pt-6">
+        <Link href="/profile" aria-label="Ir al perfil" className="shrink-0">
+          <AvatarCircle athlete={athlete} src={profile?.avatar_url ?? null} size={44} />
+        </Link>
+        <NotificationBell />
+      </header>
 
       <div className="px-5"><InlineSaveText /></div>
 
-      {/* Mood + Expense — paired row */}
-      <div className="flex flex-col gap-3 px-3">
-        <StickerCard
-          tilt={-3}
-          align="left"
-          href="/mood"
-          ariaLabel="Ver historial de mood"
-          style={{ width: '60%' }}
-        >
-          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-ink-muted">
-            Mood hoy
-          </p>
-          <div className="mt-1.5 flex items-center gap-2.5">
-            <span
-              aria-hidden
-              style={{
-                width: 26,
-                height: 26,
-                borderRadius: 8,
-                background: `linear-gradient(135deg, ${moodTokens.cardFrom} 0%, ${moodTokens.cardTo} 100%)`,
-                boxShadow: 'inset 0 -1px 2px rgba(0,0,0,0.08)',
-              }}
-            />
-            <span className="font-sans text-[22px] font-extrabold leading-none text-ink">
-              {moodTokens.label}
+      {/* Hero — Próxima sesión as the big card the user opens first */}
+      {nextSession && (
+        <section className="px-5">
+          <Link
+            href="/training"
+            className="flex items-center justify-between rounded-card bg-ink p-4 text-white shadow-card transition-transform duration-150 active:scale-[0.99]"
+          >
+            <div className="min-w-0">
+              <p className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white/65">
+                <Flame size={11} strokeWidth={1.75} aria-hidden />
+                Próxima sesión
+              </p>
+              <h2 className="mt-1 truncate font-sans text-[22px] font-extrabold leading-tight tracking-tightest">
+                {nextSession.title}
+              </h2>
+              <p className="mt-0.5 text-[12px] text-white/70">
+                {nextSession.key} · S{week} · {nextSession.rpe}
+              </p>
+            </div>
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-ink">
+              <ArrowUpRight size={20} strokeWidth={2} aria-hidden />
             </span>
-          </div>
-        </StickerCard>
+          </Link>
+        </section>
+      )}
 
-        <StickerCard
-          tilt={2}
-          align="right"
-          href="/expenses"
-          ariaLabel="Ver gastos del mes"
-          style={{ width: '46%' }}
-        >
-          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-ink-muted">
-            {monthLabel}
-          </p>
-          <p className="mt-1 font-sans text-[26px] font-extrabold leading-none tabular-nums text-ink">
-            {eur}
-          </p>
-          <p className="mt-1 text-[11px] text-ink-muted">gasto este mes</p>
-        </StickerCard>
-      </div>
+      <HorizontalCardRow
+        title="Recetas"
+        seeAllHref="/meals?tab=recetas"
+        items={recipeCards}
+        emptyText="Aún no tienes recetas. Añade la primera desde Comidas."
+      />
 
-      {/* Hero sticker — Próxima sesión, the largest, most centered */}
-      <div className="px-3">
-        <StickerCard
-          tilt={-1}
-          align="center"
-          href="/training"
-          ariaLabel="Ver plan de entreno"
-          style={{ width: '94%' }}
-          className="!max-w-none p-5"
-        >
-          <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em] text-ink-muted">
-            <Flame size={11} strokeWidth={1.75} aria-hidden />
-            Próxima sesión
-          </p>
-          <h2 className="mt-2 font-sans text-[26px] font-extrabold leading-tight tracking-tightest text-ink">
-            {weekStats.nextTitle}
-          </h2>
-          <p className="mt-1 text-[12px] text-ink-muted">
-            {weekStats.nextKey} · Semana {week} · {weekStats.rpe}
-          </p>
-          <div className="mt-3.5 flex items-center justify-between">
-            <span className="text-[13px] font-bold text-ink">Empezar</span>
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink text-white">
-              <ArrowUpRight size={18} strokeWidth={2} aria-hidden />
-            </span>
-          </div>
-        </StickerCard>
-      </div>
+      <HorizontalCardRow
+        title="Esta semana"
+        seeAllHref="/meals"
+        items={weekCards}
+        emptyText="Sin plan de comidas esta semana."
+      />
 
-      {/* Total sessions sticker — small, off-center */}
-      <div className="px-3">
-        <StickerCard
-          tilt={4}
-          align="right"
-          href="/training/progress"
-          ariaLabel="Ver progreso"
-          style={{ width: '38%' }}
-        >
-          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-ink-muted">
-            Total
-          </p>
-          <p className="mt-1 font-sans text-[30px] font-extrabold leading-none tabular-nums text-ink">
-            {totalSessions}
-          </p>
-          <p className="mt-1 text-[11px] text-ink-muted">sesiones</p>
-        </StickerCard>
-      </div>
+      <HorizontalCardRow
+        title="Por visitar"
+        seeAllHref="/meals/restaurants"
+        items={restaurantCards}
+        emptyText="No tenéis restaurantes en lista. Añade uno desde Restaurantes."
+      />
 
-      {/* Mood week sticker — wide-ish, tilted left */}
-      <div className="px-3 pb-4">
-        <StickerCard
-          tilt={-2}
-          align="center"
+      <section className="px-5 pb-2 text-center">
+        <Link
           href="/mood"
-          ariaLabel="Ver mood semana"
-          style={{ width: '88%' }}
+          className="inline-flex items-center gap-1 text-[12px] font-bold text-ink-muted underline-offset-2 hover:underline"
         >
-          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-ink-muted">
-            Semana
-          </p>
-          <div className="mt-2.5 grid grid-cols-7 gap-1.5">
-            {weekDays.map((iso, i) => {
-              const m = logsByDate[iso];
-              const t = m ? getMoodTokens(m) : null;
-              const isToday = iso === today;
-              return (
-                <div key={iso} className="flex flex-col items-center gap-1">
-                  <span className="text-[9px] font-bold text-ink-muted">{DOW_LABELS[i]}</span>
-                  <span
-                    className="block aspect-square w-full"
-                    style={{
-                      borderRadius: 6,
-                      background: t
-                        ? `linear-gradient(135deg, ${t.cardFrom} 0%, ${t.cardTo} 100%)`
-                        : 'rgba(27,29,31,0.06)',
-                      boxShadow: isToday
-                        ? '0 0 0 2px #1b1d1f, 0 0 0 4px rgba(255,255,255,0.95)'
-                        : t
-                          ? 'inset 0 -1px 2px rgba(0,0,0,0.06)'
-                          : undefined,
-                    }}
-                    aria-label={t ? `${DOW_LABELS[i]} ${t.label}` : `${DOW_LABELS[i]} sin registro`}
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <p className="mt-2 text-[11px] text-ink-muted">
-            {weekStats.done} de {weekStats.total} sesiones completadas
-          </p>
-        </StickerCard>
-      </div>
+          <MapPin size={12} strokeWidth={1.75} aria-hidden />
+          Ver año en mood
+        </Link>
+      </section>
     </main>
   );
 }
