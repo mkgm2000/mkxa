@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { ExternalLink, Loader2 } from 'lucide-react';
 import { TikTokEmbed } from './TikTokEmbed';
 
 interface MediaEmbedProps {
@@ -16,23 +18,11 @@ export function detectSource(url: string | null): 'tiktok' | 'instagram' | null 
   return null;
 }
 
-// Extracts a canonical Instagram reel/post embed URL from any shape:
-//   https://www.instagram.com/reel/<id>/...
-//   https://www.instagram.com/p/<id>/...
-//   https://www.instagram.com/reels/<id>...
-//   https://instagram.com/<user>/reel/<id>...
-// Returns null if no shortcode found — caller should fall back to "open in
-// Instagram" link.
-export function instagramEmbedUrl(url: string): string | null {
-  const m = url.match(/instagram\.com\/(?:[^/]+\/)?(?:reel|reels|p|tv)\/([A-Za-z0-9_-]+)/i);
-  if (!m) return null;
-  return `https://www.instagram.com/p/${m[1]}/embed/captioned/`;
-}
-
 export function MediaEmbed({ url, poster, sourceType }: MediaEmbedProps) {
-  const source = sourceType === 'tiktok' || sourceType === 'instagram'
-    ? sourceType
-    : detectSource(url);
+  const source =
+    sourceType === 'tiktok' || sourceType === 'instagram'
+      ? sourceType
+      : detectSource(url);
 
   if (source === 'instagram') {
     return <InstagramEmbed url={url} poster={poster} />;
@@ -41,42 +31,103 @@ export function MediaEmbed({ url, poster, sourceType }: MediaEmbedProps) {
   return <TikTokEmbed url={url} poster={poster} />;
 }
 
-function InstagramEmbed({ url }: { url: string | null; poster?: string | null }) {
-  const embedUrl = url ? instagramEmbedUrl(url) : null;
-  if (!embedUrl) {
+type IgState =
+  | { kind: 'idle' }
+  | { kind: 'loading' }
+  | { kind: 'ready'; src: string }
+  | { kind: 'error'; msg: string };
+
+interface ExtractResponse {
+  play_url?: string;
+  cover?: string | null;
+  error?: string;
+}
+
+// Instagram path: call our Python yt-dlp extractor, get a direct MP4 URL
+// off scontent.cdninstagram.com (CORS: *), drop it into a <video> tag.
+function InstagramEmbed({ url, poster }: { url: string | null; poster?: string | null }) {
+  const [state, setState] = useState<IgState>({ kind: 'idle' });
+
+  useEffect(() => {
+    if (!url) { setState({ kind: 'idle' }); return; }
+    let cancelled = false;
+    setState({ kind: 'loading' });
+    void (async () => {
+      try {
+        const res = await fetch('/api/extractors/instagram', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        });
+        if (!res.ok) {
+          if (!cancelled) setState({ kind: 'error', msg: `extract failed (${res.status})` });
+          return;
+        }
+        const data = (await res.json()) as ExtractResponse;
+        if (cancelled) return;
+        if (!data.play_url) {
+          setState({ kind: 'error', msg: data.error ?? 'no play_url' });
+          return;
+        }
+        setState({ kind: 'ready', src: data.play_url });
+      } catch (e) {
+        if (!cancelled) setState({ kind: 'error', msg: e instanceof Error ? e.message : 'unknown' });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [url]);
+
+  if (!url) {
     return (
       <div className="mx-auto flex w-full max-w-[420px] items-center justify-center rounded-card bg-ink-soft px-4 py-8 text-center text-[13px] text-ink-muted">
         Sin video Instagram asociado
       </div>
     );
   }
-  // Instagram's official embed iframe renders the video flanked by a
-  // profile header (~64 px) and a footer with likes/share/save (~150 px),
-  // and we can't restyle a cross-origin iframe. So we render the iframe at
-  // a height that's the sum of header + video + footer, then offset it
-  // upward inside a `overflow-hidden` container so only the central video
-  // area is visible. The fixed pixel offsets are tuned to IG's current
-  // embed layout; if they redesign we'll need to retune.
-  const HEADER_PX = 64;
-  const FOOTER_PX = 160;
+
+  if (state.kind === 'error') {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mx-auto flex w-full max-w-[420px] items-center justify-center gap-2 rounded-card bg-white px-4 py-6 text-[14px] font-bold text-ink shadow-card"
+      >
+        <ExternalLink size={16} strokeWidth={1.5} aria-hidden />
+        Abrir en Instagram
+      </a>
+    );
+  }
+
   return (
     <div className="relative mx-auto w-full max-w-[420px] overflow-hidden rounded-card bg-black shadow-card">
-      <div className="relative w-full" style={{ aspectRatio: '9/16', maxHeight: '78vh' }}>
-        <iframe
-          src={embedUrl}
-          allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; autoplay; fullscreen"
-          allowFullScreen
-          className="absolute left-0 right-0 border-0 bg-white"
-          style={{
-            top: `-${HEADER_PX}px`,
-            width: '100%',
-            height: `calc(100% + ${HEADER_PX + FOOTER_PX}px)`,
-          }}
-          title="Instagram video"
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          scrolling="no"
-        />
+      <div className="relative aspect-[9/16] w-full max-h-[70vh]">
+        {state.kind === 'ready' ? (
+          <video
+            // eslint-disable-next-line jsx-a11y/media-has-caption
+            src={state.src}
+            poster={poster ?? undefined}
+            controls
+            playsInline
+            autoPlay
+            muted
+            loop
+            className="absolute inset-0 h-full w-full rounded-card object-contain"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-white">
+            {poster ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={poster}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover opacity-70"
+                referrerPolicy="no-referrer"
+              />
+            ) : null}
+            <Loader2 size={28} className="relative animate-spin text-white" aria-hidden />
+          </div>
+        )}
       </div>
     </div>
   );
