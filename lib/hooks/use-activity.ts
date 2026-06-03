@@ -7,7 +7,11 @@ export interface ActivityEvent {
   id: string;
   kind: 'mood' | 'recipe' | 'restaurant' | 'collection' | 'training';
   athlete: 'MK' | 'Xabi' | null;
-  /** Pre-rendered Spanish title for the notification list. */
+  /** Bold action title — e.g. "Receta añadida" / "Mood registrado". */
+  title: string;
+  /** Muted body — e.g. recipe title, mood name, restaurant name. */
+  body?: string;
+  /** Legacy single-line label kept for older consumers. */
   text: string;
   /** ISO timestamp used for sorting + the "hace X" label. */
   at: string;
@@ -56,6 +60,8 @@ export function useActivity() {
         id: `mood:${m.id}`,
         kind: 'mood',
         athlete: m.athlete,
+        title: `${m.athlete} registró su mood`,
+        body: m.mood,
         text: `${m.athlete} registró su mood`,
         at: m.updated_at,
         href: '/mood',
@@ -66,6 +72,8 @@ export function useActivity() {
         id: `recipe:${r.id}`,
         kind: 'recipe',
         athlete: r.created_by,
+        title: `${r.created_by ?? 'Alguien'} añadió una receta`,
+        body: r.title,
         text: `${r.created_by ?? 'Alguien'} añadió receta "${r.title}"`,
         at: r.created_at,
         href: '/meals?tab=recetas',
@@ -77,6 +85,8 @@ export function useActivity() {
         id: `rest:${r.id}`,
         kind: 'restaurant',
         athlete: r.added_by,
+        title: `${r.added_by ?? 'Alguien'} ${verb} un restaurante`,
+        body: r.name,
         text: `${r.added_by ?? 'Alguien'} ${verb} "${r.name}"`,
         at: r.created_at,
         href: '/meals/restaurants',
@@ -87,6 +97,8 @@ export function useActivity() {
         id: `col:${c.id}`,
         kind: 'collection',
         athlete: c.created_by,
+        title: `${c.created_by ?? 'Alguien'} importó una colección`,
+        body: `${c.title} · ${c.item_count} vídeos`,
         text: `${c.created_by ?? 'Alguien'} importó colección "${c.title}" (${c.item_count} vídeos)`,
         at: c.created_at,
         href: `/meals/collections/${c.id}`,
@@ -98,6 +110,8 @@ export function useActivity() {
         id: `week:${w.athlete}:${w.week}:${w.version}`,
         kind: 'training',
         athlete: w.athlete,
+        title: `${w.athlete} confirmó su plan`,
+        body: `Semana ${w.week}`,
         text: `Plan S${w.week} confirmado para ${w.athlete}`,
         at: w.confirmed_at,
         href: `/training?week=${w.week}`,
