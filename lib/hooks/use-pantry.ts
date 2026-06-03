@@ -5,6 +5,13 @@ import { supabaseClient } from '@/lib/supabase/client';
 import { saveState } from '@/lib/save-state';
 import { type Aisle, type PantryItem, aisleOrder } from '@/lib/meals/recipes';
 
+// Force first character uppercase; the rest stays as the user typed it
+// (or as the OFF product name came in). Empty strings pass through.
+function capitalise(s: string): string {
+  if (!s) return s;
+  return s.charAt(0).toLocaleUpperCase('es-ES') + s.slice(1);
+}
+
 export function usePantry() {
   const [items, setItems] = useState<PantryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +62,7 @@ export function usePantry() {
     const { data, error } = await supabaseClient()
       .from('pantry_items')
       .insert({
-        name: input.name.trim().toLowerCase(),
+        name: capitalise(input.name.trim()),
         aisle: input.aisle,
         in_stock: true,
         units,
@@ -75,7 +82,7 @@ export function usePantry() {
   const editItem = useCallback(async (id: string, patch: { name?: string; units?: number | null }) => {
     saveState.getState().set('saving');
     const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (typeof patch.name === 'string') payload.name = patch.name.trim().toLowerCase();
+    if (typeof patch.name === 'string') payload.name = capitalise(patch.name.trim());
     if (patch.units !== undefined) {
       payload.units = typeof patch.units === 'number' && patch.units > 0 ? Math.trunc(patch.units) : null;
     }

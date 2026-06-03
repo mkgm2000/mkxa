@@ -26,12 +26,13 @@ export function aisleFromOffCategories(categoriesTags: string[] | null | undefin
   return 'despensa';
 }
 
-// Strip OFF brand suffixes like "Hacendado - Mercadona" and lowercase the
-// resulting display name (matches how the pantry stores names — lowercase
-// for dedupe + search consistency).
+// Strip OFF brand suffixes like "Hacendado - Mercadona" and force first
+// letter uppercase. We used to lowercase everything for pantry dedupe,
+// but the user prefers proper capitalisation so titles read clean.
 export function normaliseOffProductName(input: string): string {
-  return input
+  const stripped = input
     .replace(/\s*[-–|]\s*(mercadona|carrefour|dia|alcampo|lidl|aldi).*$/i, '')
-    .trim()
-    .toLowerCase();
+    .trim();
+  if (!stripped) return stripped;
+  return stripped.charAt(0).toLocaleUpperCase('es-ES') + stripped.slice(1);
 }

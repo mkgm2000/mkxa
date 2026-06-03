@@ -27,10 +27,13 @@ export async function GET(req: Request) {
   const q = (url.searchParams.get('q') ?? '').trim();
   if (!q) return NextResponse.json({ results: [] });
 
+  // We over-fetch (60) and post-filter so the relevance pass below has
+  // enough raw material — OFF's `popularity_key` sort returns generic
+  // bestsellers regardless of whether the term matches.
   const params = new URLSearchParams({
     search_terms: q,
     fields: 'code,product_name,product_name_es,generic_name,generic_name_es,brands,image_url,image_small_url,image_front_url,image_front_small_url,quantity,categories_tags',
-    page_size: '20',
+    page_size: '60',
     lc: 'es',
     cc: 'es',
     sort_by: 'popularity_key',
@@ -44,7 +47,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'off upstream failed', status: res.status }, { status: 502 });
   }
   const data = (await res.json()) as { products?: OffProduct[] };
-  const results = (data.products ?? [])
+
+  const tokens = fold(q).split(/\s+/).filter(Boolean);
+
+  const scored = (data.products ?? [])
     .map((p) => {
       const name = (p.product_name_es || p.product_name || p.generic_name_es || p.generic_name || '').trim();
       const image = p.image_small_url || p.image_front_small_url || p.image_url || p.image_front_url || null;
@@ -57,7 +63,37 @@ export async function GET(req: Request) {
         categories_tags: p.categories_tags ?? [],
       };
     })
-    .filter((r) => r.name && r.image_url && r.barcode);
+    .filter((r) => r.name && r.image_url && r.barcode)
+    .map((r) => {
+      const haystack = fold(`${r.name} ${r.brand ?? ''}`);
+      // Score: count how many query tokens hit the name/brand. Bonus if
+      // the name starts with the first token — that's almost always what
+      // the user means ("lechuga" → "Lechuga iceberg", not "Salsa con
+      // lechuga"). Categories also get a small bonus.
+      let score = 0;
+      for (const t of tokens) {
+        if (haystack.includes(t)) score += 1;
+      }
+      if (tokens[0] && fold(r.name).startsWith(tokens[0])) score += 3;
+      if (r.categories_tags.some((c) => tokens.every((t) => fold(c).includes(t)))) {
+        score += 1;
+      }
+      return { ...r, _score: score };
+    })
+    // Drop results that don't match ALL query tokens — eliminates the
+    // "popularity_key but unrelated" noise.
+    .filter((r) => r._score >= tokens.length);
+
+  scored.sort((a, b) => b._score - a._score);
+  const results = scored.slice(0, 20).map(({ _score, ...rest }) => rest);
 
   return NextResponse.json({ results });
+}
+
+// Lowercase + strip Spanish accents for fuzzy matching.
+function fold(s: string): string {
+  return s
+    .toLocaleLowerCase('es-ES')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 }
