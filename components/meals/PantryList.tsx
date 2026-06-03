@@ -10,7 +10,13 @@ import { type Aisle, type PantryItem, aisleOrder } from '@/lib/meals/recipes';
 interface PantryListProps {
   items: PantryItem[];
   onToggle: (id: string) => void;
-  onAdd?: (input: { name: string; aisle: Aisle }) => Promise<void> | void;
+  onAdd?: (input: {
+    name: string;
+    aisle: Aisle;
+    units?: number | null;
+    image_url?: string | null;
+    off_barcode?: string | null;
+  }) => Promise<void> | void;
   /** Optional — when provided, long-press on an item opens an edit/delete sheet. */
   onEdit?: (id: string, patch: { name?: string; units?: number | null }) => Promise<void> | void;
   onDelete?: (id: string) => Promise<void> | void;

@@ -64,6 +64,16 @@ export function PantryItemRow({ item, onToggle, onLongPress }: PantryItemRowProp
           ? <CheckCircle2 size={22} strokeWidth={1.5} aria-hidden />
           : <Circle size={22} strokeWidth={1.5} className="text-ink-muted" aria-hidden />}
       </span>
+      {item.image_url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={item.image_url}
+          alt=""
+          className="h-9 w-9 flex-shrink-0 rounded-action bg-white object-contain p-0.5"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+        />
+      )}
       <span className={clsx('flex-1 text-[14px] font-medium', item.in_stock ? 'text-ink' : 'text-ink-muted')}>
         {item.name}
         {typeof item.units === 'number' && item.units > 0 && (

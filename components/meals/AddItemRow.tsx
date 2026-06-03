@@ -1,11 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, X, Check, Minus } from 'lucide-react';
+import { Plus, X, Check, Minus, Search as SearchIcon } from 'lucide-react';
 import { AISLES, aisleLabel, type Aisle } from '@/lib/meals/recipes';
+import { ProductSearchSheet, type ProductPick } from './ProductSearchSheet';
 
 interface AddItemRowProps {
-  onAdd: (input: { name: string; quantity: number | null; unit: string | null; aisle: Aisle }) => Promise<void> | void;
+  onAdd: (input: {
+    name: string;
+    quantity: number | null;
+    unit: string | null;
+    aisle: Aisle;
+    image_url?: string | null;
+    off_barcode?: string | null;
+  }) => Promise<void> | void;
 }
 
 export function AddItemRow({ onAdd }: AddItemRowProps) {
@@ -13,11 +21,25 @@ export function AddItemRow({ onAdd }: AddItemRowProps) {
   const [name, setName] = useState('');
   const [units, setUnits] = useState(1);
   const [aisle, setAisle] = useState<Aisle>('otros');
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [offBarcode, setOffBarcode] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  function applyPick(p: ProductPick) {
+    setName(p.name);
+    setAisle(p.aisle);
+    setImageUrl(p.image_url);
+    setOffBarcode(p.off_barcode);
+    setSearchOpen(false);
+    setOpen(true);
+  }
 
   function reset() {
     setName('');
     setUnits(1);
     setAisle('otros');
+    setImageUrl(null);
+    setOffBarcode(null);
     setOpen(false);
   }
 
@@ -29,6 +51,8 @@ export function AddItemRow({ onAdd }: AddItemRowProps) {
       quantity: safeUnits,
       unit: 'uds',
       aisle,
+      image_url: imageUrl,
+      off_barcode: offBarcode,
     });
     reset();
   }
@@ -42,19 +66,54 @@ export function AddItemRow({ onAdd }: AddItemRowProps) {
 
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="flex w-full items-center gap-2 rounded-item border border-dashed border-ink-soft px-3 py-3 text-[13px] font-medium text-ink-muted"
-      >
-        <Plus size={16} strokeWidth={1.5} aria-hidden />
-        Añadir item
-      </button>
+      <>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="flex flex-1 items-center gap-2 rounded-item border border-dashed border-ink-soft px-3 py-3 text-[13px] font-medium text-ink-muted"
+          >
+            <Plus size={16} strokeWidth={1.5} aria-hidden />
+            Añadir manual
+          </button>
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            className="flex items-center gap-1.5 rounded-item bg-ink px-3 py-3 text-[13px] font-bold text-white shadow-item"
+          >
+            <SearchIcon size={14} strokeWidth={1.75} aria-hidden />
+            Buscar
+          </button>
+        </div>
+        {searchOpen && (
+          <ProductSearchSheet onClose={() => setSearchOpen(false)} onPick={applyPick} />
+        )}
+      </>
     );
   }
 
   return (
     <div className="rounded-item bg-white p-3 shadow-item">
+      {imageUrl && (
+        <div className="mb-3 flex items-center gap-3 rounded-item bg-white/60 p-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl}
+            alt=""
+            className="h-12 w-12 shrink-0 rounded-action bg-white object-contain p-0.5"
+            referrerPolicy="no-referrer"
+          />
+          <p className="flex-1 text-[11px] text-ink-muted">Producto desde OpenFoodFacts</p>
+          <button
+            type="button"
+            aria-label="Quitar producto"
+            onClick={() => { setImageUrl(null); setOffBarcode(null); }}
+            className="flex h-7 w-7 items-center justify-center rounded-full border border-ink-soft text-ink-muted"
+          >
+            <X size={12} strokeWidth={1.75} aria-hidden />
+          </button>
+        </div>
+      )}
       <input
         autoFocus
         value={name}
@@ -114,6 +173,9 @@ export function AddItemRow({ onAdd }: AddItemRowProps) {
           <Check size={16} strokeWidth={1.5} aria-hidden />
         </button>
       </div>
+      {searchOpen && (
+        <ProductSearchSheet onClose={() => setSearchOpen(false)} onPick={applyPick} />
+      )}
     </div>
   );
 }

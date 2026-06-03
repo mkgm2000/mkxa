@@ -189,6 +189,8 @@ export interface PantryItem {
   aisle: Aisle;
   in_stock: boolean;
   units: number | null;
+  image_url: string | null;
+  off_barcode: string | null;
   updated_at: string;
 }
 
@@ -204,6 +206,8 @@ export interface ShoppingItem {
   checked: boolean;
   archived: boolean;
   position: number;
+  image_url: string | null;
+  off_barcode: string | null;
   created_at: string;
 }
 

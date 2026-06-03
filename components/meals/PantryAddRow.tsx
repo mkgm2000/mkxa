@@ -1,12 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Check, X, Minus } from 'lucide-react';
+import { Plus, Check, X, Minus, Search as SearchIcon } from 'lucide-react';
 import { AISLES, aisleLabel, type Aisle } from '@/lib/meals/recipes';
 import { inferAisle } from '@/lib/meals/ingredient-aisles';
+import { ProductSearchSheet, type ProductPick } from './ProductSearchSheet';
 
 interface PantryAddRowProps {
-  onAdd: (input: { name: string; aisle: Aisle; units?: number | null }) => Promise<void> | void;
+  onAdd: (input: {
+    name: string;
+    aisle: Aisle;
+    units?: number | null;
+    image_url?: string | null;
+    off_barcode?: string | null;
+  }) => Promise<void> | void;
 }
 
 export function PantryAddRow({ onAdd }: PantryAddRowProps) {
@@ -14,30 +21,81 @@ export function PantryAddRow({ onAdd }: PantryAddRowProps) {
   const [name, setName] = useState('');
   const [aisle, setAisle] = useState<Aisle>('otros');
   const [units, setUnits] = useState<number | ''>('');
+  // OFF metadata captured when the user picks from the product search.
+  // Null for fully-manual entries.
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [offBarcode, setOffBarcode] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  function applyPick(p: ProductPick) {
+    setName(p.name);
+    setAisle(p.aisle);
+    setImageUrl(p.image_url);
+    setOffBarcode(p.off_barcode);
+    setSearchOpen(false);
+    setOpen(true);
+  }
 
   async function submit() {
     const n = name.trim();
     if (!n) return;
     const u = typeof units === 'number' && units > 0 ? Math.trunc(units) : null;
-    await onAdd({ name: n, aisle, units: u });
-    setName(''); setAisle('otros'); setUnits(''); setOpen(false);
+    await onAdd({ name: n, aisle, units: u, image_url: imageUrl, off_barcode: offBarcode });
+    setName(''); setAisle('otros'); setUnits('');
+    setImageUrl(null); setOffBarcode(null);
+    setOpen(false);
   }
 
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="mx-2 flex w-[calc(100%-1rem)] items-center gap-2 rounded-item border border-dashed border-ink-soft bg-white/40 px-3 py-3 text-[13px] font-medium text-ink-muted"
-      >
-        <Plus size={16} strokeWidth={1.5} aria-hidden />
-        Añadir a la despensa
-      </button>
+      <>
+        <div className="mx-2 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="flex flex-1 items-center gap-2 rounded-item border border-dashed border-ink-soft bg-white/40 px-3 py-3 text-[13px] font-medium text-ink-muted"
+          >
+            <Plus size={16} strokeWidth={1.5} aria-hidden />
+            Añadir manual
+          </button>
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            className="flex items-center gap-1.5 rounded-item bg-ink px-3 py-3 text-[13px] font-bold text-white shadow-item"
+          >
+            <SearchIcon size={14} strokeWidth={1.75} aria-hidden />
+            Buscar
+          </button>
+        </div>
+        {searchOpen && (
+          <ProductSearchSheet onClose={() => setSearchOpen(false)} onPick={applyPick} />
+        )}
+      </>
     );
   }
 
   return (
     <div className="mx-2 rounded-item bg-white p-3 shadow-item">
+      {imageUrl && (
+        <div className="mb-3 flex items-center gap-3 rounded-item bg-white/60 p-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl}
+            alt=""
+            className="h-12 w-12 shrink-0 rounded-action bg-white object-contain p-0.5"
+            referrerPolicy="no-referrer"
+          />
+          <p className="flex-1 text-[11px] text-ink-muted">Producto desde OpenFoodFacts</p>
+          <button
+            type="button"
+            aria-label="Quitar producto"
+            onClick={() => { setImageUrl(null); setOffBarcode(null); }}
+            className="flex h-7 w-7 items-center justify-center rounded-full border border-ink-soft text-ink-muted"
+          >
+            <X size={12} strokeWidth={1.75} aria-hidden />
+          </button>
+        </div>
+      )}
       <input
         autoFocus
         value={name}
@@ -111,6 +169,9 @@ export function PantryAddRow({ onAdd }: PantryAddRowProps) {
           <Check size={16} strokeWidth={1.5} aria-hidden />
         </button>
       </div>
+      {searchOpen && (
+        <ProductSearchSheet onClose={() => setSearchOpen(false)} onPick={applyPick} />
+      )}
     </div>
   );
 }

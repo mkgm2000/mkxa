@@ -87,6 +87,16 @@ export function ShoppingItemRow({ item, onToggle, onLongPress, recipeNamesById, 
           ? <CheckCircle2 size={22} strokeWidth={1.5} aria-hidden />
           : <Circle size={22} strokeWidth={1.5} className="text-ink-muted" aria-hidden />}
       </span>
+      {item.image_url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={item.image_url}
+          alt=""
+          className="h-9 w-9 flex-shrink-0 rounded-action bg-white object-contain p-0.5"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+        />
+      )}
       <span className="flex-1 min-w-0">
         <span className="flex items-center gap-1.5 min-w-0">
           <span

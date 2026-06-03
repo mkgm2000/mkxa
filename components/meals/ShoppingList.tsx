@@ -16,7 +16,14 @@ import {
 interface ShoppingListProps {
   items: ShoppingItem[];
   onToggle: (id: string) => void;
-  onAddManual: (input: { name: string; quantity: number | null; unit: string | null; aisle: Aisle }) => Promise<void> | void;
+  onAddManual: (input: {
+    name: string;
+    quantity: number | null;
+    unit: string | null;
+    aisle: Aisle;
+    image_url?: string | null;
+    off_barcode?: string | null;
+  }) => Promise<void> | void;
   /** Optional — when provided, long-press on an item opens an edit/delete sheet. */
   onEdit?: (id: string, patch: Partial<ShoppingItem>) => Promise<void> | void;
   onDelete?: (id: string) => Promise<void> | void;

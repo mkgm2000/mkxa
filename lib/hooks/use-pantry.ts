@@ -43,12 +43,25 @@ export function usePantry() {
     saveState.getState().set('saved');
   }, [items]);
 
-  const addItem = useCallback(async (input: { name: string; aisle: Aisle; units?: number | null }) => {
+  const addItem = useCallback(async (input: {
+    name: string;
+    aisle: Aisle;
+    units?: number | null;
+    image_url?: string | null;
+    off_barcode?: string | null;
+  }) => {
     saveState.getState().set('saving');
     const units = typeof input.units === 'number' && input.units > 0 ? Math.trunc(input.units) : null;
     const { data, error } = await supabaseClient()
       .from('pantry_items')
-      .insert({ name: input.name.trim().toLowerCase(), aisle: input.aisle, in_stock: true, units })
+      .insert({
+        name: input.name.trim().toLowerCase(),
+        aisle: input.aisle,
+        in_stock: true,
+        units,
+        image_url: input.image_url ?? null,
+        off_barcode: input.off_barcode ?? null,
+      })
       .select('*')
       .single();
     if (error || !data) { saveState.getState().set('error'); return; }

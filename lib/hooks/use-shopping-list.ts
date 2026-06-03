@@ -63,7 +63,14 @@ export function useShoppingList(weekStart: string | null) {
     saveState.getState().set('saved');
   }, [items]);
 
-  const addManual = useCallback(async (input: { name: string; quantity: number | null; unit: string | null; aisle: Aisle }) => {
+  const addManual = useCallback(async (input: {
+    name: string;
+    quantity: number | null;
+    unit: string | null;
+    aisle: Aisle;
+    image_url?: string | null;
+    off_barcode?: string | null;
+  }) => {
     if (!weekStart) return;
     saveState.getState().set('saving');
     const maxPos = items.reduce((m, i) => Math.max(m, i.position), -1);
@@ -80,6 +87,8 @@ export function useShoppingList(weekStart: string | null) {
         checked: false,
         archived: false,
         position: maxPos + 1,
+        image_url: input.image_url ?? null,
+        off_barcode: input.off_barcode ?? null,
       })
       .select('*')
       .single();
