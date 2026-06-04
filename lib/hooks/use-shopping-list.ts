@@ -215,7 +215,7 @@ export function useShoppingList(weekStart: string | null) {
     if (!res.ok) { saveState.getState().set('error'); return { error: await res.text() }; }
     saveState.getState().set('saved');
     await refresh();
-    return (await res.json()) as { expense_id: string };
+    return (await res.json()) as { expense_id: string; pantry_added?: number };
   }, [refresh, weekStart]);
 
   return { items, loading, refresh, toggleChecked, editItem, deleteItem, addManual, finish };

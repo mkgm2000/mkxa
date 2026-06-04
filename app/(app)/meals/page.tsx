@@ -519,6 +519,7 @@ export default function MealsHubPage() {
       <FinishShoppingSheet
         open={finishOpen}
         onClose={() => setFinishOpen(false)}
+        checkedCount={shoppingItems.filter((i) => i.checked).length}
         onFinish={async (input) => {
           const res = await finish(input);
           if (res && 'expense_id' in res && res.expense_id) {
