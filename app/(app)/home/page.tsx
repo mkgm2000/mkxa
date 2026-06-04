@@ -147,21 +147,21 @@ export default function HomePage() {
         title="Recetas"
         seeAllHref="/meals?tab=recetas"
         items={recipeCards}
-        emptyText="Aún no tienes recetas. Añade la primera desde Comidas."
+        emptyText="Sin recetas todavía. Añade una desde Comidas."
       />
 
       <HorizontalCardRow
         title="Esta semana"
         seeAllHref="/meals"
         items={weekCards}
-        emptyText="Sin plan de comidas esta semana."
+        emptyText="Sin plan esta semana. Asígnale recetas desde Comidas."
       />
 
       <HorizontalCardRow
         title="Por visitar"
         seeAllHref="/meals/restaurants"
         items={restaurantCards}
-        emptyText="No tenéis restaurantes en lista. Añade uno desde Restaurantes."
+        emptyText="Aún no hay sitios en la lista. Añade uno desde Restaurantes."
       />
     </main>
   );

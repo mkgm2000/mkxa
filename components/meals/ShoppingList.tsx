@@ -1,10 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { ShoppingCart } from 'lucide-react';
 import { ShoppingSectionHeader } from './ShoppingSectionHeader';
 import { ShoppingItemRow } from './ShoppingItemRow';
 import { AddItemRow } from './AddItemRow';
 import { ShoppingItemActions } from './ShoppingItemActions';
+import { EmptyState } from '@/components/ui/EmptyState';
 import {
   type Aisle,
   type PantryItem,
@@ -29,9 +31,11 @@ interface ShoppingListProps {
   onDelete?: (id: string) => Promise<void> | void;
   recipeNamesById?: Record<string, string>;
   pantryItems?: PantryItem[];
+  /** Called from the empty-state CTA. When provided, shows a "Generar desde plan" primary button. */
+  onGenerateFromPlan?: () => Promise<void> | void;
 }
 
-export function ShoppingList({ items, onToggle, onAddManual, onEdit, onDelete, recipeNamesById, pantryItems = [] }: ShoppingListProps) {
+export function ShoppingList({ items, onToggle, onAddManual, onEdit, onDelete, recipeNamesById, pantryItems = [], onGenerateFromPlan }: ShoppingListProps) {
   const [actionItem, setActionItem] = useState<ShoppingItem | null>(null);
   const inStockNames = useMemo(() => {
     const set = new Set<string>();
@@ -133,7 +137,20 @@ export function ShoppingList({ items, onToggle, onAddManual, onEdit, onDelete, r
         </div>
       )}
       {bothEmpty && (
-        <p className="px-2 pt-4 text-center text-[13px] text-ink-muted">Lista vacía. Genera desde el plan o añade items.</p>
+        <div className="px-4 pt-4">
+          <EmptyState
+            icon={ShoppingCart}
+            title="Lista de la compra vacía"
+            subtitle="Añade items manualmente o pulsa 'Generar lista' para crearla desde el plan semanal."
+            ctas={[
+              ...(onGenerateFromPlan
+                ? [{ label: 'Generar desde plan', onClick: () => { void onGenerateFromPlan(); }, variant: 'primary' as const }]
+                : []),
+              // The "Añadir item" CTA is fulfilled by the AddItemRow already
+              // rendered above, but we still surface it visually for clarity.
+            ]}
+          />
+        </div>
       )}
       {actionItem && onEdit && onDelete && (
         <ShoppingItemActions

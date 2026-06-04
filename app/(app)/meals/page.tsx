@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, X, Utensils, Search, ChevronDown, Pencil } from 'lucide-react';
+import { Plus, X, Utensils, Search, ChevronDown, Pencil, ChefHat, CalendarDays } from 'lucide-react';
 import clsx from 'clsx';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
 import { RecipeCard } from '@/components/meals/RecipeCard';
@@ -18,6 +18,7 @@ import { MealPassesSection } from '@/components/meals/MealPassesSection';
 import { TikTokRecipeSheet } from '@/components/meals/TikTokRecipeSheet';
 import { EditRecipeSheet } from '@/components/meals/EditRecipeSheet';
 import { CollectionsRow } from '@/components/meals/CollectionsRow';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useRecipes, deleteRecipe } from '@/lib/hooks/use-recipes';
 import type { Recipe } from '@/lib/meals/recipes';
 import { useMealPlan, currentWeekStart } from '@/lib/hooks/use-meal-plan';
@@ -195,6 +196,22 @@ export default function MealsHubPage() {
 
       {tab === 'semana' && (
         <>
+          {plan.length === 0 && (
+            <div className="px-4">
+              <EmptyState
+                icon={CalendarDays}
+                title="Aún no hay nada planificado"
+                subtitle="Asigna recetas a los días de la semana."
+                ctas={[
+                  {
+                    label: 'Planificar comidas',
+                    onClick: () => openPicker('mon', 'lunch'),
+                    variant: 'primary',
+                  },
+                ]}
+              />
+            </div>
+          )}
           <WeekPlanBoard
             weekStart={weekStart}
             plan={plan}
@@ -218,22 +235,15 @@ export default function MealsHubPage() {
       {tab === 'recetas' && (
         <div className="flex flex-col gap-3 px-4">
           {recipes.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 rounded-card border-2 border-dashed border-ink-soft bg-white/40 px-5 py-8 text-center">
-              <span className="text-[36px]" aria-hidden>🥘</span>
-              <p className="font-sans text-[15px] font-bold text-ink">Sin recetas aún</p>
-              <p className="text-[12px] text-ink-muted">
-                Empieza con una plantilla — pasta, pollo, ensalada… cambias lo que necesites.
-              </p>
-              <Link
-                href="/meals/recipes/new"
-                className="mt-2 rounded-action bg-ink px-5 py-2.5 text-[13px] font-bold text-white"
-              >
-                Elegir plantilla
-              </Link>
-              <Link href="/meals/scan" className="text-[12px] font-medium text-ink-muted underline">
-                o importar desde TikTok / web
-              </Link>
-            </div>
+            <EmptyState
+              icon={ChefHat}
+              title="Aún no tienes recetas"
+              subtitle="Importa una colección de TikTok o crea tu primera receta a mano."
+              ctas={[
+                { label: 'Importar colección', href: '/meals/recipes/new', variant: 'primary' },
+                { label: 'Crear receta', href: '/meals/recipes/new', variant: 'secondary' },
+              ]}
+            />
           ) : (
             <>
               <CollectionsRow />
@@ -390,6 +400,22 @@ export default function MealsHubPage() {
             onDelete={deleteShopping}
             recipeNamesById={recipeNamesById}
             pantryItems={pantryItems}
+            onGenerateFromPlan={async () => {
+              // Calls the same endpoint as GenerateShoppingButton so the
+              // empty-state CTA actually does the same thing.
+              try {
+                const res = await fetch('/api/meals/generate-shopping', {
+                  method: 'POST',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify({ week_start: weekStart }),
+                });
+                if (res.ok) {
+                  await refreshPlan();
+                }
+              } catch {
+                // Swallow — the page will simply stay on the empty state.
+              }
+            }}
           />
           {shoppingItems.length > 0 && (
             <div className="px-4 pb-4">
