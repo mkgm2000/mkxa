@@ -1,13 +1,5 @@
 {
   "framework": "nextjs",
-  "functions": {
-    "api/extractors/instagram.py": {
-      "maxDuration": 30
-    },
-    "api/extractors/tiktok_collection.py": {
-      "maxDuration": 300
-    }
-  },
   "crons": [
     {
       "path": "/api/cron/backup-email",
