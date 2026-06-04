@@ -183,7 +183,17 @@ export interface MealPlanRow {
   recipe?: Recipe | null;
 }
 
-export interface PantryItem {
+export type MacrosSource = 'mercadona' | 'off' | 'estimate' | 'manual';
+
+export interface MacrosFields {
+  kcal_100g: number | null;
+  protein_100g: number | null;
+  carbs_100g: number | null;
+  fat_100g: number | null;
+  macros_source: MacrosSource | null;
+}
+
+export interface PantryItem extends MacrosFields {
   id: string;
   name: string;
   aisle: Aisle;
@@ -194,7 +204,7 @@ export interface PantryItem {
   updated_at: string;
 }
 
-export interface ShoppingItem {
+export interface ShoppingItem extends MacrosFields {
   id: string;
   week_start: string;
   name: string;

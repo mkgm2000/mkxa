@@ -18,6 +18,11 @@ interface PantryListProps {
     units?: number | null;
     image_url?: string | null;
     off_barcode?: string | null;
+    kcal_100g?: number | null;
+    protein_100g?: number | null;
+    carbs_100g?: number | null;
+    fat_100g?: number | null;
+    macros_source?: 'mercadona' | 'off' | 'estimate' | 'manual' | null;
   }) => Promise<void> | void;
   /** Optional — when provided, long-press on an item opens an edit/delete sheet. */
   onEdit?: (id: string, patch: { name?: string; units?: number | null }) => Promise<void> | void;

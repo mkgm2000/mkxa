@@ -3,7 +3,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, X, Utensils, Search, ChevronDown, Pencil, ChefHat, CalendarDays } from 'lucide-react';
+import { Plus, X, Utensils, Search, ChevronDown, Pencil, ChefHat, CalendarDays, Flame } from 'lucide-react';
+import { WeeklyMacrosSheet } from '@/components/meals/WeeklyMacrosSheet';
 import clsx from 'clsx';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
 import { RecipeCard } from '@/components/meals/RecipeCard';
@@ -80,6 +81,7 @@ export default function MealsHubPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState<{ day: MealDay; slot: MealSlot } | null>(null);
   const [finishOpen, setFinishOpen] = useState(false);
+  const [macrosOpen, setMacrosOpen] = useState(false);
   const [tiktokSheet, setTiktokSheet] = useState<Recipe | null>(null);
 
   // Search query + collapse state for the Recetas tab.
@@ -229,6 +231,24 @@ export default function MealsHubPage() {
             weekStart={weekStart}
             onGenerated={() => { setTab('compra'); refreshPlan(); }}
           />
+          {/* Floating macros button — corner of the semana tab. Opens a
+              modal with macros broken down by Semana / Día / Comida. */}
+          <button
+            type="button"
+            aria-label="Ver macros de la semana"
+            onClick={() => setMacrosOpen(true)}
+            className="fixed right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white shadow-2xl active:scale-95"
+            style={{ bottom: 'calc(env(safe-area-inset-bottom, 16px) + 96px)' }}
+          >
+            <Flame size={22} strokeWidth={2} aria-hidden />
+          </button>
+          {macrosOpen && (
+            <WeeklyMacrosSheet
+              weekStart={weekStart}
+              plan={plan}
+              onClose={() => setMacrosOpen(false)}
+            />
+          )}
         </>
       )}
 

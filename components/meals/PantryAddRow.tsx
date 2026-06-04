@@ -13,6 +13,11 @@ interface PantryAddRowProps {
     units?: number | null;
     image_url?: string | null;
     off_barcode?: string | null;
+    kcal_100g?: number | null;
+    protein_100g?: number | null;
+    carbs_100g?: number | null;
+    fat_100g?: number | null;
+    macros_source?: 'mercadona' | 'off' | 'estimate' | 'manual' | null;
   }) => Promise<void> | void;
 }
 
@@ -21,10 +26,17 @@ export function PantryAddRow({ onAdd }: PantryAddRowProps) {
   const [name, setName] = useState('');
   const [aisle, setAisle] = useState<Aisle>('otros');
   const [units, setUnits] = useState<number | ''>('');
-  // OFF metadata captured when the user picks from the product search.
+  // Product metadata captured when the user picks from the search sheet.
   // Null for fully-manual entries.
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [offBarcode, setOffBarcode] = useState<string | null>(null);
+  const [macros, setMacros] = useState<{
+    kcal_100g: number | null;
+    protein_100g: number | null;
+    carbs_100g: number | null;
+    fat_100g: number | null;
+    source: 'mercadona' | 'off' | 'estimate' | 'manual' | null;
+  }>({ kcal_100g: null, protein_100g: null, carbs_100g: null, fat_100g: null, source: null });
   const [searchOpen, setSearchOpen] = useState(false);
 
   function applyPick(p: ProductPick) {
@@ -32,6 +44,13 @@ export function PantryAddRow({ onAdd }: PantryAddRowProps) {
     setAisle(p.aisle);
     setImageUrl(p.image_url);
     setOffBarcode(p.off_barcode);
+    setMacros({
+      kcal_100g: p.kcal_100g,
+      protein_100g: p.protein_100g,
+      carbs_100g: p.carbs_100g,
+      fat_100g: p.fat_100g,
+      source: p.macros_source,
+    });
     setSearchOpen(false);
     setOpen(true);
   }
@@ -40,9 +59,21 @@ export function PantryAddRow({ onAdd }: PantryAddRowProps) {
     const n = name.trim();
     if (!n) return;
     const u = typeof units === 'number' && units > 0 ? Math.trunc(units) : null;
-    await onAdd({ name: n, aisle, units: u, image_url: imageUrl, off_barcode: offBarcode });
+    await onAdd({
+      name: n,
+      aisle,
+      units: u,
+      image_url: imageUrl,
+      off_barcode: offBarcode,
+      kcal_100g: macros.kcal_100g,
+      protein_100g: macros.protein_100g,
+      carbs_100g: macros.carbs_100g,
+      fat_100g: macros.fat_100g,
+      macros_source: macros.source,
+    });
     setName(''); setAisle('otros'); setUnits('');
     setImageUrl(null); setOffBarcode(null);
+    setMacros({ kcal_100g: null, protein_100g: null, carbs_100g: null, fat_100g: null, source: null });
     setOpen(false);
   }
 
@@ -82,14 +113,31 @@ export function PantryAddRow({ onAdd }: PantryAddRowProps) {
           <img
             src={imageUrl}
             alt=""
-            className="h-12 w-12 shrink-0 rounded-action bg-white object-contain p-0.5"
+            className={`h-12 w-12 shrink-0 rounded-action bg-white ${macros.source === 'mercadona' ? 'object-cover' : 'object-contain p-0.5'}`}
             referrerPolicy="no-referrer"
           />
-          <p className="flex-1 text-[11px] text-ink-muted">Producto desde OpenFoodFacts</p>
+          <div className="flex-1 min-w-0">
+            <p className="line-clamp-1 text-[11px] font-bold text-ink">
+              {macros.source === 'mercadona' ? 'Producto Mercadona' : 'Producto OpenFoodFacts'}
+            </p>
+            {macros.kcal_100g !== null && (
+              <p className="line-clamp-1 text-[10px] text-ink-muted">
+                {macros.source === 'estimate' ? '≈ ' : ''}
+                {macros.kcal_100g} kcal · P {macros.protein_100g ?? 0} · C {macros.carbs_100g ?? 0} · G {macros.fat_100g ?? 0} / 100g
+                {macros.source === 'estimate' && (
+                  <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] font-extrabold uppercase tracking-wider text-amber-700">Estimado</span>
+                )}
+              </p>
+            )}
+          </div>
           <button
             type="button"
             aria-label="Quitar producto"
-            onClick={() => { setImageUrl(null); setOffBarcode(null); }}
+            onClick={() => {
+              setImageUrl(null);
+              setOffBarcode(null);
+              setMacros({ kcal_100g: null, protein_100g: null, carbs_100g: null, fat_100g: null, source: null });
+            }}
             className="flex h-7 w-7 items-center justify-center rounded-full border border-ink-soft text-ink-muted"
           >
             <X size={12} strokeWidth={1.75} aria-hidden />

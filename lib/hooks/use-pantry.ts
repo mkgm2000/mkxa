@@ -56,6 +56,11 @@ export function usePantry() {
     units?: number | null;
     image_url?: string | null;
     off_barcode?: string | null;
+    kcal_100g?: number | null;
+    protein_100g?: number | null;
+    carbs_100g?: number | null;
+    fat_100g?: number | null;
+    macros_source?: 'mercadona' | 'off' | 'estimate' | 'manual' | null;
   }) => {
     saveState.getState().set('saving');
     const units = typeof input.units === 'number' && input.units > 0 ? Math.trunc(input.units) : null;
@@ -68,6 +73,11 @@ export function usePantry() {
         units,
         image_url: input.image_url ?? null,
         off_barcode: input.off_barcode ?? null,
+        kcal_100g: input.kcal_100g ?? null,
+        protein_100g: input.protein_100g ?? null,
+        carbs_100g: input.carbs_100g ?? null,
+        fat_100g: input.fat_100g ?? null,
+        macros_source: input.macros_source ?? null,
       })
       .select('*')
       .single();
