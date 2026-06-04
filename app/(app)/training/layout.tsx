@@ -5,7 +5,7 @@ import { MoodGradientBg } from '@/components/mood/MoodGradientBg';
 // tabs continue to follow the current mood.
 export default function TrainingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <MoodGradientBg mood="joyful" className="-mb-28 pb-28">
+    <MoodGradientBg mood="joyful" className="-mb-36 pb-36">
       {children}
     </MoodGradientBg>
   );
