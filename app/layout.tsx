@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import { AthleteProvider } from '@/lib/athlete-context';
+import { PwaUpdateBanner } from '@/components/feedback/PwaUpdateBanner';
 
 const monaSans = localFont({
   src: [
@@ -15,24 +16,34 @@ const monaSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'MKXA',
-  description: 'Daily life app for MK and Xabi',
+  title: 'mkxa — MK ♥ Xabi',
+  description: 'App personal de MK y Xabi: comidas, entrenos, mood, gastos.',
+  applicationName: 'mkxa',
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
     ],
     shortcut: ['/favicon.svg'],
+    other: [
+      { rel: 'mask-icon', url: '/icons/icon-monochrome.svg', color: '#1b1d1f' },
+    ],
   },
   appleWebApp: {
     capable: true,
-    title: 'MKXA',
+    title: 'mkxa',
     statusBarStyle: 'default',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
   },
 };
 
@@ -53,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className={monaSans.variable}>
       <body className="font-sans antialiased">
         <AthleteProvider>{children}</AthleteProvider>
+        <PwaUpdateBanner />
       </body>
     </html>
   );
