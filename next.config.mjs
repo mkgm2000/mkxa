@@ -91,12 +91,18 @@ const withPWA = withPWAInit({
           expiration: { maxEntries: 300, maxAgeSeconds: 30 * 24 * 60 * 60 },
         },
       },
-      // 7. HTML pages — StaleWhileRevalidate so reopening is instant, but fresh content trickles in.
+      // 7. HTML pages — NetworkFirst. SWR was serving stale shells that
+      //    broke the MoodGate (cached client tries to read mood from a
+      //    cached HTML build whose JS no longer matches Supabase types).
+      //    NetworkFirst always tries the network first; only falls back
+      //    to cache when actually offline. Adds <1s of latency vs SWR
+      //    but keeps the app correct.
       {
         urlPattern: ({ request, sameOrigin }) => sameOrigin && request.destination === 'document',
-        handler: 'StaleWhileRevalidate',
+        handler: 'NetworkFirst',
         options: {
-          cacheName: 'pages-v1',
+          cacheName: 'pages-v2',
+          networkTimeoutSeconds: 4,
           expiration: { maxEntries: 50, maxAgeSeconds: 7 * 24 * 60 * 60 },
         },
       },
