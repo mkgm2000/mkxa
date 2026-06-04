@@ -91,6 +91,28 @@ const withPWA = withPWAInit({
           expiration: { maxEntries: 300, maxAgeSeconds: 30 * 24 * 60 * 60 },
         },
       },
+      // 6b. TikTok thumbnails (recipe covers + collection posters). Hosts
+      //     are *.tiktokcdn.com, *.tiktokcdn-us.com, *.tiktokcdn-eu.com,
+      //     www.tikwm.com (proxy), plus the Instagram CDN for IG recipes.
+      //     Per-video URL is immutable → CacheFirst forever, large maxEntries
+      //     so a 1000+ item collection doesn't churn the cache.
+      {
+        urlPattern: ({ url, request }) => {
+          if (request.destination !== 'image') return false;
+          const h = url.hostname;
+          return (
+            h.includes('tiktokcdn') ||
+            h.endsWith('tikwm.com') ||
+            h.endsWith('cdninstagram.com') ||
+            h.endsWith('fbcdn.net')
+          );
+        },
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'img-tiktok-v1',
+          expiration: { maxEntries: 2000, maxAgeSeconds: 30 * 24 * 60 * 60 },
+        },
+      },
       // 7. HTML pages — NetworkFirst. SWR was serving stale shells that
       //    broke the MoodGate (cached client tries to read mood from a
       //    cached HTML build whose JS no longer matches Supabase types).

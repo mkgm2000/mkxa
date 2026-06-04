@@ -37,7 +37,9 @@ export function CollectionsRow() {
                   alt=""
                   className="h-full w-full object-cover"
                   referrerPolicy="no-referrer"
-                  loading="lazy"
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
                 />
               ) : null}
               <span className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">

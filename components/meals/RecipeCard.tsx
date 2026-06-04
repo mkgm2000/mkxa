@@ -74,13 +74,15 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
 
 function TikTokPosterCard({ recipe }: { recipe: Recipe }) {
   return (
-    <article className="group relative overflow-hidden rounded-card bg-ink shadow-card">
+    <article className="group relative overflow-hidden rounded-card bg-ink-soft shadow-card">
       <div className="relative aspect-[9/16] w-full">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={recipe.thumbnail_url ?? ''}
           alt=""
-          loading="lazy"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
           referrerPolicy="no-referrer"
           className="h-full w-full object-cover"
         />
