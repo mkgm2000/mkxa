@@ -105,6 +105,13 @@ const withPWA = withPWAInit({
 });
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  experimental: {
+    // Heavy native/server-only deps. Marking them external stops Next
+    // from bundling their full tree into every lambda — keeps the
+    // serverless package under the Vercel 245 MB limit.
+    serverComponentsExternalPackages: ['exceljs', '@anthropic-ai/sdk', 'resend'],
+  },
+};
 
 export default withPWA(nextConfig);
