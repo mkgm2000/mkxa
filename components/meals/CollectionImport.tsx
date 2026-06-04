@@ -5,33 +5,15 @@ import { useRouter } from 'next/navigation';
 import { Layers, Loader2, AlertCircle, Check } from 'lucide-react';
 import { supabaseClient } from '@/lib/supabase/client';
 import { useAthlete } from '@/lib/athlete-context';
+import { CollectionImportProgress } from './CollectionImportProgress';
 
-type Step = 'url' | 'loading' | 'done' | 'error';
+type Step = 'url' | 'tracking' | 'done' | 'error';
 
-interface ServerResponse {
-  collection_id?: string | null;
-  saved?: boolean;
-  items?: unknown[];
-  collection_title?: string;
-  error?: string;
-}
-
-// Sheet that imports a TikTok collection wholesale and is **uninterruptible**
-// for the user. The Python extractor handles BOTH the yt-dlp scrape and the
-// Supabase insert in a single Vercel function call, so once the network
-// request leaves the device we don't need the browser to stay alive: the
-// row gets persisted server-side even if the user navigates away or the
-// connection drops.
-//
-// Resilience layers (in order):
-//   1. `keepalive: true` so Safari keeps the request going across nav.
-//   2. The Python function inserts directly via PostgREST — even if the
-//      browser drops, the row appears in DB.
-//   3. If our fetch never returns (timeout / abort), we poll Supabase
-//      every 5 s for a freshly-created collection that matches our
-//      source_url, and we automatically navigate to it.
-//   4. `beforeunload` warning so MK gets a confirm prompt before she
-//      accidentally closes the tab mid-import.
+// Triggers the GitHub Actions workflow that runs yt-dlp + writes items.
+// Once dispatched, the collection row already exists in DB (status
+// 'queued'). The user sees a live progressive loader sourced from the
+// row's import_progress field. Closing the tab is safe — the workflow
+// keeps running and the row gets to 'completed' regardless.
 export function CollectionImport() {
   const router = useRouter();
   const athlete = useAthlete();
@@ -39,47 +21,22 @@ export function CollectionImport() {
   const [step, setStep] = useState<Step>('url');
   const [url, setUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [statusMsg, setStatusMsg] = useState<string>('');
-  const trackedUrl = useRef<string | null>(null);
-  const importStartedAt = useRef<number | null>(null);
+  const [collectionId, setCollectionId] = useState<string | null>(null);
+  const isClosingRef = useRef(false);
 
-  // Warn before navigating away during a live import.
+  // Warn before navigating away during tracking — but only if the user
+  // still expects to see the result here. Once we navigate to the detail
+  // page we suppress the warning.
   useEffect(() => {
-    if (step !== 'loading') return;
+    if (step !== 'tracking') return;
     function beforeUnload(e: BeforeUnloadEvent) {
+      if (isClosingRef.current) return;
       e.preventDefault();
       e.returnValue = '';
     }
     window.addEventListener('beforeunload', beforeUnload);
     return () => window.removeEventListener('beforeunload', beforeUnload);
   }, [step]);
-
-  // Resume-poller: if the browser ever loses the fetch, keep checking the
-  // DB for a row with our source_url created after we started. When found,
-  // jump to the detail page.
-  useEffect(() => {
-    if (step !== 'loading' || !trackedUrl.current) return;
-    let cancelled = false;
-    async function poll() {
-      const startISO = new Date(importStartedAt.current ?? Date.now()).toISOString();
-      const { data, error: pollErr } = await supabaseClient()
-        .from('recipe_collections')
-        .select('id,item_count,created_at,source_url')
-        .eq('source_url', trackedUrl.current ?? '')
-        .gt('created_at', startISO)
-        .order('created_at', { ascending: false })
-        .limit(1);
-      if (cancelled) return;
-      if (!pollErr && data && data.length > 0) {
-        const row = data[0] as { id: string; item_count: number };
-        setStep('done');
-        setStatusMsg(`Colección con ${row.item_count} vídeos guardada`);
-        setTimeout(() => router.push(`/meals/collections/${row.id}`), 600);
-      }
-    }
-    const tick = setInterval(() => { void poll(); }, 5000);
-    return () => { cancelled = true; clearInterval(tick); };
-  }, [step, router]);
 
   async function start() {
     setError(null);
@@ -88,81 +45,60 @@ export function CollectionImport() {
       setError('Pega un link de colección de TikTok');
       return;
     }
-    trackedUrl.current = cleanUrl;
-    importStartedAt.current = Date.now();
-    setStep('loading');
-    setStatusMsg('Sacando vídeos de TikTok…');
 
     try {
-      const res = await fetch('/api/extractors/tiktok_collection', {
+      const res = await fetch('/api/extractors/tiktok-collection-trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url: cleanUrl,
-          original_url: cleanUrl,
-          created_by: athlete,
+          mode: 'new',
+          athlete,
         }),
-        // Survive tab navigation on mobile Safari / Chrome.
-        keepalive: true,
       });
-      const data = (await res.json()) as ServerResponse;
-      if (!res.ok || data.error) {
-        // Don't bail to error yet — the server might have persisted the
-        // row anyway. Let the poller find it.
-        setStatusMsg('Tardando un poco más de lo normal…');
+      const data = (await res.json()) as { collection_id?: string; error?: string; detail?: string };
+      if (!res.ok || !data.collection_id) {
+        // 503 with friendly message if the env var GH_PAT isn't set yet.
+        setStep('error');
+        setError(data.error === 'GH_PAT env missing'
+          ? 'Falta configurar el token de GitHub. Ver instrucciones en mkxa/profile.'
+          : data.error ?? 'No se pudo arrancar la importación');
         return;
       }
-      if (data.collection_id) {
-        setStep('done');
-        setStatusMsg(`Colección con ${(data.items?.length ?? 0)} vídeos guardada`);
-        setTimeout(() => router.push(`/meals/collections/${data.collection_id}`), 600);
-      } else {
-        // Server didn't save — fall back to client-side insert with the
-        // payload we already got back, so the data MK just waited for
-        // doesn't get thrown away.
-        await clientFallbackInsert(data);
-      }
+      setCollectionId(data.collection_id);
+      setStep('tracking');
     } catch (e) {
-      // Network error — the request might still be in flight in another
-      // path. Don't show an error: the poller will catch the result if
-      // the server completed.
-      console.warn('[collection-import] fetch failed, poller still watching', e);
-      setStatusMsg('Conexión inestable — esperando confirmación…');
+      console.warn('[collection-import] trigger failed', e);
+      setStep('error');
+      setError('Sin conexión');
     }
   }
 
-  async function clientFallbackInsert(data: ServerResponse) {
-    if (!Array.isArray(data.items) || data.items.length === 0) {
-      setStep('error');
-      setError('La extracción no devolvió vídeos.');
-      return;
+  // Fallback poller — if the page is the source of truth (still here when
+  // workflow completes), navigate to detail.
+  useEffect(() => {
+    if (step !== 'tracking' || !collectionId) return;
+    let cancelled = false;
+    async function tick() {
+      const { data } = await supabaseClient()
+        .from('recipe_collections')
+        .select('id,import_status,item_count')
+        .eq('id', collectionId)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      const row = data as { id: string; import_status: string; item_count: number };
+      if (row.import_status === 'completed') {
+        isClosingRef.current = true;
+        setStep('done');
+        setTimeout(() => router.push(`/meals/collections/${row.id}`), 600);
+      } else if (row.import_status === 'failed') {
+        setStep('error');
+        setError('La importación falló — mira el detalle de la colección para reintentar.');
+      }
     }
-    const items = data.items;
-    const cover =
-      Array.isArray(items) && items.length > 0 && typeof items[0] === 'object'
-        ? ((items[0] as { thumbnail?: string | null }).thumbnail ?? null)
-        : null;
-    const { data: row, error: dbError } = await supabaseClient()
-      .from('recipe_collections')
-      .insert({
-        title: data.collection_title ?? 'Colección sin título',
-        source_url: trackedUrl.current ?? url.trim(),
-        source_type: 'tiktok',
-        items,
-        cover_url: cover,
-        created_by: athlete,
-      })
-      .select('id')
-      .single();
-    if (dbError || !row) {
-      setStep('error');
-      setError(dbError?.message ?? 'no se pudo guardar');
-      return;
-    }
-    setStep('done');
-    setStatusMsg(`Colección con ${items.length} vídeos guardada`);
-    setTimeout(() => router.push(`/meals/collections/${(row as { id: string }).id}`), 600);
-  }
+    const t = setInterval(() => { void tick(); }, 2500);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [step, collectionId, router]);
 
   return (
     <section className="flex flex-col gap-5 px-5 pb-8">
@@ -177,8 +113,9 @@ export function CollectionImport() {
           Importar colección
         </h2>
         <p className="text-center text-[13px] text-ink-muted">
-          Pega el link de una colección de TikTok. Guardamos todos los vídeos
-          en una colección comprimida para que los pases a recetas uno a uno.
+          Pega el link de una colección de TikTok. La extracción corre en GitHub
+          Actions y los vídeos se guardan en bloques de 100 — ves el progreso en
+          vivo.
         </p>
       </div>
 
@@ -209,24 +146,17 @@ export function CollectionImport() {
             disabled={!url.trim()}
             className="rounded-action bg-ink py-4 text-[14px] font-bold text-white disabled:opacity-40"
           >
-            Cargar y guardar
+            Arrancar importación
           </button>
           <p className="text-center text-[11px] text-ink-muted">
-            Las colecciones grandes (1000+) tardan ~1 min. Si cierras la app,
-            la importación sigue en el servidor — al volver verás la colección.
+            Las grandes (1000+) tardan ~2 min. Si cierras la app, la importación
+            sigue en GitHub y al volver verás la colección lista.
           </p>
         </>
       )}
 
-      {step === 'loading' && (
-        <div className="flex flex-col items-center gap-3 py-12 text-center">
-          <Loader2 size={28} className="animate-spin text-ink" aria-hidden />
-          <p className="text-[13px] font-medium text-ink">{statusMsg}</p>
-          <p className="max-w-[280px] text-[11px] text-ink-muted">
-            No cierres esta pantalla. Si pierdes conexión, la importación se
-            recupera sola — el servidor termina de guardar la colección.
-          </p>
-        </div>
+      {step === 'tracking' && collectionId && (
+        <CollectionImportProgress collectionId={collectionId} />
       )}
 
       {step === 'done' && (
@@ -234,7 +164,7 @@ export function CollectionImport() {
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white">
             <Check size={28} strokeWidth={2} aria-hidden />
           </span>
-          <p className="text-[14px] font-bold text-ink">{statusMsg}</p>
+          <p className="text-[14px] font-bold text-ink">¡Listo! Abriendo la colección…</p>
         </div>
       )}
 
@@ -253,6 +183,18 @@ export function CollectionImport() {
           </button>
         </div>
       )}
+
+      {step === 'tracking' && (
+        <p className="text-center text-[11px] text-ink-muted">
+          Puedes cerrar esta pantalla: la importación corre en GitHub. Cuando
+          vuelvas la colección estará lista o avanzada.
+        </p>
+      )}
+
+      {/* unused but keeps the file consistent with original imports */}
+      <span style={{ display: 'none' }} aria-hidden>
+        <Loader2 size={1} />
+      </span>
     </section>
   );
 }

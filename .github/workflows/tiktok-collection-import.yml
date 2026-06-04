@@ -1,0 +1,55 @@
+name: TikTok collection import
+
+# Triggered by mkxa Vercel when a user pastes a collection URL OR taps
+# Refresh on an existing collection. yt-dlp runs here (no 245MB cap),
+# writes items + progress to Supabase.
+
+on:
+  workflow_dispatch:
+    inputs:
+      collection_id:
+        description: 'recipe_collections.id (uuid) to update.'
+        required: true
+        type: string
+      url:
+        description: 'TikTok collection / playlist URL.'
+        required: true
+        type: string
+      mode:
+        description: 'new (first import) | refresh (merge into existing).'
+        required: true
+        default: 'new'
+        type: choice
+        options:
+          - new
+          - refresh
+      athlete:
+        description: 'MK or Xabi (attribution).'
+        required: false
+        type: string
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install yt-dlp
+        run: pip install --upgrade yt-dlp requests
+
+      - name: Run import
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python .github/scripts/import_tiktok_collection.py \
+            --collection-id '${{ inputs.collection_id }}' \
+            --url '${{ inputs.url }}' \
+            --mode '${{ inputs.mode }}' \
+            --athlete '${{ inputs.athlete }}'

@@ -4,9 +4,10 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import clsx from 'clsx';
-import { ChevronLeft, Search, X, Check, ChefHat, Trash2 } from 'lucide-react';
+import { ChevronLeft, Search, X, Check, ChefHat, Trash2, RefreshCw } from 'lucide-react';
 import { useCollection, deleteCollection } from '@/lib/hooks/use-collections';
 import { saveRecipe } from '@/lib/hooks/use-recipes';
+import { CollectionImportProgress } from '@/components/meals/CollectionImportProgress';
 import { useAthlete } from '@/lib/athlete-context';
 import { MEAL_SLOTS, mealSlotLabel, type MealSlot } from '@/lib/meals/recipes';
 import type { RecipeCollectionItem } from '@/lib/meals/collections';
@@ -25,6 +26,39 @@ export default function CollectionDetailPage() {
   const [promoting, setPromoting] = useState<RecipeCollectionItem | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
+
+  async function triggerRefresh() {
+    if (!collection) return;
+    setRefreshing(true);
+    setRefreshError(null);
+    try {
+      const res = await fetch('/api/extractors/tiktok-collection-trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: collection.source_url,
+          mode: 'refresh',
+          collection_id: collection.id,
+          athlete,
+        }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setRefreshError(data.error ?? 'No se pudo arrancar la actualización');
+        setRefreshing(false);
+        return;
+      }
+      // Re-fetch row to surface the new 'queued' status to the progress bar.
+      await refresh();
+    } catch {
+      setRefreshError('Sin conexión');
+    } finally {
+      // Keep the progress component alive — it polls until completed.
+      setRefreshing(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     if (!collection) return [];
@@ -78,6 +112,15 @@ export default function CollectionDetailPage() {
         <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
+            aria-label="Actualizar colección"
+            disabled={refreshing}
+            onClick={() => { void triggerRefresh(); }}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink shadow-action active:scale-95 disabled:opacity-50"
+          >
+            <RefreshCw size={18} strokeWidth={1.75} className={refreshing ? 'animate-spin' : ''} aria-hidden />
+          </button>
+          <button
+            type="button"
             aria-label="Eliminar colección"
             onClick={() => setConfirmDelete(true)}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-danger shadow-action active:scale-95"
@@ -93,6 +136,18 @@ export default function CollectionDetailPage() {
           </Link>
         </div>
       </header>
+
+      {refreshError && (
+        <p className="mx-5 flex items-center gap-2 rounded-action bg-danger/10 px-3 py-2 text-[12px] text-danger">
+          {refreshError}
+        </p>
+      )}
+
+      {collection.import_status && collection.import_status !== 'completed' && (
+        <div className="mx-5 rounded-card bg-white p-4 shadow-card">
+          <CollectionImportProgress collectionId={collection.id} />
+        </div>
+      )}
 
       <div className="px-5">
         <div className="relative">
