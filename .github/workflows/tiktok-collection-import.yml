@@ -46,7 +46,8 @@ jobs:
       - name: Run import
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Anon key is enough because RLS is open project-wide for this app.
+          SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           python .github/scripts/import_tiktok_collection.py \
             --collection-id '${{ inputs.collection_id }}' \
