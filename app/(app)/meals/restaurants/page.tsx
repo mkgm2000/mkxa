@@ -3,11 +3,12 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
-import { ChevronLeft, Plus, Heart, CheckCircle2, X, Star } from 'lucide-react';
+import { ChevronLeft, Plus, Heart, CheckCircle2, X, Star, MapPin, Check } from 'lucide-react';
 import { useRestaurants } from '@/lib/hooks/use-restaurants';
 import { RestaurantCard } from '@/components/meals/RestaurantCard';
 import { RestaurantForm } from '@/components/meals/RestaurantForm';
 import { RestaurantNavSheet } from '@/components/meals/RestaurantNavSheet';
+import { EmptyState } from '@/components/ui/EmptyState';
 import type { Restaurant, RestaurantStatus } from '@/lib/meals/restaurants';
 
 export default function RestaurantsPage() {
@@ -141,7 +142,23 @@ export default function RestaurantsPage() {
         {loading ? (
           <p className="py-8 text-center text-[13px] text-ink-muted">Cargando…</p>
         ) : filtered.length === 0 ? (
-          <EmptyState tab={tab} onAdd={openNew} />
+          tab === 'wishlist' ? (
+            <EmptyState
+              icon={MapPin}
+              title="Sin restaurantes por visitar"
+              subtitle="Añade uno desde el botón + y planead la próxima cena."
+              ctas={[{ label: 'Añadir restaurante', onClick: openNew, variant: 'primary' }]}
+              className="mt-6"
+            />
+          ) : (
+            <EmptyState
+              icon={Check}
+              title="Aún no habéis registrado visitas"
+              subtitle="Cuando vayáis a un sitio, marcadlo como visitado."
+              ctas={[{ label: 'Ver wishlist', onClick: () => setTab('wishlist'), variant: 'primary' }]}
+              className="mt-6"
+            />
+          )
         ) : (
           filtered.map((r, idx) => (
             <div
@@ -326,24 +343,3 @@ export default function RestaurantsPage() {
   );
 }
 
-function EmptyState({ tab, onAdd }: { tab: RestaurantStatus; onAdd: () => void }) {
-  return (
-    <div className="mt-6 flex flex-col items-center gap-3 rounded-card bg-white p-8 text-center shadow-card">
-      <h3 className="font-sans text-[18px] font-extrabold text-ink">
-        {tab === 'wishlist' ? 'Sin restaurantes por probar' : 'Aún ningún visitado'}
-      </h3>
-      <p className="max-w-[260px] text-[13px] text-ink-muted">
-        {tab === 'wishlist'
-          ? 'Añade los sitios que os apetece descubrir juntos.'
-          : 'Cuando vayáis a uno, márcalo como visitado para guardar la valoración.'}
-      </p>
-      <button
-        type="button"
-        onClick={onAdd}
-        className="mt-2 rounded-action bg-ink px-5 py-2.5 text-[14px] font-bold text-white active:scale-95"
-      >
-        Añadir el primero
-      </button>
-    </div>
-  );
-}

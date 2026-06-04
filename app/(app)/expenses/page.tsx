@@ -70,7 +70,7 @@ export default function ExpensesPage() {
             Cargando…
           </div>
         ) : (
-          <ExpenseList expenses={data} />
+          <ExpenseList expenses={data} onAddExpense={() => setSheetOpen(true)} />
         )}
       </section>
 

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { ChevronLeft, Search, X, Plus, Check, Film, Tv, Trash2, Star } from 'lucide-react';
 import { useMedia } from '@/lib/hooks/use-media';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useAthlete } from '@/lib/athlete-context';
 import {
   PROVIDERS,
@@ -135,15 +136,21 @@ export default function MediaPage() {
         {loading ? (
           <p className="py-10 text-center text-[12px] text-ink-muted">Cargando…</p>
         ) : filtered.length === 0 ? (
-          <div className="rounded-card bg-white p-6 text-center shadow-card">
-            <Film size={28} strokeWidth={1.5} className="mx-auto text-ink-muted" aria-hidden />
-            <p className="mt-2 text-[13px] font-bold text-ink">
-              {tab === 'wishlist' ? 'No hay nada en cola.' : 'No habéis marcado nada como visto.'}
-            </p>
-            <p className="mt-1 text-[12px] text-ink-muted">
-              Toca el botón “+” para buscar una peli o serie.
-            </p>
-          </div>
+          tab === 'wishlist' ? (
+            <EmptyState
+              icon={Film}
+              title="No hay nada en cola"
+              subtitle="Busca una peli o serie con el botón + y la añadimos a vuestra lista."
+              ctas={[{ label: 'Buscar', onClick: () => setSearchOpen(true), variant: 'primary' }]}
+            />
+          ) : (
+            <EmptyState
+              icon={Check}
+              title="No habéis marcado nada como visto"
+              subtitle="Cuando veáis algo, abridlo y marcadlo desde el detalle."
+              ctas={[{ label: 'Ver lista', onClick: () => setTab('wishlist'), variant: 'primary' }]}
+            />
+          )
         ) : (
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {filtered.map((m) => (

@@ -1,10 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Package } from 'lucide-react';
 import { ShoppingSectionHeader } from './ShoppingSectionHeader';
 import { PantryItemRow } from './PantryItemRow';
 import { PantryAddRow } from './PantryAddRow';
 import { PantryItemActions } from './PantryItemActions';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { type Aisle, type PantryItem, aisleOrder } from '@/lib/meals/recipes';
 
 interface PantryListProps {
@@ -44,9 +46,13 @@ export function PantryList({ items, onToggle, onAdd, onEdit, onDelete }: PantryL
     <div className="flex flex-col gap-2 pt-2">
       {onAdd && <PantryAddRow onAdd={onAdd} />}
       {sections.length === 0 && (
-        <p className="px-3 pt-2 text-center text-[13px] text-ink-muted">
-          Despensa vacía. Añade lo que ya tengas para no comprarlo dos veces.
-        </p>
+        <div className="px-4 pt-3">
+          <EmptyState
+            icon={Package}
+            title="Despensa vacía"
+            subtitle="Añade lo que ya tienes en casa para no comprarlo dos veces."
+          />
+        </div>
       )}
       {sections.map(({ aisle, items: rows }) => (
         <div key={aisle}>

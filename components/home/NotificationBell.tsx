@@ -5,6 +5,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { Bell, Heart, ChefHat, MapPin, Layers, Dumbbell, type LucideIcon } from 'lucide-react';
 import { AvatarCircle } from '@/components/profile/AvatarCircle';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useActivity, markNotificationsSeen, type ActivityEvent } from '@/lib/hooks/use-activity';
 import { useAthleteProfiles } from '@/lib/hooks/use-athlete-profiles';
 
@@ -127,9 +128,11 @@ export function NotificationBell() {
           </div>
 
           {visible.length === 0 ? (
-            <p className="px-5 py-8 text-center text-[12px] text-ink-muted">
-              {filter === 'unread' ? 'Sin novedades.' : 'Aún no hay nada que contar.'}
-            </p>
+            <EmptyState
+              compact
+              title="Sin novedades por ahora"
+              subtitle="Cuando MK o tú añadáis algo, aparecerá aquí."
+            />
           ) : (
             <ul className="flex max-h-[60vh] flex-col divide-y divide-ink-soft/40 overflow-y-auto pb-1">
               {visible.map((e) => {
