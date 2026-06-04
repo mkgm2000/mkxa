@@ -9,10 +9,12 @@ import { InlineSaveText } from '@/components/feedback/InlineSaveText';
 import { WeekHeader } from '@/components/training/WeekHeader';
 import { SessionCard } from '@/components/training/SessionCard';
 import { RpeModal } from '@/components/training/RpeModal';
+import { AdaptiveBanner } from '@/components/training/AdaptiveBanner';
 import { useAthlete } from '@/lib/athlete-context';
 import { useTraining } from '@/lib/hooks/use-training';
 import { useConfirmedWeek } from '@/lib/hooks/use-confirmed-week';
 import { useMaxAvailableWeek } from '@/lib/hooks/use-available-weeks';
+import { useAdaptiveSuggestion } from '@/lib/hooks/use-adaptive-suggestion';
 import { getCurrentWeek, getDays, getWeekDates, MAX_WEEK } from '@/lib/plan-hyrox';
 import type { Day, DayKey } from '@/lib/plan-hyrox';
 
@@ -70,6 +72,8 @@ export default function TrainingPage() {
 
   const { byKey, setLog, setWeekNote } = useTraining(athlete, effectiveWeek);
   const { plan: confirmedPlan, refresh: refreshConfirmed } = useConfirmedWeek(athlete, effectiveWeek);
+  // Adaptive suggestion based on historical registros (RPE + completion rate).
+  const { suggestion: adaptiveSuggestion } = useAdaptiveSuggestion(athlete, effectiveWeek);
 
   // Force refetch when arriving from /training/adjust (the URL will have
   // ?week=N after confirm). Without this, useConfirmedWeek's [athlete, week]
@@ -158,6 +162,8 @@ export default function TrainingPage() {
       <div className="px-5">
         <InlineSaveText />
       </div>
+
+      <AdaptiveBanner suggestion={adaptiveSuggestion} week={effectiveWeek} />
 
       <WeekHeader
         week={effectiveWeek}
