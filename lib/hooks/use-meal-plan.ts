@@ -4,10 +4,18 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabaseClient } from '@/lib/supabase/client';
 import { saveState } from '@/lib/save-state';
 import type { MealDay, MealPlanRow, MealSlot, Recipe } from '@/lib/meals/recipes';
-import { startOfWeekISO } from '@/lib/date';
+import { addDaysISO, startOfWeekISO } from '@/lib/date';
 
 export function currentWeekStart(): string {
   return startOfWeekISO(new Date());
+}
+
+// MK plans NEXT week's meals (she sits down on the weekend and writes
+// monday-onwards). The weekly planner + shopping list both target the
+// upcoming Monday; once it arrives, what was "next" becomes "current"
+// and the home/today views pick it up automatically.
+export function nextWeekStart(): string {
+  return addDaysISO(startOfWeekISO(new Date()), 7);
 }
 
 export function useMealPlan(weekStart: string | null) {

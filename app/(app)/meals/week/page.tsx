@@ -8,13 +8,15 @@ import { WeekPlanBoard } from '@/components/meals/WeekPlanBoard';
 import { GenerateShoppingButton } from '@/components/meals/GenerateShoppingButton';
 import { RecipePickerSheet } from '@/components/meals/RecipePickerSheet';
 import { useRecipes } from '@/lib/hooks/use-recipes';
-import { useMealPlan, currentWeekStart } from '@/lib/hooks/use-meal-plan';
+import { useMealPlan, nextWeekStart } from '@/lib/hooks/use-meal-plan';
+import { isoWeekNumber } from '@/lib/date';
 import type { MealDay, MealSlot } from '@/lib/meals/recipes';
 
 export default function WeekPlanPage() {
   const router = useRouter();
   const { recipes } = useRecipes();
-  const weekStart = useMemo(() => currentWeekStart(), []);
+  const weekStart = useMemo(() => nextWeekStart(), []);
+  const weekNumber = useMemo(() => isoWeekNumber(weekStart), [weekStart]);
   const { plan, upsertSlot, clearSlot } = useMealPlan(weekStart);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [target, setTarget] = useState<{ day: MealDay; slot: MealSlot } | null>(null);
@@ -25,7 +27,7 @@ export default function WeekPlanPage() {
         <Link href="/meals" aria-label="Volver" className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-action">
           <ChevronLeft size={20} strokeWidth={1.5} className="text-ink" aria-hidden />
         </Link>
-        <h1 className="font-sans text-[20px] font-extrabold tracking-tightest text-ink">Plan semana</h1>
+        <h1 className="font-sans text-[20px] font-extrabold tracking-tightest text-ink">Semana {weekNumber}</h1>
         <span aria-hidden className="h-10 w-10" />
       </header>
 

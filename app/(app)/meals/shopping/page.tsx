@@ -8,11 +8,11 @@ import { ShoppingList } from '@/components/meals/ShoppingList';
 import { FinishShoppingSheet } from '@/components/meals/FinishShoppingSheet';
 import { useShoppingList } from '@/lib/hooks/use-shopping-list';
 import { useRecipes } from '@/lib/hooks/use-recipes';
-import { currentWeekStart } from '@/lib/hooks/use-meal-plan';
+import { nextWeekStart } from '@/lib/hooks/use-meal-plan';
 
 export default function ShoppingPage() {
   const router = useRouter();
-  const weekStart = useMemo(() => currentWeekStart(), []);
+  const weekStart = useMemo(() => nextWeekStart(), []);
   const { items, toggleChecked, addManual, finish } = useShoppingList(weekStart);
   const { recipes } = useRecipes();
   const [finishOpen, setFinishOpen] = useState(false);

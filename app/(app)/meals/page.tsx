@@ -23,7 +23,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ShareButton } from '@/components/ui/ShareButton';
 import { useRecipes, deleteRecipe } from '@/lib/hooks/use-recipes';
 import type { Recipe } from '@/lib/meals/recipes';
-import { useMealPlan, currentWeekStart } from '@/lib/hooks/use-meal-plan';
+import { useMealPlan, nextWeekStart } from '@/lib/hooks/use-meal-plan';
+import { isoWeekNumber } from '@/lib/date';
 import { useShoppingList } from '@/lib/hooks/use-shopping-list';
 import { usePantry } from '@/lib/hooks/use-pantry';
 import { MEAL_SLOTS, mealSlotLabel, type MealDay, type MealSlot } from '@/lib/meals/recipes';
@@ -46,7 +47,8 @@ export default function MealsHubPage() {
   const searchParams = useSearchParams();
   const initialTab: Tab = isTab(searchParams.get('tab')) ? (searchParams.get('tab') as Tab) : 'semana';
   const [tab, setTabState] = useState<Tab>(initialTab);
-  const weekStart = useMemo(() => currentWeekStart(), []);
+  const weekStart = useMemo(() => nextWeekStart(), []);
+  const weekNumber = useMemo(() => isoWeekNumber(weekStart), [weekStart]);
 
   useEffect(() => {
     const q = searchParams.get('tab');
@@ -154,7 +156,7 @@ export default function MealsHubPage() {
           <h1 className="font-sans text-[36px] font-extrabold leading-[1.05] tracking-tightest text-ink">
             Comidas
           </h1>
-          <p className="mt-2 text-[13px] text-ink-muted">Semana del {weekStart}</p>
+          <p className="mt-2 text-[13px] text-ink-muted">Semana {weekNumber} · del {weekStart}</p>
         </div>
         <div className="flex items-center gap-2">
           <Link
