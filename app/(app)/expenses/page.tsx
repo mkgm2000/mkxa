@@ -1,12 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, ScanLine } from 'lucide-react';
 import { HeaderActionButton } from '@/components/nav/HeaderActionButton';
 import { InlineSaveText } from '@/components/feedback/InlineSaveText';
 import { SegmentedDayWeekMonth, type Range } from '@/components/controls/SegmentedDayWeekMonth';
 import { AddExpenseSheet } from '@/components/expenses/AddExpenseSheet';
 import { ExpenseList } from '@/components/expenses/ExpenseList';
+import { TicketScanSheet } from '@/components/expenses/TicketScanSheet';
 import { useExpenses } from '@/lib/hooks/use-expenses';
 import { formatEuros } from '@/lib/expenses';
 import { todayISO, startOfWeekISO } from '@/lib/date';
@@ -35,6 +36,7 @@ function rangeBounds(range: Range, now = new Date()): { from: string; to: string
 export default function ExpensesPage() {
   const [range, setRange] = useState<Range>('month');
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
 
   const { from, to, label } = useMemo(() => rangeBounds(range), [range]);
   const { data, loading, total } = useExpenses({ from, to });
@@ -53,11 +55,18 @@ export default function ExpensesPage() {
             {formatEuros(total)}
           </p>
         </div>
-        <HeaderActionButton
-          icon={Plus}
-          label="Añadir gasto"
-          onClick={() => setSheetOpen(true)}
-        />
+        <div className="flex flex-col items-end gap-2">
+          <HeaderActionButton
+            icon={Plus}
+            label="Añadir gasto"
+            onClick={() => setSheetOpen(true)}
+          />
+          <HeaderActionButton
+            icon={ScanLine}
+            label="Escanear ticket"
+            onClick={() => setScanOpen(true)}
+          />
+        </div>
       </header>
 
       <InlineSaveText />
@@ -75,6 +84,7 @@ export default function ExpensesPage() {
       </section>
 
       <AddExpenseSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
+      <TicketScanSheet open={scanOpen} onClose={() => setScanOpen(false)} />
     </main>
   );
 }
