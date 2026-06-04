@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { ChevronLeft, Search, X, Plus, Check, Film, Tv, Trash2, Star } from 'lucide-react';
 import { useMedia } from '@/lib/hooks/use-media';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ShareButton } from '@/components/ui/ShareButton';
 import { useAthlete } from '@/lib/athlete-context';
 import {
   PROVIDERS,
@@ -490,14 +491,30 @@ function DetailSheet({
             <img src={backdrop} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
           ) : null}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-          <button
-            type="button"
-            aria-label="Cerrar"
-            onClick={onClose}
-            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-action active:scale-95"
-          >
-            <X size={18} strokeWidth={1.75} className="text-ink" aria-hidden />
-          </button>
+          <div className="absolute right-3 top-3 flex items-center gap-2">
+            {/* Share lives in the detail header — the cards in the grid
+                are too small to host another chip without crowding. */}
+            <ShareButton
+              target={{
+                kind: 'media',
+                id: item.id,
+                title: item.title,
+                text: item.overview ?? undefined,
+              }}
+              label={`Compartir ${item.title}`}
+              iconSize={16}
+              className="h-9 w-9 bg-white shadow-action"
+              stopPropagation={false}
+            />
+            <button
+              type="button"
+              aria-label="Cerrar"
+              onClick={onClose}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-action active:scale-95"
+            >
+              <X size={18} strokeWidth={1.75} className="text-ink" aria-hidden />
+            </button>
+          </div>
           <div className="absolute bottom-3 left-4 right-4 text-white">
             <p className="text-[10px] font-bold uppercase tracking-wider opacity-80">
               {item.media_type === 'tv' ? 'Serie' : 'Película'}

@@ -20,6 +20,7 @@ import { TikTokRecipeSheet } from '@/components/meals/TikTokRecipeSheet';
 import { EditRecipeSheet } from '@/components/meals/EditRecipeSheet';
 import { CollectionsRow } from '@/components/meals/CollectionsRow';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ShareButton } from '@/components/ui/ShareButton';
 import { useRecipes, deleteRecipe } from '@/lib/hooks/use-recipes';
 import type { Recipe } from '@/lib/meals/recipes';
 import { useMealPlan, currentWeekStart } from '@/lib/hooks/use-meal-plan';
@@ -397,6 +398,19 @@ export default function MealsHubPage() {
                             <Link href={`/meals/recipes/${r.id}`} className="block">
                               <RecipeCard recipe={r} />
                             </Link>
+                          )}
+                          {/* Share lives as an overlay so we don't have
+                              to push RecipeCard's tight 2-col layout
+                              around. Hidden in edit mode so it doesn't
+                              clash with the X/Pencil chips. */}
+                          {!editingRecipes && (
+                            <div className="absolute right-1.5 top-1.5 z-10">
+                              <ShareButton
+                                target={{ kind: 'recipe', id: r.id, title: r.title }}
+                                label={`Compartir ${r.title}`}
+                                className="bg-white/90 shadow-action"
+                              />
+                            </div>
                           )}
                         </div>
                       ))}
