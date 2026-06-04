@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <g transform="translate(50 36) scale(1.6)" fill="currentColor">
+    <path d="M0,-2 C -3,-7 -10,-7 -10,-1 C -10,5 0,11 0,11 C 0,11 10,5 10,-1 C 10,-7 3,-7 0,-2 Z"/>
+  </g>
+  <text x="50" y="78" text-anchor="middle"
+        font-family="system-ui, -apple-system, Arial, sans-serif"
+        font-size="32" font-weight="900" letter-spacing="-2"
+        fill="currentColor">mkxa</text>
+</svg>
