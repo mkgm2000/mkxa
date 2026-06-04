@@ -1,1 +1,2 @@
-yt-dlp==2024.12.13
+# yt-dlp temporarily removed — Vercel Python lambda exceeded 245MB.
+# Instagram + TikTok extractors stubbed until a Node-based replacement lands.
