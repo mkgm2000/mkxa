@@ -9,6 +9,7 @@ import { RestaurantCard } from '@/components/meals/RestaurantCard';
 import { RestaurantForm } from '@/components/meals/RestaurantForm';
 import { RestaurantNavSheet } from '@/components/meals/RestaurantNavSheet';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ShareButton } from '@/components/ui/ShareButton';
 import type { Restaurant, RestaurantStatus } from '@/lib/meals/restaurants';
 
 export default function RestaurantsPage() {
@@ -185,6 +186,23 @@ export default function RestaurantsPage() {
                 onMarkVisited={!editMode && r.status === 'wishlist' ? openMarkVisited : undefined}
                 onNavigate={!editMode && r.location ? setNavTarget : undefined}
               />
+              {/* Share affordance — overlaid on the card top-right so it
+                  doesn't reflow the existing card row. Hidden in edit
+                  mode to avoid colliding with the delete chip. */}
+              {!editMode && (
+                <div className="absolute right-2 top-2 z-10">
+                  <ShareButton
+                    target={{
+                      kind: 'restaurant',
+                      id: r.id,
+                      title: r.name,
+                      text: r.location ?? undefined,
+                    }}
+                    label={`Compartir ${r.name}`}
+                    className="bg-white/90 shadow-action"
+                  />
+                </div>
+              )}
             </div>
           ))
         )}
