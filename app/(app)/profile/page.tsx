@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { RotateCcw, ExternalLink, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import { RotateCcw, ExternalLink, ChevronRight, Sparkles } from 'lucide-react';
 import { MoodGradientBg } from '@/components/mood/MoodGradientBg';
 import { AthleteCard } from '@/components/profile/AthleteCard';
 import { MoodHistoryChart } from '@/components/profile/MoodHistoryChart';
@@ -47,6 +48,31 @@ export default function ProfilePage() {
         <section>
           <h2 className="mb-2 px-5 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">Tu ánimo</h2>
           <MoodHistoryChart athlete={athlete} />
+        </section>
+
+        <section className="mx-5">
+          <h2 className="mb-2 px-1 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">Resumen del año</h2>
+          <Link
+            href={`/recap?year=${new Date().getFullYear()}`}
+            className="block overflow-hidden rounded-card shadow-card"
+          >
+            <div
+              className="relative flex items-center gap-4 p-5"
+              style={{ background: 'linear-gradient(135deg, #ffe2ec 0%, #ffa3bc 55%, #ff80a0 100%)' }}
+            >
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/70 backdrop-blur-sm">
+                <Sparkles size={26} strokeWidth={1.8} className="text-ink" aria-hidden />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink/70">mkxa recap</p>
+                <p className="font-sans text-[22px] font-extrabold leading-tight tracking-tightest text-ink">
+                  Vuestro {new Date().getFullYear()} en mkxa
+                </p>
+                <p className="mt-1 text-[12px] font-medium text-ink/70">Mood, recetas, training y más</p>
+              </div>
+              <ChevronRight size={18} strokeWidth={2} className="text-ink" aria-hidden />
+            </div>
+          </Link>
         </section>
 
         <section>
