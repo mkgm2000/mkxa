@@ -7,6 +7,7 @@ import { InlineSaveText } from '@/components/feedback/InlineSaveText';
 import { SegmentedDayWeekMonth, type Range } from '@/components/controls/SegmentedDayWeekMonth';
 import { AddExpenseSheet } from '@/components/expenses/AddExpenseSheet';
 import { ExpenseList } from '@/components/expenses/ExpenseList';
+import { ExpensesDashboard } from '@/components/expenses/ExpensesDashboard';
 import { useExpenses } from '@/lib/hooks/use-expenses';
 import { formatEuros } from '@/lib/expenses';
 import { todayISO, startOfWeekISO } from '@/lib/date';
@@ -61,6 +62,8 @@ export default function ExpensesPage() {
       </header>
 
       <InlineSaveText />
+
+      <ExpensesDashboard />
 
       <SegmentedDayWeekMonth value={range} onChange={setRange} />
 
