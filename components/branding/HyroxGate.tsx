@@ -1,14 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Check } from 'lucide-react';
 import { HyroxCountdown } from './HyroxCountdown';
 import { useAthlete } from '@/lib/athlete-context';
 import { todayISO } from '@/lib/date';
 
+const PAGE_BG = '#f0eee9';
+
 // Bumped from v1 → v2 to force the reminder to reappear after a UX
 // reset. Bump again any time we redesign the popup.
-const STORAGE_KEY = 'mkxa.hyrox.seen.v3';
+const STORAGE_KEY = 'mkxa.hyrox.seen.v4';
 
 // Daily HYROX countdown reminder, gated like MoodGate. Each athlete
 // sees it once per calendar day on first entry; tapping "Vamos"
@@ -72,27 +73,27 @@ export function HyroxReminderScreen({
   eyebrow?: string;
   ctaLabel?: string;
 }) {
-  return (
-    <main
-      className="flex min-h-dvh w-full flex-col bg-[#f0eee9]"
-      style={{
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 24px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
-      }}
-    >
-      <header className="flex items-start justify-between px-5">
-        <span aria-hidden className="h-10 w-10" />
-        <button
-          type="button"
-          onClick={onDismiss}
-          aria-label="Cerrar"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-action transition-transform duration-150 active:scale-95"
-        >
-          <Check size={18} strokeWidth={1.75} className="text-ink" aria-hidden />
-        </button>
-      </header>
+  // Pin the html safe-area chrome to the same cream so iOS doesn't
+  // paint a strip behind the status bar. Restore on unmount.
+  useEffect(() => {
+    const root = document.documentElement;
+    const prev = root.style.getPropertyValue('--mood-bg');
+    root.style.setProperty('--mood-bg', PAGE_BG);
+    return () => {
+      if (prev) root.style.setProperty('--mood-bg', prev);
+      else root.style.removeProperty('--mood-bg');
+    };
+  }, []);
 
-      <section className="flex flex-1 flex-col items-center justify-center gap-8 px-6 text-center">
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col overflow-hidden"
+      style={{ backgroundColor: PAGE_BG }}
+    >
+      <section
+        className="flex flex-1 flex-col items-center justify-center gap-8 px-6 text-center"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 32px)' }}
+      >
         <div className="flex flex-col items-center gap-2">
           <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-ink-muted">
             {eyebrow}
@@ -103,16 +104,21 @@ export function HyroxReminderScreen({
         </div>
 
         <HyroxCountdown hideHeader />
+      </section>
 
+      <footer
+        className="flex items-center justify-center px-6"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)', paddingTop: 16 }}
+      >
         <button
           type="button"
           onClick={onDismiss}
-          className="rounded-full bg-ink px-7 py-3 text-[13px] font-extrabold uppercase tracking-[0.18em] text-white active:scale-95"
+          className="rounded-full bg-ink px-8 py-3.5 text-[13px] font-extrabold uppercase tracking-[0.18em] text-white shadow-card active:scale-95"
         >
           {ctaLabel}
         </button>
-      </section>
-    </main>
+      </footer>
+    </div>
   );
 }
 
