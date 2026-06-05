@@ -8,7 +8,7 @@ import { todayISO } from '@/lib/date';
 
 // Bumped from v1 → v2 to force the reminder to reappear after a UX
 // reset. Bump again any time we redesign the popup.
-const STORAGE_KEY = 'mkxa.hyrox.seen.v2';
+const STORAGE_KEY = 'mkxa.hyrox.seen.v3';
 
 // Daily HYROX countdown reminder, gated like MoodGate. Each athlete
 // sees it once per calendar day on first entry; tapping "Vamos"
@@ -63,7 +63,15 @@ export function HyroxGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function ReminderScreen({ onDismiss }: { onDismiss: () => void }) {
+export function HyroxReminderScreen({
+  onDismiss,
+  eyebrow = 'recordatorio diario',
+  ctaLabel = 'Vamos',
+}: {
+  onDismiss: () => void;
+  eyebrow?: string;
+  ctaLabel?: string;
+}) {
   return (
     <main
       className="flex min-h-dvh w-full flex-col bg-[#f0eee9]"
@@ -77,7 +85,7 @@ function ReminderScreen({ onDismiss }: { onDismiss: () => void }) {
         <button
           type="button"
           onClick={onDismiss}
-          aria-label="Entendido"
+          aria-label="Cerrar"
           className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-action transition-transform duration-150 active:scale-95"
         >
           <Check size={18} strokeWidth={1.75} className="text-ink" aria-hidden />
@@ -87,7 +95,7 @@ function ReminderScreen({ onDismiss }: { onDismiss: () => void }) {
       <section className="flex flex-1 flex-col items-center justify-center gap-8 px-6 text-center">
         <div className="flex flex-col items-center gap-2">
           <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-ink-muted">
-            recordatorio diario
+            {eyebrow}
           </p>
           <h1 className="font-sans text-[36px] font-extrabold leading-[1.05] tracking-tightest text-ink">
             Camino a HYROX
@@ -101,9 +109,13 @@ function ReminderScreen({ onDismiss }: { onDismiss: () => void }) {
           onClick={onDismiss}
           className="rounded-full bg-ink px-7 py-3 text-[13px] font-extrabold uppercase tracking-[0.18em] text-white active:scale-95"
         >
-          Vamos
+          {ctaLabel}
         </button>
       </section>
     </main>
   );
+}
+
+function ReminderScreen({ onDismiss }: { onDismiss: () => void }) {
+  return <HyroxReminderScreen onDismiss={onDismiss} />;
 }

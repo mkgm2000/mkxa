@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { RotateCcw, ExternalLink, ChevronRight, Download, Sparkles } from 'lucide-react';
+import { RotateCcw, ExternalLink, ChevronRight, Download, Sparkles, Timer } from 'lucide-react';
 import { MoodGradientBg } from '@/components/mood/MoodGradientBg';
 import { AthleteCard } from '@/components/profile/AthleteCard';
 import { MoodHistoryChart } from '@/components/profile/MoodHistoryChart';
 import { ExploreCards } from '@/components/profile/ExploreCards';
+import { HyroxReminderScreen } from '@/components/branding/HyroxGate';
+import { getHyroxDaysLeft } from '@/components/branding/HyroxCountdown';
 import { useAthlete } from '@/lib/athlete-context';
 import { useMoodToday } from '@/lib/hooks/use-mood-today';
 import { supabaseClient } from '@/lib/supabase/client';
@@ -18,6 +20,7 @@ export default function ProfilePage() {
   const { mood } = useMoodToday(athlete);
   const [resetting, setResetting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [showHyrox, setShowHyrox] = useState(false);
 
   function exportData() {
     // The server route streams the workbook as an attachment, so a plain
@@ -46,6 +49,18 @@ export default function ProfilePage() {
   }
 
   if (!athlete) return null;
+
+  if (showHyrox) {
+    return (
+      <HyroxReminderScreen
+        eyebrow="cuenta atrás"
+        ctaLabel="Volver"
+        onDismiss={() => setShowHyrox(false)}
+      />
+    );
+  }
+
+  const daysLeft = getHyroxDaysLeft();
 
   return (
     <MoodGradientBg mood={mood?.mood ?? 'love'}>
@@ -86,6 +101,30 @@ export default function ProfilePage() {
               <ChevronRight size={18} strokeWidth={2} className="text-ink" aria-hidden />
             </div>
           </Link>
+        </section>
+
+        <section className="mx-5">
+          <h2 className="mb-2 px-1 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">Cuenta atrás</h2>
+          <button
+            type="button"
+            onClick={() => setShowHyrox(true)}
+            className="flex w-full items-center gap-4 overflow-hidden rounded-card bg-white p-5 text-left shadow-card transition-transform duration-150 active:scale-[0.99]"
+          >
+            <div
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
+              style={{ backgroundColor: 'rgba(255,106,42,0.15)' }}
+            >
+              <Timer size={26} strokeWidth={1.8} style={{ color: '#ff6a2a' }} aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted">HYROX · 16 oct 2026</p>
+              <p className="font-sans text-[22px] font-extrabold leading-tight tracking-tightest text-ink">
+                <span className="tabular-nums" style={{ color: '#ff6a2a' }}>{daysLeft}</span> días left
+              </p>
+              <p className="mt-1 text-[12px] font-medium text-ink-muted">Ver progreso completo</p>
+            </div>
+            <ChevronRight size={18} strokeWidth={2} className="text-ink-muted" aria-hidden />
+          </button>
         </section>
 
         <section>
