@@ -181,59 +181,52 @@ export function useTraining(athlete: Athlete | null, week: number) {
       setByKey((prev) => ({ ...prev, [dayKey]: merged }));
       saveState.getState().set('saving');
       const nowIso = new Date().toISOString();
-      const { error } = await supabaseClient().from('registros').upsert(
-        {
-          athlete,
-          week,
-          day_key: dayKey,
-          completed: merged.completed,
-          rpe: merged.rpe,
-          notes: merged.notes,
-          custom_blocks: merged.customBlocks,
-          extra_blocks: merged.extraBlocks,
-          week_note: merged.weekNote,
-          assigned_dow: merged.assignedDow,
-          updated_at: nowIso,
-        },
-        { onConflict: 'athlete,week,day_key' }
-      );
+
+      // Surgical upsert: only the columns this patch actually touches
+      // travel to the DB. Anything else (notes, week_note, assigned_dow
+      // written by the OTHER athlete since we loaded) is left alone.
+      // Previously a "completed" toggle would re-send the whole local
+      // state and clobber a freshly-written shared note from the other
+      // device.
+      const has = (k: keyof TrainingLog) => Object.prototype.hasOwnProperty.call(patch, k);
+      const ownRow: Record<string, unknown> = {
+        athlete,
+        week,
+        day_key: dayKey,
+        updated_at: nowIso,
+      };
+      if (has('completed'))    ownRow.completed     = merged.completed;
+      if (has('rpe'))          ownRow.rpe           = merged.rpe;
+      if (has('notes'))        ownRow.notes         = merged.notes;
+      if (has('customBlocks')) ownRow.custom_blocks = merged.customBlocks;
+      if (has('extraBlocks'))  ownRow.extra_blocks  = merged.extraBlocks;
+      if (has('weekNote'))     ownRow.week_note     = merged.weekNote;
+      if (has('assignedDow'))  ownRow.assigned_dow  = merged.assignedDow;
+
+      const { error } = await supabaseClient()
+        .from('registros')
+        .upsert(ownRow, { onConflict: 'athlete,week,day_key' });
       if (error) {
         saveState.getState().set('error', error.message);
         return;
       }
 
-      // If notes is part of the patch, mirror it to the OTHER athlete so the
-      // textual feedback stays shared. Only notes + updated_at travel; other
-      // per-athlete columns are left untouched on update (defaults on insert).
-      if (Object.prototype.hasOwnProperty.call(patch, 'notes')) {
-        const { error: mirrorErr } = await supabaseClient().from('registros').upsert(
-          {
-            athlete: OTHER[athlete],
-            week,
-            day_key: dayKey,
-            notes: merged.notes,
-            updated_at: nowIso,
-          },
-          { onConflict: 'athlete,week,day_key' }
-        );
-        if (mirrorErr) {
-          saveState.getState().set('error', mirrorErr.message);
-          return;
-        }
-      }
-
-      // Mirror assigned_dow to the OTHER athlete — schedule is shared.
-      if (Object.prototype.hasOwnProperty.call(patch, 'assignedDow')) {
-        const { error: mirrorErr } = await supabaseClient().from('registros').upsert(
-          {
-            athlete: OTHER[athlete],
-            week,
-            day_key: dayKey,
-            assigned_dow: merged.assignedDow,
-            updated_at: nowIso,
-          },
-          { onConflict: 'athlete,week,day_key' }
-        );
+      // Mirror SHARED fields to the OTHER athlete. Built the same way —
+      // only fields actually in the patch travel.
+      const mirrorRow: Record<string, unknown> = {
+        athlete: OTHER[athlete],
+        week,
+        day_key: dayKey,
+        updated_at: nowIso,
+      };
+      let mirrorHasShared = false;
+      if (has('notes'))       { mirrorRow.notes        = merged.notes;       mirrorHasShared = true; }
+      if (has('weekNote'))    { mirrorRow.week_note    = merged.weekNote;    mirrorHasShared = true; }
+      if (has('assignedDow')) { mirrorRow.assigned_dow = merged.assignedDow; mirrorHasShared = true; }
+      if (mirrorHasShared) {
+        const { error: mirrorErr } = await supabaseClient()
+          .from('registros')
+          .upsert(mirrorRow, { onConflict: 'athlete,week,day_key' });
         if (mirrorErr) {
           saveState.getState().set('error', mirrorErr.message);
           return;
@@ -251,23 +244,17 @@ export function useTraining(athlete: Athlete | null, week: number) {
       if (!athlete) return;
       saveState.getState().set('saving');
       const nowIso = new Date().toISOString();
-      const rows = dayKeys.map((dk) => {
-        const cur = byKey[dk] ?? EMPTY;
-        return {
-          athlete,
-          week,
-          day_key: dk,
-          completed: cur.completed,
-          rpe: cur.rpe,
-          notes: cur.notes,
-          custom_blocks: cur.customBlocks,
-          extra_blocks: cur.extraBlocks,
-          week_note: note,
-          updated_at: nowIso,
-        };
-      });
-      // Mirror week_note to the OTHER athlete's rows. Only week_note +
-      // updated_at travel so per-athlete columns stay untouched on update.
+
+      // Surgical upsert — only week_note + updated_at travel for BOTH
+      // athletes. Per-athlete columns (completed/rpe/etc.) stay where
+      // they are.
+      const ownRows = dayKeys.map((dk) => ({
+        athlete,
+        week,
+        day_key: dk,
+        week_note: note,
+        updated_at: nowIso,
+      }));
       const mirrorRows = dayKeys.map((dk) => ({
         athlete: OTHER[athlete],
         week,
@@ -275,6 +262,7 @@ export function useTraining(athlete: Athlete | null, week: number) {
         week_note: note,
         updated_at: nowIso,
       }));
+
       setByKey((prev) => {
         const next: TrainingByKey = { ...prev };
         for (const dk of dayKeys) {
@@ -284,7 +272,7 @@ export function useTraining(athlete: Athlete | null, week: number) {
       });
       const { error } = await supabaseClient()
         .from('registros')
-        .upsert(rows, { onConflict: 'athlete,week,day_key' });
+        .upsert(ownRows, { onConflict: 'athlete,week,day_key' });
       if (error) {
         saveState.getState().set('error', error.message);
         return;
@@ -298,7 +286,7 @@ export function useTraining(athlete: Athlete | null, week: number) {
       }
       saveState.getState().set('saved');
     },
-    [athlete, week, byKey]
+    [athlete, week]
   );
 
   return { loading, byKey, setLog, setWeekNote };
