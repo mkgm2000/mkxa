@@ -25,6 +25,9 @@ export interface TrainingLog {
   customBlocks: Record<number, CustomBlock>;
   extraBlocks: ExtraBlock[];
   weekNote: string | null;
+  // 0=Mon..6=Sun. Shared between athletes (they train together) — see
+  // setAssignedDow below. NULL means follow DEFAULT_DOW from plan-hyrox.
+  assignedDow: number | null;
 }
 
 export type TrainingByKey = Partial<Record<DayKey, TrainingLog>>;
@@ -39,6 +42,7 @@ interface RegistrosRow {
   custom_blocks: Record<number, CustomBlock> | null;
   extra_blocks: ExtraBlock[] | null;
   week_note: string | null;
+  assigned_dow: number | null;
   updated_at: string | null;
 }
 
@@ -49,6 +53,7 @@ const EMPTY: TrainingLog = {
   customBlocks: {},
   extraBlocks: [],
   weekNote: null,
+  assignedDow: null,
 };
 
 const OTHER: Record<Athlete, Athlete> = { MK: 'Xabi', Xabi: 'MK' };
@@ -65,7 +70,7 @@ export function useTraining(athlete: Athlete | null, week: number) {
       // Fetch the current athlete's rows first (preserves legacy query shape).
       const mineRes = await supabaseClient()
         .from('registros')
-        .select('athlete,week,day_key,completed,rpe,notes,custom_blocks,extra_blocks,week_note,updated_at')
+        .select('athlete,week,day_key,completed,rpe,notes,custom_blocks,extra_blocks,week_note,assigned_dow,updated_at')
         .eq('athlete', athlete)
         .eq('week', week);
       if (cancelled) return;
@@ -77,7 +82,7 @@ export function useTraining(athlete: Athlete | null, week: number) {
       // Fetch the OTHER athlete's rows so we can merge shared notes/week_note.
       const otherRes = await supabaseClient()
         .from('registros')
-        .select('athlete,week,day_key,completed,rpe,notes,custom_blocks,extra_blocks,week_note,updated_at')
+        .select('athlete,week,day_key,completed,rpe,notes,custom_blocks,extra_blocks,week_note,assigned_dow,updated_at')
         .eq('athlete', OTHER[athlete])
         .eq('week', week);
       if (cancelled) return;
@@ -137,6 +142,21 @@ export function useTraining(athlete: Athlete | null, week: number) {
           notes = other!.notes;
         }
 
+        // assigned_dow is shared — latest non-null across the two
+        // athletes wins so a tap by either of them moves the session.
+        let dow: number | null = null;
+        const mineDowTs = mine?.updated_at ?? '';
+        const otherDowTs = other?.updated_at ?? '';
+        const mineHasDow = mine && mine.assigned_dow != null;
+        const otherHasDow = other && other.assigned_dow != null;
+        if (mineHasDow && otherHasDow) {
+          dow = mineDowTs >= otherDowTs ? mine!.assigned_dow : other!.assigned_dow;
+        } else if (mineHasDow) {
+          dow = mine!.assigned_dow;
+        } else if (otherHasDow) {
+          dow = other!.assigned_dow;
+        }
+
         next[dk] = {
           completed: !!mine?.completed,
           rpe: mine?.rpe ?? null,
@@ -144,6 +164,7 @@ export function useTraining(athlete: Athlete | null, week: number) {
           customBlocks: mine?.custom_blocks ?? {},
           extraBlocks: mine?.extra_blocks ?? [],
           weekNote: sharedWeekNote,
+          assignedDow: dow,
         };
       });
       setByKey(next);
@@ -171,6 +192,7 @@ export function useTraining(athlete: Athlete | null, week: number) {
           custom_blocks: merged.customBlocks,
           extra_blocks: merged.extraBlocks,
           week_note: merged.weekNote,
+          assigned_dow: merged.assignedDow,
           updated_at: nowIso,
         },
         { onConflict: 'athlete,week,day_key' }
@@ -190,6 +212,24 @@ export function useTraining(athlete: Athlete | null, week: number) {
             week,
             day_key: dayKey,
             notes: merged.notes,
+            updated_at: nowIso,
+          },
+          { onConflict: 'athlete,week,day_key' }
+        );
+        if (mirrorErr) {
+          saveState.getState().set('error', mirrorErr.message);
+          return;
+        }
+      }
+
+      // Mirror assigned_dow to the OTHER athlete — schedule is shared.
+      if (Object.prototype.hasOwnProperty.call(patch, 'assignedDow')) {
+        const { error: mirrorErr } = await supabaseClient().from('registros').upsert(
+          {
+            athlete: OTHER[athlete],
+            week,
+            day_key: dayKey,
+            assigned_dow: merged.assignedDow,
             updated_at: nowIso,
           },
           { onConflict: 'athlete,week,day_key' }

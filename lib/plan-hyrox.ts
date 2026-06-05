@@ -279,3 +279,36 @@ export function getWeekDates(week: number, locale = 'es-ES'): string {
     d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
   return `${f(s)} – ${f(e)}`;
 }
+
+// 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun. Matches the
+// `assigned_dow` column on `registros`.
+export const DOW_LABELS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] as const;
+export const DOW_LABELS_LONG = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] as const;
+
+// Default placement when the user hasn't moved a session yet —
+// classic 4-day split: Lun / Mié / Vie / Sáb.
+export const DEFAULT_DOW: Record<DayKey, number> = {
+  D1: 0,
+  D2: 2,
+  D3: 4,
+  D4: 5,
+};
+
+/** Monday of the given training week (UTC midnight). */
+export function getWeekStartDate(week: number): Date {
+  const s = new Date(START_DATE);
+  s.setUTCDate(s.getUTCDate() + (week - 1) * 7);
+  return s;
+}
+
+/** Date of the given weekday within the given training week. */
+export function getDateForDow(week: number, dow: number): Date {
+  const s = getWeekStartDate(week);
+  s.setUTCDate(s.getUTCDate() + dow);
+  return s;
+}
+
+/** Short weekday + day-of-month label, e.g. "Lun 8". */
+export function dowDateLabel(week: number, dow: number): string {
+  return `${DOW_LABELS[dow]} ${getDateForDow(week, dow).getUTCDate()}`;
+}

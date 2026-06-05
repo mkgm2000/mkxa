@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, ChevronRight, PenLine } from 'lucide-react';
+import { Calendar, Check, ChevronRight, PenLine } from 'lucide-react';
 import clsx from 'clsx';
 import type { Day } from '@/lib/plan-hyrox';
 import type { TrainingLog, CustomBlock, ExtraBlock } from '@/lib/hooks/use-training';
@@ -12,6 +12,10 @@ import { AddBlockRow } from './AddBlockRow';
 export interface SessionCardProps {
   day: Day;
   log: TrainingLog | null;
+  /** Label like "Lun 8" derived from week + assignedDow. Optional so
+   *  callers that don't yet handle scheduling can omit the chip. */
+  dayLabel?: string | null;
+  onPickDay?: () => void;
   onCheck: () => void;
   onUncheck: () => void;
   onOpenRpe: () => void;
@@ -24,7 +28,7 @@ export interface SessionCardProps {
 const DONE_COLOR = '#77d6bd';
 
 export function SessionCard({
-  day, log, onCheck, onUncheck, onOpenRpe,
+  day, log, dayLabel, onPickDay, onCheck, onUncheck, onOpenRpe,
   onSaveBlock, onAddExtra, onSaveExtra, onDeleteExtra,
 }: SessionCardProps) {
   const [open, setOpen] = useState(false);
@@ -71,6 +75,17 @@ export function SessionCard({
               <span className="inline-flex h-5 items-center rounded-full bg-ink px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-white">
                 {day.key}
               </span>
+              {dayLabel && onPickDay && (
+                <button
+                  type="button"
+                  aria-label={`Mover ${day.key} a otro día (ahora ${dayLabel})`}
+                  onClick={(e) => { e.stopPropagation(); onPickDay(); }}
+                  className="inline-flex h-5 items-center gap-1 rounded-full border border-ink-soft bg-white px-2 text-[10px] font-bold text-ink active:scale-95"
+                >
+                  <Calendar size={10} strokeWidth={1.75} aria-hidden />
+                  {dayLabel}
+                </button>
+              )}
               {completed && (
                 <span
                   className="inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold"

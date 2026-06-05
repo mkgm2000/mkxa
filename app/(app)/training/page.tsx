@@ -10,12 +10,20 @@ import { WeekHeader } from '@/components/training/WeekHeader';
 import { SessionCard } from '@/components/training/SessionCard';
 import { RpeModal } from '@/components/training/RpeModal';
 import { AdaptiveBanner } from '@/components/training/AdaptiveBanner';
+import { DayAssignmentSheet } from '@/components/training/DayAssignmentSheet';
 import { useAthlete } from '@/lib/athlete-context';
 import { useTraining } from '@/lib/hooks/use-training';
 import { useConfirmedWeek } from '@/lib/hooks/use-confirmed-week';
 import { useMaxAvailableWeek } from '@/lib/hooks/use-available-weeks';
 import { useAdaptiveSuggestion } from '@/lib/hooks/use-adaptive-suggestion';
-import { getCurrentWeek, getDays, getWeekDates, MAX_WEEK } from '@/lib/plan-hyrox';
+import {
+  DEFAULT_DOW,
+  dowDateLabel,
+  getCurrentWeek,
+  getDays,
+  getWeekDates,
+  MAX_WEEK,
+} from '@/lib/plan-hyrox';
 import type { Day, DayKey } from '@/lib/plan-hyrox';
 
 export default function TrainingPage() {
@@ -94,7 +102,30 @@ export default function TrainingPage() {
       : undefined;
     return getDays(effectiveWeek, athlete, override);
   }, [effectiveWeek, athlete, confirmedPlan]);
-  const done = useMemo(() => days.filter((d) => byKey[d.key]?.completed).length, [days, byKey]);
+  // Effective weekday per session: persisted assignedDow first, then
+  // DEFAULT_DOW from plan-hyrox. Keeps the list ordered Mon→Sun even
+  // after the user shuffles sessions around.
+  const dowByKey = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const d of days) {
+      m[d.key] = byKey[d.key]?.assignedDow ?? DEFAULT_DOW[d.key];
+    }
+    return m;
+  }, [days, byKey]);
+
+  const orderedDays = useMemo(() => {
+    return [...days].sort((a, b) => {
+      const da = dowByKey[a.key];
+      const db = dowByKey[b.key];
+      if (da !== db) return da - db;
+      return a.key.localeCompare(b.key);
+    });
+  }, [days, dowByKey]);
+
+  const done = useMemo(() => orderedDays.filter((d) => byKey[d.key]?.completed).length, [orderedDays, byKey]);
+
+  // Day-assignment sheet state
+  const [pickDayKey, setPickDayKey] = useState<DayKey | null>(null);
 
   // RPE modal state
   const [modalDay, setModalDay] = useState<DayKey | null>(null);
@@ -182,11 +213,13 @@ export default function TrainingPage() {
       )}
 
       <section className="flex flex-col gap-3 px-5">
-        {days.map((day) => (
+        {orderedDays.map((day) => (
           <SessionCard
             key={day.key}
             day={day}
             log={byKey[day.key] ?? null}
+            dayLabel={dowDateLabel(effectiveWeek, dowByKey[day.key])}
+            onPickDay={() => setPickDayKey(day.key)}
             onCheck={() => {
               void setLog(day.key, { completed: true });
               setTimeout(() => openModal(day.key), 50);
@@ -274,6 +307,43 @@ export default function TrainingPage() {
         onSave={saveModal}
         onClose={closeModal}
       />
+
+      {(() => {
+        if (!pickDayKey) return null;
+        const target = orderedDays.find((d) => d.key === pickDayKey);
+        if (!target) return null;
+        // Map of dow → DayKey of whatever's already there. Excludes
+        // the target itself so the sheet only highlights collisions.
+        const taken: Record<number, DayKey> = {};
+        for (const d of orderedDays) {
+          if (d.key === pickDayKey) continue;
+          taken[dowByKey[d.key]] = d.key;
+        }
+        const currentDow = dowByKey[pickDayKey];
+        return (
+          <DayAssignmentSheet
+            open
+            week={effectiveWeek}
+            dayKey={pickDayKey}
+            title={target.title}
+            currentDow={currentDow}
+            taken={taken}
+            onClose={() => setPickDayKey(null)}
+            onPick={(dow) => {
+              if (dow === currentDow) { setPickDayKey(null); return; }
+              // Swap: if another session occupies the picked slot, send
+              // it back to where the chosen one came from. Otherwise
+              // just move the chosen one.
+              const occupied = taken[dow];
+              if (occupied) {
+                void setLog(occupied, { assignedDow: currentDow });
+              }
+              void setLog(pickDayKey, { assignedDow: dow });
+              setPickDayKey(null);
+            }}
+          />
+        );
+      })()}
     </main>
   );
 }
