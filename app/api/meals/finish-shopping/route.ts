@@ -36,6 +36,7 @@ type ExistingPantryRow = Pick<
   PantryItem,
   | 'id'
   | 'name'
+  | 'aisle'
   | 'image_url'
   | 'off_barcode'
   | 'kcal_100g'
@@ -119,7 +120,7 @@ export async function POST(req: Request) {
     // user-edited values (only fill nulls).
     const { data: existingRows, error: ePantryRead } = await supa
       .from('pantry_items')
-      .select('id, name, image_url, off_barcode, kcal_100g, protein_100g, carbs_100g, fat_100g, macros_source')
+      .select('id, name, aisle, image_url, off_barcode, kcal_100g, protein_100g, carbs_100g, fat_100g, macros_source')
       .in('name', wantedNames);
     if (ePantryRead) return NextResponse.json({ error: `pantry read failed: ${ePantryRead.message}` }, { status: 500 });
     const existingByName = new Map<string, ExistingPantryRow>();
@@ -134,9 +135,13 @@ export async function POST(req: Request) {
         const cur = existing?.[k] ?? null;
         return cur !== null && cur !== undefined ? cur : src[k] ?? null;
       };
+      // Aisle: respect a user-reclassified pantry value. Only fall back
+      // to the shopping-row aisle for brand-new pantry rows. Previously
+      // every shopping-list finish blew away manual reclassifications.
+      const aisle = (existing?.aisle ?? src.aisle) as Aisle;
       return {
         name,
-        aisle: src.aisle as Aisle,
+        aisle,
         in_stock: true,
         image_url: pickNullable('image_url'),
         off_barcode: pickNullable('off_barcode'),
