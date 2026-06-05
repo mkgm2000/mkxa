@@ -6,7 +6,9 @@ import { HyroxCountdown } from './HyroxCountdown';
 import { useAthlete } from '@/lib/athlete-context';
 import { todayISO } from '@/lib/date';
 
-const STORAGE_KEY = 'mkxa.hyrox.seen';
+// Bumped from v1 → v2 to force the reminder to reappear after a UX
+// reset. Bump again any time we redesign the popup.
+const STORAGE_KEY = 'mkxa.hyrox.seen.v2';
 
 // Daily HYROX countdown reminder, gated like MoodGate. Each athlete
 // sees it once per calendar day on first entry; tapping "Vamos"
