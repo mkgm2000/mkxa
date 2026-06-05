@@ -225,7 +225,12 @@ export default function TrainingPage() {
               setTimeout(() => openModal(day.key), 50);
             }}
             onUncheck={() => {
-              void setLog(day.key, { completed: false, rpe: null, notes: null });
+              // Only flip the completed flag — keep RPE and sensaciones
+              // in the row. Notes are shared between athletes, so wiping
+              // them on uncheck used to destroy the other athlete's
+              // sensations too. RPE stays because if you re-check the
+              // day it's almost always the same one.
+              void setLog(day.key, { completed: false });
             }}
             onOpenRpe={() => openModal(day.key)}
             onSaveBlock={(i, b) => {
