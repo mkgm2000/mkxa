@@ -20,6 +20,7 @@ export interface SessionCardProps {
   onUncheck: () => void;
   onOpenRpe: () => void;
   onSaveBlock: (index: number, block: BlockData) => void;
+  onDeleteBaseBlock?: (index: number) => void;
   onAddExtra: (block: BlockData) => void;
   onSaveExtra: (index: number, block: BlockData) => void;
   onDeleteExtra: (index: number) => void;
@@ -29,14 +30,16 @@ const DONE_COLOR = '#77d6bd';
 
 export function SessionCard({
   day, log, dayLabel, onPickDay, onCheck, onUncheck, onOpenRpe,
-  onSaveBlock, onAddExtra, onSaveExtra, onDeleteExtra,
+  onSaveBlock, onDeleteBaseBlock, onAddExtra, onSaveExtra, onDeleteExtra,
 }: SessionCardProps) {
   const [open, setOpen] = useState(false);
   const completed = !!log?.completed;
   const rpe = log?.rpe ?? null;
   const customBlocks: Record<number, CustomBlock> = log?.customBlocks ?? {};
   const extras: ExtraBlock[] = log?.extraBlocks ?? [];
-  const blocksCount = day.blocks.length + extras.length;
+  const deletedSet = new Set<number>(log?.deletedBlocks ?? []);
+  const visibleCount = day.blocks.reduce((n, _, i) => n + (deletedSet.has(i) ? 0 : 1), 0);
+  const blocksCount = visibleCount + extras.length;
 
   return (
     <article
@@ -126,6 +129,7 @@ export function SessionCard({
         <div className="border-t border-ink-soft px-4 pt-3 pb-4">
           <div className="flex flex-col gap-2">
             {day.blocks.map((b, i) => {
+              if (deletedSet.has(i)) return null;
               const cb = customBlocks[i] ?? {};
               const merged: BlockData = {
                 name: cb.name ?? b.name,
@@ -137,6 +141,7 @@ export function SessionCard({
                   key={`b-${i}`}
                   block={merged}
                   onSave={(next) => onSaveBlock(i, next)}
+                  onDelete={onDeleteBaseBlock ? () => onDeleteBaseBlock(i) : undefined}
                 />
               );
             })}

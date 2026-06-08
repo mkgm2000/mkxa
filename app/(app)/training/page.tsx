@@ -237,6 +237,11 @@ export default function TrainingPage() {
               const cur = byKey[day.key]?.customBlocks ?? {};
               void setLog(day.key, { customBlocks: { ...cur, [i]: b } });
             }}
+            onDeleteBaseBlock={(i) => {
+              const cur = byKey[day.key]?.deletedBlocks ?? [];
+              if (cur.includes(i)) return;
+              void setLog(day.key, { deletedBlocks: [...cur, i].sort((a, b) => a - b) });
+            }}
             onAddExtra={(b) => {
               const cur = byKey[day.key]?.extraBlocks ?? [];
               void setLog(day.key, { extraBlocks: [...cur, b] });

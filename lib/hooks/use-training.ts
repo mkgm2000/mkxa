@@ -28,6 +28,10 @@ export interface TrainingLog {
   // 0=Mon..6=Sun. Shared between athletes (they train together) — see
   // setAssignedDow below. NULL means follow DEFAULT_DOW from plan-hyrox.
   assignedDow: number | null;
+  // Indices into the base plan's day.blocks that the user removed. Shared
+  // between athletes (mirror-write on change). Empty = render base plan
+  // unchanged.
+  deletedBlocks: number[];
 }
 
 export type TrainingByKey = Partial<Record<DayKey, TrainingLog>>;
@@ -43,6 +47,7 @@ interface RegistrosRow {
   extra_blocks: ExtraBlock[] | null;
   week_note: string | null;
   assigned_dow: number | null;
+  deleted_blocks: number[] | null;
   updated_at: string | null;
 }
 
@@ -54,6 +59,7 @@ const EMPTY: TrainingLog = {
   extraBlocks: [],
   weekNote: null,
   assignedDow: null,
+  deletedBlocks: [],
 };
 
 const OTHER: Record<Athlete, Athlete> = { MK: 'Xabi', Xabi: 'MK' };
@@ -70,7 +76,7 @@ export function useTraining(athlete: Athlete | null, week: number) {
       // Fetch the current athlete's rows first (preserves legacy query shape).
       const mineRes = await supabaseClient()
         .from('registros')
-        .select('athlete,week,day_key,completed,rpe,notes,custom_blocks,extra_blocks,week_note,assigned_dow,updated_at')
+        .select('athlete,week,day_key,completed,rpe,notes,custom_blocks,extra_blocks,week_note,assigned_dow,deleted_blocks,updated_at')
         .eq('athlete', athlete)
         .eq('week', week);
       if (cancelled) return;
@@ -82,7 +88,7 @@ export function useTraining(athlete: Athlete | null, week: number) {
       // Fetch the OTHER athlete's rows so we can merge shared notes/week_note.
       const otherRes = await supabaseClient()
         .from('registros')
-        .select('athlete,week,day_key,completed,rpe,notes,custom_blocks,extra_blocks,week_note,assigned_dow,updated_at')
+        .select('athlete,week,day_key,completed,rpe,notes,custom_blocks,extra_blocks,week_note,assigned_dow,deleted_blocks,updated_at')
         .eq('athlete', OTHER[athlete])
         .eq('week', week);
       if (cancelled) return;
@@ -157,6 +163,12 @@ export function useTraining(athlete: Athlete | null, week: number) {
           dow = other!.assigned_dow;
         }
 
+        // deleted_blocks shared — union of both athletes' removed indices
+        // so a block removed on either device disappears for both.
+        const mineDel = (mine?.deleted_blocks ?? []) as number[];
+        const otherDel = (other?.deleted_blocks ?? []) as number[];
+        const deletedBlocks = Array.from(new Set([...mineDel, ...otherDel])).sort((a, b) => a - b);
+
         next[dk] = {
           completed: !!mine?.completed,
           rpe: mine?.rpe ?? null,
@@ -165,6 +177,7 @@ export function useTraining(athlete: Athlete | null, week: number) {
           extraBlocks: mine?.extra_blocks ?? [],
           weekNote: sharedWeekNote,
           assignedDow: dow,
+          deletedBlocks,
         };
       });
       setByKey(next);
@@ -195,13 +208,14 @@ export function useTraining(athlete: Athlete | null, week: number) {
         day_key: dayKey,
         updated_at: nowIso,
       };
-      if (has('completed'))    ownRow.completed     = merged.completed;
-      if (has('rpe'))          ownRow.rpe           = merged.rpe;
-      if (has('notes'))        ownRow.notes         = merged.notes;
-      if (has('customBlocks')) ownRow.custom_blocks = merged.customBlocks;
-      if (has('extraBlocks'))  ownRow.extra_blocks  = merged.extraBlocks;
-      if (has('weekNote'))     ownRow.week_note     = merged.weekNote;
-      if (has('assignedDow'))  ownRow.assigned_dow  = merged.assignedDow;
+      if (has('completed'))     ownRow.completed      = merged.completed;
+      if (has('rpe'))           ownRow.rpe            = merged.rpe;
+      if (has('notes'))         ownRow.notes          = merged.notes;
+      if (has('customBlocks'))  ownRow.custom_blocks  = merged.customBlocks;
+      if (has('extraBlocks'))   ownRow.extra_blocks   = merged.extraBlocks;
+      if (has('weekNote'))      ownRow.week_note      = merged.weekNote;
+      if (has('assignedDow'))   ownRow.assigned_dow   = merged.assignedDow;
+      if (has('deletedBlocks')) ownRow.deleted_blocks = merged.deletedBlocks;
 
       const { error } = await supabaseClient()
         .from('registros')
@@ -220,9 +234,10 @@ export function useTraining(athlete: Athlete | null, week: number) {
         updated_at: nowIso,
       };
       let mirrorHasShared = false;
-      if (has('notes'))       { mirrorRow.notes        = merged.notes;       mirrorHasShared = true; }
-      if (has('weekNote'))    { mirrorRow.week_note    = merged.weekNote;    mirrorHasShared = true; }
-      if (has('assignedDow')) { mirrorRow.assigned_dow = merged.assignedDow; mirrorHasShared = true; }
+      if (has('notes'))         { mirrorRow.notes          = merged.notes;         mirrorHasShared = true; }
+      if (has('weekNote'))      { mirrorRow.week_note      = merged.weekNote;      mirrorHasShared = true; }
+      if (has('assignedDow'))   { mirrorRow.assigned_dow   = merged.assignedDow;   mirrorHasShared = true; }
+      if (has('deletedBlocks')) { mirrorRow.deleted_blocks = merged.deletedBlocks; mirrorHasShared = true; }
       if (mirrorHasShared) {
         const { error: mirrorErr } = await supabaseClient()
           .from('registros')
