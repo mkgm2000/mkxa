@@ -63,14 +63,14 @@ export async function POST(req: Request) {
   // SHARED generation: fetch BOTH athletes' registros (S1 → target-1).
   // The prompt processes both — the output covers both plans.
   const { data: mkRows } = await supa.from('registros')
-    .select('week,day_key,completed,rpe,notes,week_note')
+    .select('week,day_key,completed,rpe,notes,week_note,custom_blocks,extra_blocks,deleted_blocks')
     .eq('athlete', 'MK')
     .gte('week', 1)
     .lte('week', target_week - 1)
     .order('week', { ascending: true })
     .order('day_key', { ascending: true });
   const { data: xabiRows } = await supa.from('registros')
-    .select('week,day_key,completed,rpe,notes,week_note')
+    .select('week,day_key,completed,rpe,notes,week_note,custom_blocks,extra_blocks,deleted_blocks')
     .eq('athlete', 'Xabi')
     .gte('week', 1)
     .lte('week', target_week - 1)

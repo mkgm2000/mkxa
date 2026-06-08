@@ -135,6 +135,7 @@ export function SessionCard({
                 name: cb.name ?? b.name,
                 sets: cb.sets ?? b.sets,
                 load: cb.load ?? b.load,
+                rest: cb.rest ?? b.rest,
               };
               return (
                 <BlockRow

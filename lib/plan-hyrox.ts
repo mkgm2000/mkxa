@@ -4,6 +4,9 @@ export interface Block {
   name: string;
   sets: string;
   load: string;
+  /** Optional rest override coming from generated/confirmed plan. UI
+   *  falls back to lib/training-rest getRest() heuristic when absent. */
+  rest?: string;
 }
 
 export type DayKey = 'D1' | 'D2' | 'D3' | 'D4';

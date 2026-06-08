@@ -7,6 +7,7 @@ export const GeneratedBlock = z.object({
   name: z.string().min(1).max(800),
   sets: z.string().min(1).max(600),
   load: z.string().min(1).max(2000),
+  rest: z.string().min(1).max(120).optional(),
 });
 
 export const GeneratedDay = z.object({

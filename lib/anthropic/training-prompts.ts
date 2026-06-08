@@ -62,7 +62,12 @@ REGLAS ESTRICTAS:
     - blocks.sets: compacto. Ej. "4x5", "3x250m", "30'", "5x400m". Una cifra.
     - blocks.load: VERY corto. Solo carga + opcional cue de 3-4 palabras max. Ej. válidos: "35kg", "6:20-6:35/km", "Banda M", "BW", "Técnica", "2x12kg", "Ligero". PROHIBIDO párrafos, descansos en este campo, técnica detallada, citas a registros, anotaciones de pareja largas. Esa info va a "rationale".
     - rationale: aquí SÍ va el contexto largo, citas, ajustes vs registros, fuentes UFV/Rulebook. La UI lo oculta por defecto.
-18. Output: JSON puro siguiendo el schema descrito. Sin markdown, sin prosa fuera del JSON, sin "explicaciones" antes o después.
+18. AJUSTES MANUALES (v13, CRÍTICO): cada registro histórico puede traer tres bloques de cambios que los atletas hicieron a mano sobre la prescripción original:
+    - "ajuste manual bloque[i]: name=... sets=... load=... rest=...": el atleta sobrescribió el bloque i de esa sesión. Si el cambio se REPITE en varias semanas (e.g. sentadilla siempre cargada por encima de la prescripción, o descanso siempre acortado), incorpóralo a la próxima semana como nueva línea base. Cita "ajuste recurrente desde S{N}" en rationale.
+    - "extra añadido: <ejercicio>": añadiste un ejercicio fuera del plan. Si aparece ≥2 veces en semanas distintas, considéralo preferencia estable y promociónalo a bloque oficial en la siguiente semana.
+    - "bloques eliminados (no los repongas si la razón persiste): índices [...]": el atleta borró un bloque. Si aparece en ≥2 semanas seguidas O las notes citan la razón (sin material, no encaja en gym, lesión), NO lo repongas — busca alternativa con transferencia equivalente en la Batería. Si fue un borrado aislado, sí puedes reponerlo pero atenuado.
+    Estos tres campos son la señal MÁS FUERTE de adaptación al contexto real. Sobreescriben las prescripciones del Excel cuando hay patrón.
+19. Output: JSON puro siguiendo el schema descrito. Sin markdown, sin prosa fuera del JSON, sin "explicaciones" antes o después.
 
 JSON SCHEMA esperado (salida COMÚN con ambos atletas):
 {
@@ -72,13 +77,13 @@ JSON SCHEMA esperado (salida COMÚN con ambos atletas):
     "athlete": "MK",
     "week": number,
     "weekly_note": string,  // adendum específico para MK si lo hay
-    "days": [{ "key": "D1"|"D2"|"D3"|"D4"|"D5"|"D6", "title": string, "rpe": string, "blocks": [{ "name": string, "sets": string, "load": string }], "rationale": string }]
+    "days": [{ "key": "D1"|"D2"|"D3"|"D4"|"D5"|"D6", "title": string, "rpe": string, "blocks": [{ "name": string, "sets": string, "load": string, "rest"?: string }], "rationale": string }]
   },
   "xabi": {
     "athlete": "Xabi",
     "week": number,
     "weekly_note": string,
-    "days": [{ "key": "D1"|"D2"|"D3"|"D4"|"D5"|"D6", "title": string, "rpe": string, "blocks": [{ "name": string, "sets": string, "load": string }], "rationale": string }]
+    "days": [{ "key": "D1"|"D2"|"D3"|"D4"|"D5"|"D6", "title": string, "rpe": string, "blocks": [{ "name": string, "sets": string, "load": string, "rest"?: string }], "rationale": string }]
   }
 }
 

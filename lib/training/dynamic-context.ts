@@ -8,6 +8,13 @@ export interface RecentRegistro {
   rpe: number | null;
   notes: string | null;
   week_note: string | null;
+  /** Per-block manual overrides keyed by index into plan_jsonb.days[k].blocks.
+   *  Tracks WHAT the athletes actually loaded/rested vs the prescription. */
+  custom_blocks: Record<string, { name?: string; sets?: string; load?: string; rest?: string }> | null;
+  /** Extras added by the athletes on top of the prescribed plan. */
+  extra_blocks: Array<{ name: string; sets: string; load: string; rest?: string }> | null;
+  /** Indices of prescribed blocks the athletes removed. */
+  deleted_blocks: number[] | null;
 }
 
 export interface BuildDynamicContextArgs {
@@ -62,6 +69,35 @@ function formatRegistros(registros: RecentRegistro[]): string {
         ? `  "${collapseNotes(r.notes)}"`
         : '';
       lines.push(`  ${r.day_key} [${statusLabel}]${notesPart}`);
+
+      // Manual overrides — what the athletes actually did vs prescription.
+      // Surfacing these is the only way Claude learns from user adjustments
+      // when generating the next week.
+      const cb = r.custom_blocks ?? {};
+      const cbKeys = Object.keys(cb).sort((a, b) => Number(a) - Number(b));
+      for (const k of cbKeys) {
+        const entry = cb[k];
+        if (!entry) continue;
+        const parts = [
+          entry.name ? `name="${entry.name}"` : null,
+          entry.sets ? `sets="${entry.sets}"` : null,
+          entry.load ? `load="${entry.load}"` : null,
+          entry.rest ? `rest="${entry.rest}"` : null,
+        ].filter(Boolean);
+        if (parts.length === 0) continue;
+        lines.push(`    · ajuste manual bloque[${k}]: ${parts.join(' ')}`);
+      }
+
+      const extras = r.extra_blocks ?? [];
+      for (const e of extras) {
+        const restPart = e.rest ? ` · rest="${e.rest}"` : '';
+        lines.push(`    · extra añadido: "${e.name}" ${e.sets} @ ${e.load}${restPart}`);
+      }
+
+      const dels = r.deleted_blocks ?? [];
+      if (dels.length > 0) {
+        lines.push(`    · bloques eliminados (no los repongas si la razón persiste): índices [${dels.join(', ')}]`);
+      }
     }
   }
 

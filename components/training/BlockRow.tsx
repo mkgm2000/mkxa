@@ -8,6 +8,8 @@ export interface BlockData {
   name: string;
   sets: string;
   load: string;
+  /** Custom rest. Empty/undefined → fall back to getRest() heuristic on display. */
+  rest?: string;
 }
 
 export interface BlockRowProps {
@@ -27,6 +29,7 @@ export function BlockRow({ block, extra, onSave, onDelete }: BlockRowProps) {
   const [name, setName] = useState(block.name);
   const [sets, setSets] = useState(block.sets);
   const [load, setLoad] = useState(block.load);
+  const [rest, setRest] = useState(block.rest ?? '');
   const [confirming, setConfirming] = useState(false);
   const [pressing, setPressing] = useState(false);
   const pressTimer = useRef<number | null>(null);
@@ -50,8 +53,8 @@ export function BlockRow({ block, extra, onSave, onDelete }: BlockRowProps) {
   };
   useEffect(() => () => cancelPress(), []);
 
-  const rest = getRest(block.name, block.sets);
-  const loadLine = [block.load, rest && rest !== '—' ? `Descanso: ${rest}` : null]
+  const effectiveRest = block.rest && block.rest.trim() ? block.rest.trim() : getRest(block.name, block.sets);
+  const loadLine = [block.load, effectiveRest && effectiveRest !== '—' ? `Descanso: ${effectiveRest}` : null]
     .filter(Boolean)
     .join(' · ');
 
@@ -90,6 +93,18 @@ export function BlockRow({ block, extra, onSave, onDelete }: BlockRowProps) {
             />
           </label>
         </div>
+        <label className="mt-2 block">
+          <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-muted">
+            Descanso
+          </span>
+          <input
+            aria-label="Descanso"
+            value={rest}
+            onChange={(e) => setRest(e.target.value)}
+            placeholder={getRest(block.name, block.sets)}
+            className="mt-1 w-full rounded-md border border-ink-soft bg-white px-2.5 py-2 text-[13px] text-ink focus:border-ink focus:outline-none"
+          />
+        </label>
         <div className="mt-3 flex gap-2">
           {onDelete && (
             <button
@@ -104,7 +119,7 @@ export function BlockRow({ block, extra, onSave, onDelete }: BlockRowProps) {
             type="button"
             onClick={() => {
               setEditing(false);
-              setName(block.name); setSets(block.sets); setLoad(block.load);
+              setName(block.name); setSets(block.sets); setLoad(block.load); setRest(block.rest ?? '');
             }}
             className="flex-1 rounded-md border border-ink-soft px-3 py-2 text-[12px] font-semibold text-ink-muted transition-transform duration-150 active:scale-95"
           >
@@ -114,7 +129,12 @@ export function BlockRow({ block, extra, onSave, onDelete }: BlockRowProps) {
             type="button"
             onClick={() => {
               setEditing(false);
-              onSave({ name: name.trim(), sets: sets.trim(), load: load.trim() });
+              onSave({
+                name: name.trim(),
+                sets: sets.trim(),
+                load: load.trim(),
+                rest: rest.trim() || undefined,
+              });
             }}
             className="flex-1 rounded-md border border-ink bg-ink px-3 py-2 text-[12px] font-semibold text-white transition-transform duration-150 active:scale-95"
           >

@@ -10,12 +10,15 @@ export interface CustomBlock {
   name?: string;
   sets?: string;
   load?: string;
+  /** Per-block rest override. NULL/undefined falls back to getRest() heuristic. */
+  rest?: string;
 }
 
 export interface ExtraBlock {
   name: string;
   sets: string;
   load: string;
+  rest?: string;
 }
 
 export interface TrainingLog {
