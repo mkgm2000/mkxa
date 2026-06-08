@@ -67,6 +67,30 @@ const EMPTY: TrainingLog = {
 
 const OTHER: Record<Athlete, Athlete> = { MK: 'Xabi', Xabi: 'MK' };
 
+// Strip undefined values from a row payload so PostgREST never has to
+// see them. JSON.stringify already drops them — this just makes intent
+// explicit and prevents any defensive code from sending `null` by accident.
+function clean<T extends Record<string, unknown>>(row: T): T {
+  const out: Record<string, unknown> = {};
+  for (const k in row) if (row[k] !== undefined) out[k] = row[k];
+  return out as T;
+}
+
+// Format Supabase / PostgREST error → short string the UI can show.
+// PostgrestError shape is { message, code, details, hint }. message
+// alone is sometimes empty for constraint violations; combine the
+// useful parts.
+function fmtErr(e: { message?: string; code?: string; details?: string; hint?: string } | Error): string {
+  if (e instanceof Error) return e.message || String(e);
+  const parts = [
+    e.message,
+    e.code ? `(${e.code})` : null,
+    e.details,
+    e.hint ? `· ${e.hint}` : null,
+  ].filter(Boolean);
+  return parts.join(' ') || 'unknown';
+}
+
 export function useTraining(athlete: Athlete | null, week: number) {
   const [byKey, setByKey] = useState<TrainingByKey>({});
   const [loading, setLoading] = useState<boolean>(athlete !== null);
@@ -222,9 +246,9 @@ export function useTraining(athlete: Athlete | null, week: number) {
 
       const { error } = await supabaseClient()
         .from('registros')
-        .upsert(ownRow, { onConflict: 'athlete,week,day_key' });
+        .upsert(clean(ownRow), { onConflict: 'athlete,week,day_key' });
       if (error) {
-        saveState.getState().set('error', error.message);
+        saveState.getState().set('error', fmtErr(error));
         return;
       }
 
@@ -244,9 +268,9 @@ export function useTraining(athlete: Athlete | null, week: number) {
       if (mirrorHasShared) {
         const { error: mirrorErr } = await supabaseClient()
           .from('registros')
-          .upsert(mirrorRow, { onConflict: 'athlete,week,day_key' });
+          .upsert(clean(mirrorRow), { onConflict: 'athlete,week,day_key' });
         if (mirrorErr) {
-          saveState.getState().set('error', mirrorErr.message);
+          saveState.getState().set('error', fmtErr(mirrorErr));
           return;
         }
       }
@@ -292,14 +316,14 @@ export function useTraining(athlete: Athlete | null, week: number) {
         .from('registros')
         .upsert(ownRows, { onConflict: 'athlete,week,day_key' });
       if (error) {
-        saveState.getState().set('error', error.message);
+        saveState.getState().set('error', fmtErr(error));
         return;
       }
       const { error: mirrorErr } = await supabaseClient()
         .from('registros')
         .upsert(mirrorRows, { onConflict: 'athlete,week,day_key' });
       if (mirrorErr) {
-        saveState.getState().set('error', mirrorErr.message);
+        saveState.getState().set('error', fmtErr(mirrorErr));
         return;
       }
       saveState.getState().set('saved');

@@ -341,13 +341,9 @@ export default function TrainingPage() {
             onClose={() => setPickDayKey(null)}
             onPick={(dow) => {
               if (dow === currentDow) { setPickDayKey(null); return; }
-              // Swap: if another session occupies the picked slot, send
-              // it back to where the chosen one came from. Otherwise
-              // just move the chosen one.
-              const occupied = taken[dow];
-              if (occupied) {
-                void setLog(occupied, { assignedDow: currentDow });
-              }
+              // No swap. Multiple sessions on the same dow are allowed
+              // (e.g. doble entreno mismo día). The orderedDays sort
+              // tiebreaks by D-key so visually they stack in order.
               void setLog(pickDayKey, { assignedDow: dow });
               setPickDayKey(null);
             }}

@@ -64,7 +64,7 @@ export function DayAssignmentSheet({
         </div>
 
         <p className="mb-3 text-[12px] text-ink-muted">
-          Elige el día de la semana. Si otra sesión ya estaba ahí, se intercambian.
+          Elige el día de la semana. Puedes apilar dos sesiones el mismo día si entrenáis doble.
         </p>
 
         <ul className="flex flex-col gap-1.5">
@@ -98,7 +98,7 @@ export function DayAssignmentSheet({
                     </span>
                   ) : swap ? (
                     <span className="rounded-full bg-ink-soft/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-ink-muted">
-                      Intercambia {swap}
+                      Ya está {swap} · apila
                     </span>
                   ) : null}
                 </button>
