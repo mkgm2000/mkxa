@@ -15,6 +15,9 @@ export interface SessionCardProps {
   /** Label like "Lun 8" derived from week + assignedDow. Optional so
    *  callers that don't yet handle scheduling can omit the chip. */
   dayLabel?: string | null;
+  /** When true the chip renders with a "solo yo" accent — this athlete
+   *  has a personal-only day override apart from the partner. */
+  dayIsPersonal?: boolean;
   onPickDay?: () => void;
   onCheck: () => void;
   onUncheck: () => void;
@@ -29,7 +32,7 @@ export interface SessionCardProps {
 const DONE_COLOR = '#77d6bd';
 
 export function SessionCard({
-  day, log, dayLabel, onPickDay, onCheck, onUncheck, onOpenRpe,
+  day, log, dayLabel, dayIsPersonal, onPickDay, onCheck, onUncheck, onOpenRpe,
   onSaveBlock, onDeleteBaseBlock, onAddExtra, onSaveExtra, onDeleteExtra,
 }: SessionCardProps) {
   const [open, setOpen] = useState(false);
@@ -81,12 +84,17 @@ export function SessionCard({
               {dayLabel && onPickDay && (
                 <button
                   type="button"
-                  aria-label={`Mover ${day.key} a otro día (ahora ${dayLabel})`}
+                  aria-label={`Mover ${day.key} a otro día (ahora ${dayLabel}${dayIsPersonal ? ', solo tú' : ''})`}
                   onClick={(e) => { e.stopPropagation(); onPickDay(); }}
-                  className="inline-flex h-5 items-center gap-1 rounded-full border border-ink-soft bg-white px-2 text-[10px] font-bold text-ink active:scale-95"
+                  className={`inline-flex h-5 items-center gap-1 rounded-full px-2 text-[10px] font-bold active:scale-95 ${
+                    dayIsPersonal
+                      ? 'border border-ink bg-ink text-white'
+                      : 'border border-ink-soft bg-white text-ink'
+                  }`}
                 >
                   <Calendar size={10} strokeWidth={1.75} aria-hidden />
                   {dayLabel}
+                  {dayIsPersonal && <span aria-hidden>·yo</span>}
                 </button>
               )}
               {completed && (

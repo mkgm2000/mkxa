@@ -1,34 +1,52 @@
 'use client';
 
-import { useEffect } from 'react';
-import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { X, Users, User } from 'lucide-react';
 import { DOW_LABELS_LONG, getDateForDow } from '@/lib/plan-hyrox';
 import type { DayKey } from '@/lib/plan-hyrox';
+import type { Athlete } from '@/lib/athlete-context';
+
+type Scope = 'shared' | 'personal';
 
 interface DayAssignmentSheetProps {
   open: boolean;
   week: number;
   dayKey: DayKey;
   title: string;
+  /** The dow effectively rendered for this athlete (personal ?? shared). */
   currentDow: number;
-  /** Map of dow → DayKey already taken by another session this week, so
-   *  we can hint who's there and let the user confirm the swap. */
+  /** The shared dow (without this athlete's personal override). Shown so
+   *  the user knows what the partner sees. */
+  sharedDow: number;
+  /** True when this athlete already has a personal override. Lets the
+   *  sheet show "Volver a compartido" affordance. */
+  isPersonal: boolean;
+  /** Current viewer — labels copy ("Solo MK" / "Solo Xabi"). */
+  athlete: Athlete;
+  /** Map of dow → DayKey already taken by ANOTHER session this week for
+   *  this athlete. Used to hint "ya tienes D3 aquí · se apila". */
   taken: Record<number, DayKey>;
-  onPick: (dow: number) => void;
+  onPick: (dow: number, scope: Scope) => void;
+  /** Clear this athlete's personal override → fall back to shared. */
+  onClearPersonal: () => void;
   onClose: () => void;
 }
 
 const DOWS = [0, 1, 2, 3, 4, 5, 6];
 
 export function DayAssignmentSheet({
-  open, week, dayKey, title, currentDow, taken, onPick, onClose,
+  open, week, dayKey, title, currentDow, sharedDow, isPersonal, athlete,
+  taken, onPick, onClearPersonal, onClose,
 }: DayAssignmentSheetProps) {
+  const [scope, setScope] = useState<Scope>(isPersonal ? 'personal' : 'shared');
+
   useEffect(() => {
     if (!open) return;
+    setScope(isPersonal ? 'personal' : 'shared');
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+  }, [open, isPersonal, onClose]);
 
   if (!open) return null;
 
@@ -63,8 +81,44 @@ export function DayAssignmentSheet({
           </button>
         </div>
 
+        <div className="mb-3 flex gap-1.5 rounded-action bg-ink-soft/30 p-1">
+          <button
+            type="button"
+            onClick={() => setScope('shared')}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-action px-3 py-2 text-[12px] font-bold transition-colors ${
+              scope === 'shared' ? 'bg-ink text-white' : 'text-ink-muted'
+            }`}
+          >
+            <Users size={13} strokeWidth={1.75} aria-hidden />
+            Para ambos
+          </button>
+          <button
+            type="button"
+            onClick={() => setScope('personal')}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-action px-3 py-2 text-[12px] font-bold transition-colors ${
+              scope === 'personal' ? 'bg-ink text-white' : 'text-ink-muted'
+            }`}
+          >
+            <User size={13} strokeWidth={1.75} aria-hidden />
+            Solo {athlete}
+          </button>
+        </div>
         <p className="mb-3 text-[12px] text-ink-muted">
-          Elige el día de la semana. Puedes apilar dos sesiones el mismo día si entrenáis doble.
+          {scope === 'shared'
+            ? 'Cambia el día para los dos. Doble entreno mismo día: tap apila sin reemplazar.'
+            : `Cambia el día SOLO para ${athlete}. El otro atleta sigue con su día.`}
+          {isPersonal && scope === 'personal' && (
+            <>
+              {' · '}
+              <button
+                type="button"
+                onClick={() => { onClearPersonal(); onClose(); }}
+                className="underline decoration-dotted underline-offset-2 active:opacity-60"
+              >
+                Volver a compartido (día {sharedDow})
+              </button>
+            </>
+          )}
         </p>
 
         <ul className="flex flex-col gap-1.5">
@@ -77,7 +131,7 @@ export function DayAssignmentSheet({
               <li key={dow}>
                 <button
                   type="button"
-                  onClick={() => onPick(dow)}
+                  onClick={() => onPick(dow, scope)}
                   className={`flex w-full items-center justify-between gap-3 rounded-action border px-4 py-3 text-left transition-colors ${
                     isCurrent
                       ? 'border-ink bg-ink text-white'

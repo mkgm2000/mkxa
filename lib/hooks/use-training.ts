@@ -28,9 +28,13 @@ export interface TrainingLog {
   customBlocks: Record<number, CustomBlock>;
   extraBlocks: ExtraBlock[];
   weekNote: string | null;
-  // 0=Mon..6=Sun. Shared between athletes (they train together) — see
-  // setAssignedDow below. NULL means follow DEFAULT_DOW from plan-hyrox.
+  // 0=Mon..6=Sun. SHARED between athletes (mirrored on write) — they
+  // normally train together. NULL means follow DEFAULT_DOW.
   assignedDow: number | null;
+  // Per-athlete override that does NOT mirror. When set, this athlete
+  // does the session on a different weekday than the partner. NULL =
+  // follow the shared assignedDow.
+  assignedDowPersonal: number | null;
   // Indices into the base plan's day.blocks that the user removed. Shared
   // between athletes (mirror-write on change). Empty = render base plan
   // unchanged.
@@ -50,6 +54,7 @@ interface RegistrosRow {
   extra_blocks: ExtraBlock[] | null;
   week_note: string | null;
   assigned_dow: number | null;
+  assigned_dow_personal: number | null;
   deleted_blocks: number[] | null;
   updated_at: string | null;
 }
@@ -62,6 +67,7 @@ const EMPTY: TrainingLog = {
   extraBlocks: [],
   weekNote: null,
   assignedDow: null,
+  assignedDowPersonal: null,
   deletedBlocks: [],
 };
 
@@ -103,7 +109,7 @@ export function useTraining(athlete: Athlete | null, week: number) {
       // Fetch the current athlete's rows first (preserves legacy query shape).
       const mineRes = await supabaseClient()
         .from('registros')
-        .select('athlete,week,day_key,completed,rpe,notes,custom_blocks,extra_blocks,week_note,assigned_dow,deleted_blocks,updated_at')
+        .select('athlete,week,day_key,completed,rpe,notes,custom_blocks,extra_blocks,week_note,assigned_dow,assigned_dow_personal,deleted_blocks,updated_at')
         .eq('athlete', athlete)
         .eq('week', week);
       if (cancelled) return;
@@ -115,7 +121,7 @@ export function useTraining(athlete: Athlete | null, week: number) {
       // Fetch the OTHER athlete's rows so we can merge shared notes/week_note.
       const otherRes = await supabaseClient()
         .from('registros')
-        .select('athlete,week,day_key,completed,rpe,notes,custom_blocks,extra_blocks,week_note,assigned_dow,deleted_blocks,updated_at')
+        .select('athlete,week,day_key,completed,rpe,notes,custom_blocks,extra_blocks,week_note,assigned_dow,assigned_dow_personal,deleted_blocks,updated_at')
         .eq('athlete', OTHER[athlete])
         .eq('week', week);
       if (cancelled) return;
@@ -204,6 +210,9 @@ export function useTraining(athlete: Athlete | null, week: number) {
           extraBlocks: mine?.extra_blocks ?? [],
           weekNote: sharedWeekNote,
           assignedDow: dow,
+          // Personal override is read straight from the current athlete's
+          // row — never the partner's. That's the whole point.
+          assignedDowPersonal: mine?.assigned_dow_personal ?? null,
           deletedBlocks,
         };
       });
@@ -235,14 +244,15 @@ export function useTraining(athlete: Athlete | null, week: number) {
         day_key: dayKey,
         updated_at: nowIso,
       };
-      if (has('completed'))     ownRow.completed      = merged.completed;
-      if (has('rpe'))           ownRow.rpe            = merged.rpe;
-      if (has('notes'))         ownRow.notes          = merged.notes;
-      if (has('customBlocks'))  ownRow.custom_blocks  = merged.customBlocks;
-      if (has('extraBlocks'))   ownRow.extra_blocks   = merged.extraBlocks;
-      if (has('weekNote'))      ownRow.week_note      = merged.weekNote;
-      if (has('assignedDow'))   ownRow.assigned_dow   = merged.assignedDow;
-      if (has('deletedBlocks')) ownRow.deleted_blocks = merged.deletedBlocks;
+      if (has('completed'))           ownRow.completed             = merged.completed;
+      if (has('rpe'))                 ownRow.rpe                   = merged.rpe;
+      if (has('notes'))               ownRow.notes                 = merged.notes;
+      if (has('customBlocks'))        ownRow.custom_blocks         = merged.customBlocks;
+      if (has('extraBlocks'))         ownRow.extra_blocks          = merged.extraBlocks;
+      if (has('weekNote'))            ownRow.week_note             = merged.weekNote;
+      if (has('assignedDow'))         ownRow.assigned_dow          = merged.assignedDow;
+      if (has('assignedDowPersonal')) ownRow.assigned_dow_personal = merged.assignedDowPersonal;
+      if (has('deletedBlocks'))       ownRow.deleted_blocks        = merged.deletedBlocks;
 
       const { error } = await supabaseClient()
         .from('registros')

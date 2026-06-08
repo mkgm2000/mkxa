@@ -102,14 +102,28 @@ export default function TrainingPage() {
       : undefined;
     return getDays(effectiveWeek, athlete, override);
   }, [effectiveWeek, athlete, confirmedPlan]);
-  // Effective weekday per session: persisted assignedDow first, then
-  // DEFAULT_DOW from plan-hyrox. Keeps the list ordered Mon→Sun even
-  // after the user shuffles sessions around.
+  // Effective weekday per session for THIS athlete:
+  //   personal override > shared > DEFAULT_DOW from plan-hyrox.
+  // `dowSharedByKey` tracks the shared value too, so the picker can
+  // tell when a session is on a personal day apart from the partner.
   const dowByKey = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const d of days) {
+      const log = byKey[d.key];
+      m[d.key] = log?.assignedDowPersonal ?? log?.assignedDow ?? DEFAULT_DOW[d.key];
+    }
+    return m;
+  }, [days, byKey]);
+  const dowSharedByKey = useMemo(() => {
     const m: Record<string, number> = {};
     for (const d of days) {
       m[d.key] = byKey[d.key]?.assignedDow ?? DEFAULT_DOW[d.key];
     }
+    return m;
+  }, [days, byKey]);
+  const isPersonalByKey = useMemo(() => {
+    const m: Record<string, boolean> = {};
+    for (const d of days) m[d.key] = byKey[d.key]?.assignedDowPersonal != null;
     return m;
   }, [days, byKey]);
 
@@ -219,6 +233,7 @@ export default function TrainingPage() {
             day={day}
             log={byKey[day.key] ?? null}
             dayLabel={dowDateLabel(effectiveWeek, dowByKey[day.key])}
+            dayIsPersonal={isPersonalByKey[day.key]}
             onPickDay={() => setPickDayKey(day.key)}
             onCheck={() => {
               void setLog(day.key, { completed: true });
@@ -322,14 +337,14 @@ export default function TrainingPage() {
         if (!pickDayKey) return null;
         const target = orderedDays.find((d) => d.key === pickDayKey);
         if (!target) return null;
-        // Map of dow → DayKey of whatever's already there. Excludes
-        // the target itself so the sheet only highlights collisions.
         const taken: Record<number, DayKey> = {};
         for (const d of orderedDays) {
           if (d.key === pickDayKey) continue;
           taken[dowByKey[d.key]] = d.key;
         }
         const currentDow = dowByKey[pickDayKey];
+        const sharedDow = dowSharedByKey[pickDayKey];
+        const isPersonal = isPersonalByKey[pickDayKey];
         return (
           <DayAssignmentSheet
             open
@@ -337,14 +352,32 @@ export default function TrainingPage() {
             dayKey={pickDayKey}
             title={target.title}
             currentDow={currentDow}
+            sharedDow={sharedDow}
+            isPersonal={isPersonal}
+            athlete={athlete}
             taken={taken}
             onClose={() => setPickDayKey(null)}
-            onPick={(dow) => {
-              if (dow === currentDow) { setPickDayKey(null); return; }
-              // No swap. Multiple sessions on the same dow are allowed
-              // (e.g. doble entreno mismo día). The orderedDays sort
-              // tiebreaks by D-key so visually they stack in order.
-              void setLog(pickDayKey, { assignedDow: dow });
+            onClearPersonal={() => {
+              void setLog(pickDayKey, { assignedDowPersonal: null });
+            }}
+            onPick={(dow, scope) => {
+              if (dow === currentDow && scope === (isPersonal ? 'personal' : 'shared')) {
+                setPickDayKey(null);
+                return;
+              }
+              if (scope === 'shared') {
+                // Move both athletes' day. setLog with assignedDow mirrors
+                // to partner. Clear THIS athlete's personal override so the
+                // shared value takes effect immediately.
+                void setLog(pickDayKey, {
+                  assignedDow: dow,
+                  assignedDowPersonal: null,
+                });
+              } else {
+                // Only this athlete's day moves. Personal override doesn't
+                // mirror — partner keeps the shared value.
+                void setLog(pickDayKey, { assignedDowPersonal: dow });
+              }
               setPickDayKey(null);
             }}
           />
