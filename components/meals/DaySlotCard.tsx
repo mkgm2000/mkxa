@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { Plus, Hourglass, X, Play, Flame, Utensils } from 'lucide-react';
 import type { MealDay, MealPlanRow, MealSlot } from '@/lib/meals/recipes';
@@ -13,11 +15,20 @@ interface DaySlotCardProps {
   onClear: (day: MealDay, slot: MealSlot) => void;
   onTogglePrepared?: (day: MealDay, slot: MealSlot, value: boolean) => void;
   onToggleEaten?: (day: MealDay, slot: MealSlot, value: boolean) => void;
+  /** When true, tapping a slot with a recipe opens the picker (edit mode);
+   *  the card wiggles to signal the mode. */
+  editMode?: boolean;
+  /** Fired after a ~500ms press-and-hold on a slot with a recipe. */
+  onLongPress?: () => void;
+  /** Index used to alternate wiggle direction. */
+  wobbleIdx?: number;
 }
 
 const SLOT_LABELS: Record<MealSlot, string> = {
   breakfast: 'Desayuno', lunch: 'Comida', dinner: 'Cena', snack: 'Snack', dessert: 'Postres',
 };
+
+const LONG_PRESS_MS = 500;
 
 export function DaySlotCard({
   day,
@@ -27,8 +38,30 @@ export function DaySlotCard({
   onClear,
   onTogglePrepared,
   onToggleEaten,
+  editMode = false,
+  onLongPress,
+  wobbleIdx = 0,
 }: DaySlotCardProps) {
+  const router = useRouter();
   const recipe = row?.recipe ?? null;
+
+  // Long-press handling — same pattern as PantryItemRow.
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longFired = useRef(false);
+
+  function clearTimer() {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+  }
+  function handlePointerDown() {
+    if (!onLongPress || !recipe) return;
+    longFired.current = false;
+    clearTimer();
+    timer.current = setTimeout(() => {
+      longFired.current = true;
+      onLongPress();
+    }, LONG_PRESS_MS);
+  }
+  function handlePointerEnd() { clearTimer(); }
 
   if (!recipe) {
     return (
@@ -49,21 +82,51 @@ export function DaySlotCard({
 
   const prepared = row?.prepared === true;
   const eaten = row?.eaten === true;
+  const thumb = recipe.image_url ?? recipe.thumbnail_url ?? null;
+
+  function handleMainClick() {
+    if (longFired.current) { longFired.current = false; return; }
+    if (editMode) {
+      onPick(day, slot);
+    } else {
+      router.push(`/meals/recipes/${recipe!.id}`);
+    }
+  }
 
   return (
-    <div className="relative rounded-card bg-white p-3 shadow-card">
+    <div
+      className={clsx(
+        'relative rounded-card bg-white p-3 shadow-card',
+        editMode && (wobbleIdx % 2 === 0 ? 'animate-wobble-l' : 'animate-wobble-r'),
+      )}
+      style={editMode ? { animationDelay: `${(wobbleIdx % 4) * 70}ms` } : undefined}
+    >
       <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-ink-muted">
         {SLOT_LABELS[slot]}
       </p>
       <button
         type="button"
-        onClick={() => onPick(day, slot)}
-        aria-label={`Cambiar ${SLOT_LABELS[slot]}`}
+        onClick={handleMainClick}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerEnd}
+        onPointerLeave={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        onPointerMove={handlePointerEnd}
+        onContextMenu={(e) => {
+          if (onLongPress) { e.preventDefault(); onLongPress(); }
+        }}
+        aria-label={editMode ? `Cambiar ${SLOT_LABELS[slot]}` : `Ver ${recipe.title}`}
         className="flex w-full items-start gap-3 text-left"
       >
-        {recipe.image_url
+        {thumb
           // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={recipe.image_url} alt="" className="h-12 w-12 rounded-lg object-cover" />
+          ? <img
+              src={thumb}
+              alt=""
+              className="h-12 w-12 rounded-lg object-cover"
+              referrerPolicy="no-referrer"
+              loading="lazy"
+            />
           : <span className="h-12 w-12 rounded-lg bg-mood-happy-from" aria-hidden />}
         <span className="flex-1 min-w-0">
           <span className="block truncate text-[14px] font-bold text-ink">{recipe.title}</span>

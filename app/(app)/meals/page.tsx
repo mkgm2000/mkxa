@@ -79,6 +79,7 @@ export default function MealsHubPage() {
   const { items: pantryItems, toggleInStock, addItem: addPantry, editItem: editPantry, deleteItem: deletePantry } = usePantry();
 
   const [editingRecipes, setEditingRecipes] = useState(false);
+  const [editingWeek, setEditingWeek] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<Recipe | null>(null);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -225,6 +226,9 @@ export default function MealsHubPage() {
             onTogglePrepared={(day, slot, value) => { void setPrepared(day, slot, value); }}
             onToggleEaten={(day, slot, value) => { void setEaten(day, slot, value); }}
             onCookAll={() => cookAllToday()}
+            editMode={editingWeek}
+            onEnterEditMode={() => setEditingWeek(true)}
+            onExitEditMode={() => setEditingWeek(false)}
           />
           <FridgeSection
             plan={plan}

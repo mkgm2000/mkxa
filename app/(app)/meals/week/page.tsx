@@ -20,6 +20,7 @@ export default function WeekPlanPage() {
   const { plan, upsertSlot, clearSlot } = useMealPlan(weekStart);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [target, setTarget] = useState<{ day: MealDay; slot: MealSlot } | null>(null);
+  const [editingWeek, setEditingWeek] = useState(false);
 
   return (
     <main className="flex flex-col gap-4 px-1 pt-4 pb-6">
@@ -36,6 +37,9 @@ export default function WeekPlanPage() {
         plan={plan}
         onPick={(day, slot) => { setTarget({ day, slot }); setPickerOpen(true); }}
         onClear={async (day, slot) => { await clearSlot({ day, slot }); }}
+        editMode={editingWeek}
+        onEnterEditMode={() => setEditingWeek(true)}
+        onExitEditMode={() => setEditingWeek(false)}
       />
 
       <GenerateShoppingButton weekStart={weekStart} onGenerated={() => router.push('/meals/shopping')} />
