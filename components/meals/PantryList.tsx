@@ -11,7 +11,6 @@ import { type Aisle, type PantryItem, aisleOrder } from '@/lib/meals/recipes';
 
 interface PantryListProps {
   items: PantryItem[];
-  onToggle: (id: string) => void;
   onAdd?: (input: {
     name: string;
     aisle: Aisle;
@@ -29,7 +28,7 @@ interface PantryListProps {
   onDelete?: (id: string) => Promise<void> | void;
 }
 
-export function PantryList({ items, onToggle, onAdd, onEdit, onDelete }: PantryListProps) {
+export function PantryList({ items, onAdd, onEdit, onDelete }: PantryListProps) {
   const [actionItem, setActionItem] = useState<PantryItem | null>(null);
 
   const sections = useMemo(() => {
@@ -67,7 +66,6 @@ export function PantryList({ items, onToggle, onAdd, onEdit, onDelete }: PantryL
               <PantryItemRow
                 key={it.id}
                 item={it}
-                onToggle={onToggle}
                 onLongPress={onEdit && onDelete ? setActionItem : undefined}
               />
             ))}

@@ -76,7 +76,7 @@ export default function MealsHubPage() {
     cookAllToday,
   } = useMealPlan(weekStart);
   const { items: shoppingItems, toggleChecked, editItem: editShopping, deleteItem: deleteShopping, addManual, finish } = useShoppingList(weekStart);
-  const { items: pantryItems, toggleInStock, addItem: addPantry, editItem: editPantry, deleteItem: deletePantry } = usePantry();
+  const { items: pantryItems, addItem: addPantry, editItem: editPantry, deleteItem: deletePantry } = usePantry();
 
   const [editingRecipes, setEditingRecipes] = useState(false);
   const [editingWeek, setEditingWeek] = useState(false);
@@ -472,7 +472,7 @@ export default function MealsHubPage() {
       )}
 
       {tab === 'despensa' && (
-        <PantryList items={pantryItems} onToggle={toggleInStock} onAdd={addPantry} onEdit={editPantry} onDelete={deletePantry} />
+        <PantryList items={pantryItems} onAdd={addPantry} onEdit={editPantry} onDelete={deletePantry} />
       )}
 
       {tab === 'pases' && <MealPassesSection />}

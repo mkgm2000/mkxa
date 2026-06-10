@@ -8,7 +8,7 @@ import { AISLES, aisleLabel, type Aisle } from '@/lib/meals/recipes';
 import { usePantry } from '@/lib/hooks/use-pantry';
 
 export default function PantryPage() {
-  const { items, toggleInStock, addItem, editItem, deleteItem } = usePantry();
+  const { items, addItem, editItem, deleteItem } = usePantry();
   const [name, setName] = useState('');
   const [aisle, setAisle] = useState<Aisle>('despensa');
   const [units, setUnits] = useState<number | ''>('');
@@ -97,7 +97,7 @@ export default function PantryPage() {
         </div>
       )}
 
-      <PantryList items={items} onToggle={toggleInStock} onEdit={editItem} onDelete={deleteItem} />
+      <PantryList items={items} onEdit={editItem} onDelete={deleteItem} />
     </main>
   );
 }
