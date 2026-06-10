@@ -89,7 +89,9 @@ export function DaySlotCard({
     if (editMode) {
       onPick(day, slot);
     } else {
-      router.push(`/meals/recipes/${recipe!.id}`);
+      // Go to the cook view — has TikTok embed + ingredients + steps.
+      // The /recipes/[id] route is the image-gallery / management page.
+      router.push(`/meals/cook/${recipe!.id}`);
     }
   }
 
@@ -115,8 +117,15 @@ export function DaySlotCard({
         onContextMenu={(e) => {
           if (onLongPress) { e.preventDefault(); onLongPress(); }
         }}
+        onSelectCapture={(e) => e.preventDefault()}
         aria-label={editMode ? `Cambiar ${SLOT_LABELS[slot]}` : `Ver ${recipe.title}`}
-        className="flex w-full items-start gap-3 text-left"
+        style={{
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+        className="flex w-full items-start gap-3 text-left touch-manipulation"
       >
         {thumb
           // eslint-disable-next-line @next/next/no-img-element
