@@ -340,13 +340,18 @@ function PromoteSheet({
   onDone: () => void;
 }) {
   const [slot, setSlot] = useState<MealSlot>('lunch');
+  const [title, setTitle] = useState(item.title);
   const [saving, setSaving] = useState(false);
 
+  const trimmedTitle = title.trim();
+  const canSubmit = trimmedTitle.length > 0 && !saving;
+
   async function go() {
+    if (!trimmedTitle) return;
     setSaving(true);
     const res = await saveRecipe({
       recipe: {
-        title: item.title,
+        title: trimmedTitle,
         source_url: item.video_url,
         source_type: 'tiktok',
         image_url: null,
@@ -394,6 +399,26 @@ function PromoteSheet({
 
         <p className="mt-2 line-clamp-2 text-[13px] font-bold text-ink">{item.title}</p>
 
+        <label
+          htmlFor="promote-title"
+          className="mt-4 mb-2 block text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted"
+        >
+          Nombre de la receta
+        </label>
+        <input
+          id="promote-title"
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+          aria-required="true"
+          placeholder="Ej. Bowl de pollo y arroz"
+          className="w-full rounded-action border border-ink-soft bg-white px-3 py-2.5 text-[14px] outline-none focus:border-ink"
+        />
+        <p className="mt-1.5 text-[11px] text-ink-muted">
+          Dale un nombre claro — aparecerá en tu lista de recetas
+        </p>
+
         <p className="mt-4 mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">
           Tipo de comida
         </p>
@@ -430,7 +455,7 @@ function PromoteSheet({
           <button
             type="button"
             onClick={go}
-            disabled={saving}
+            disabled={!canSubmit}
             className="flex-1 rounded-action bg-ink py-3 text-[14px] font-bold text-white active:scale-95 disabled:opacity-40"
           >
             {saving ? 'Guardando…' : 'Pasar a recetas'}
