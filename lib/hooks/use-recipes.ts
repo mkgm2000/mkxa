@@ -193,6 +193,39 @@ export async function updateRecipe(
   return { ok: true };
 }
 
+// Replaces the full ingredient list for a recipe. Strategy is dumb but
+// safe: delete every row for `recipeId`, then re-insert the new set.
+// We don't try to diff because the edit sheet is the only writer here
+// and the lists are tiny — a clean swap is easier to reason about than
+// chasing per-row updates. Returns the first error we see, if any.
+export async function updateRecipeIngredients(
+  recipeId: string,
+  ingredients: Omit<RecipeIngredient, 'id' | 'recipe_id'>[],
+): Promise<{ ok: true } | { error: string }> {
+  const supa = supabaseClient();
+  saveState.getState().set('saving');
+  const { error: eDel } = await supa
+    .from('recipe_ingredients')
+    .delete()
+    .eq('recipe_id', recipeId);
+  if (eDel) { saveState.getState().set('error'); return { error: eDel.message }; }
+  if (ingredients.length > 0) {
+    const rows = ingredients.map((ing, idx) => ({
+      name: ing.name,
+      quantity: ing.quantity,
+      unit: ing.unit,
+      aisle: ing.aisle ?? 'otros',
+      optional: ing.optional ?? false,
+      recipe_id: recipeId,
+      position: ing.position ?? idx,
+    }));
+    const { error: eIns } = await supa.from('recipe_ingredients').insert(rows);
+    if (eIns) { saveState.getState().set('error'); return { error: eIns.message }; }
+  }
+  saveState.getState().set('saved');
+  return { ok: true };
+}
+
 // Lazy backfill helper used by the TikTok card: when an older recipe
 // has no thumbnail_url yet, the card calls this with the URL it just
 // resolved from oEmbed. Best-effort — failure is silent (the next
