@@ -254,6 +254,18 @@ export function getCurrentWeek(now: Date = new Date()): number {
   return Math.max(1, diff + 1);
 }
 
+/** Day index within the current training week. 0 = Monday, 6 = Sunday. */
+export function getDayInWeek(now: Date = new Date()): number {
+  const ms = now.getTime() - START_DATE.getTime();
+  const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+  return ((days % 7) + 7) % 7;
+}
+
+/** Days remaining in the current training week (NOT counting today). */
+export function getDaysRemainingInWeek(now: Date = new Date()): number {
+  return Math.max(0, 6 - getDayInWeek(now));
+}
+
 /** Days array for a given week + athlete, with safe fallback. */
 export function getDays(
   week: number,

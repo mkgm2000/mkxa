@@ -21,6 +21,7 @@ import {
   dowDateLabel,
   getCurrentWeek,
   getDays,
+  getDaysRemainingInWeek,
   getWeekDates,
   MAX_WEEK,
 } from '@/lib/plan-hyrox';
@@ -49,9 +50,12 @@ export default function TrainingPage() {
   }, []);
   const [userIntent, setUserIntent] = useState<number | null>(initialIntent);
 
-  // Derived week — re-evaluates on every render, so it auto-follows
-  // `maxAvailableWeek` until the user manually navigates or the URL pins.
-  const week = userIntent ?? Math.max(1, maxAvailableWeek);
+  // Derived week — defaults to the CURRENT calendar week of the macrociclo
+  // (capped at whatever's available in DB). Previously defaulted to the
+  // HIGHEST confirmed week, so a user who'd already confirmed S8 would
+  // land on S8 in mid-June instead of S6 (the week they're actually
+  // training). Manual nav still overrides via userIntent.
+  const week = userIntent ?? Math.min(currentWeek, Math.max(1, maxAvailableWeek));
 
   // If the user navigated to a week beyond what's now available, walk them
   // back to the latest. (Keeps `userIntent` itself null if they hadn't pinned.)
@@ -176,10 +180,11 @@ export default function TrainingPage() {
     return () => clearTimeout(t);
   }, [weekNoteDraft, athlete, byKey, days, setWeekNote]);
 
+  const daysRemaining = useMemo(() => getDaysRemainingInWeek(), []);
+
   if (!athlete) return null;
 
   const meta = `${getWeekDates(effectiveWeek)}`;
-  const todayBadge = effectiveWeek === currentWeek;
 
   return (
     <main className="flex flex-col gap-5 pt-2 pb-12">
@@ -191,11 +196,6 @@ export default function TrainingPage() {
           <h1 className="mt-1 font-sans text-[40px] font-extrabold leading-[1.02] tracking-tightest text-ink">
             Plan de entreno
           </h1>
-          {todayBadge && (
-            <p className="mt-2 text-[12px] text-ink-muted">
-              Semana actual en curso
-            </p>
-          )}
         </div>
         <HeaderActionButton
           icon={ChevronLeft}
@@ -216,6 +216,9 @@ export default function TrainingPage() {
         done={done}
         total={days.length}
         meta={meta}
+        currentWeek={currentWeek}
+        daysRemaining={daysRemaining}
+        onJumpToCurrent={() => setWeek(currentWeek)}
         onPrev={() => setWeek((w) => Math.max(1, (w ?? maxAvailableWeek) - 1))}
         onNext={() => setWeek((w) => Math.min(maxAvailableWeek, (w ?? maxAvailableWeek) + 1))}
       />
