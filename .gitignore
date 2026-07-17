@@ -54,3 +54,6 @@ supabase/.temp/
 /public/workbox-*.js.map
 /public/fallback-*.js
 /public/swe-worker-*.js
+
+# Local-only vendored exercise media (served from Supabase Storage in prod)
+public/exercise-media-dev/

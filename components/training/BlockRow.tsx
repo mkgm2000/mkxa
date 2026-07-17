@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { PenLine, Trash2 } from 'lucide-react';
 import { getRest } from '@/lib/training-rest';
+import { matchExerciseId } from '@/lib/training/exercise-map';
+import { thumbUrl } from '@/lib/training/exercise-media';
+import { ExerciseSheet } from './ExerciseSheet';
 
 export interface BlockData {
   name: string;
@@ -32,11 +35,20 @@ export function BlockRow({ block, extra, onSave, onDelete }: BlockRowProps) {
   const [rest, setRest] = useState(block.rest ?? '');
   const [confirming, setConfirming] = useState(false);
   const [pressing, setPressing] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [thumbFailed, setThumbFailed] = useState(false);
   const pressTimer = useRef<number | null>(null);
   const longPressFired = useRef(false);
 
+  const exerciseId = matchExerciseId(block.name);
+  const showThumb = !!exerciseId && !thumbFailed;
+
   const startPress = () => {
     if (!onDelete) return;
+    // Both touch and mouse handlers are bound; a tap on a touch device fires
+    // synthetic mouse events too. Bail if a timer is already pending so we
+    // never orphan one.
+    if (pressTimer.current != null) return;
     longPressFired.current = false;
     setPressing(true);
     pressTimer.current = window.setTimeout(() => {
@@ -147,47 +159,79 @@ export function BlockRow({ block, extra, onSave, onDelete }: BlockRowProps) {
 
   return (
     <div className="relative">
-      <button
-        type="button"
-        aria-label={`Editar ${block.name}`}
-        onClick={() => { if (!longPressFired.current) setEditing(true); }}
-        onTouchStart={startPress}
-        onTouchEnd={cancelPress}
-        onTouchCancel={cancelPress}
-        onTouchMove={cancelPress}
-        onMouseDown={startPress}
-        onMouseUp={cancelPress}
-        onMouseLeave={cancelPress}
-        className={`group flex w-full items-start gap-3 rounded-item bg-white p-3 text-left shadow-item transition-all duration-150 active:scale-[0.99] ${
+      <div
+        className={`group flex w-full items-stretch gap-3 rounded-item bg-white p-3 shadow-item transition-all duration-150 ${
           pressing ? 'scale-[0.97] bg-danger/5' : ''
         }`}
       >
-        <span
-          aria-hidden
-          className={`mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${extra ? 'bg-ink-muted' : 'bg-ink'}`}
-        />
-        <span className="flex-1 min-w-0">
-          <span className="flex items-baseline justify-between gap-2">
-            <span className="truncate text-[14px] font-semibold text-ink">{block.name}</span>
-            {block.sets && (
-              <span className="flex-shrink-0 text-[12px] font-medium text-ink-muted">
-                {block.sets}
-              </span>
+        {showThumb ? (
+          <button
+            type="button"
+            aria-label={`Ver ${block.name}`}
+            onClick={() => setSheetOpen(true)}
+            className="relative h-11 w-11 flex-shrink-0 self-center overflow-hidden rounded-lg bg-[#f3ecdd] transition-transform duration-150 active:scale-95"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={thumbUrl(exerciseId!)}
+              alt=""
+              loading="lazy"
+              onError={() => setThumbFailed(true)}
+              className="h-full w-full object-cover"
+            />
+          </button>
+        ) : (
+          <span
+            aria-hidden
+            className={`mt-1.5 h-1.5 w-1.5 flex-shrink-0 self-start rounded-full ${extra ? 'bg-ink-muted' : 'bg-ink'}`}
+          />
+        )}
+
+        <button
+          type="button"
+          aria-label={`Editar ${block.name}`}
+          onClick={() => { if (!longPressFired.current) setEditing(true); }}
+          onTouchStart={startPress}
+          onTouchEnd={cancelPress}
+          onTouchCancel={cancelPress}
+          onTouchMove={cancelPress}
+          onMouseDown={startPress}
+          onMouseUp={cancelPress}
+          onMouseLeave={cancelPress}
+          className="flex flex-1 min-w-0 items-start gap-3 text-left active:scale-[0.99]"
+        >
+          <span className="flex-1 min-w-0">
+            <span className="flex items-baseline justify-between gap-2">
+              <span className="truncate text-[14px] font-semibold text-ink">{block.name}</span>
+              {block.sets && (
+                <span className="flex-shrink-0 text-[12px] font-medium text-ink-muted">
+                  {block.sets}
+                </span>
+              )}
+            </span>
+            {loadLine && (
+              <span className="mt-0.5 block text-[11px] text-ink-muted">{loadLine}</span>
             )}
           </span>
-          {loadLine && (
-            <span className="mt-0.5 block text-[11px] text-ink-muted">{loadLine}</span>
-          )}
-        </span>
-        <PenLine size={14} strokeWidth={1.5} className="mt-1 flex-shrink-0 text-ink-muted opacity-0 group-hover:opacity-100" aria-hidden />
-      </button>
+          <PenLine size={14} strokeWidth={1.5} className="mt-1 flex-shrink-0 text-ink-muted opacity-0 group-hover:opacity-100" aria-hidden />
+        </button>
+      </div>
+
+      {sheetOpen && exerciseId && (
+        <ExerciseSheet
+          exerciseId={exerciseId}
+          blockName={block.name}
+          onClose={() => setSheetOpen(false)}
+        />
+      )}
 
       {confirming && onDelete && (
         <div
-          className="fixed inset-0 z-50 flex items-end bg-black/35"
+          className="fixed inset-0 z-50 flex items-end bg-ink/45"
           onClick={() => setConfirming(false)}
           role="dialog"
           aria-modal="true"
+          aria-label="Eliminar bloque"
         >
           <div
             className="w-full rounded-t-sheet bg-white p-6 shadow-card"

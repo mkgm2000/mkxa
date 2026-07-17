@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PLAN, START_DATE, getCurrentWeek, getDays, getWeekDates, MAX_WEEK } from '@/lib/plan-hyrox';
+import { PLAN, START_DATE, getCurrentWeek, getDays, getWeekDates } from '@/lib/plan-hyrox';
 
 describe('PLAN', () => {
   it('contains weeks 1..3 with MK + Xabi each', () => {
@@ -52,8 +52,11 @@ describe('getDays', () => {
   it('falls back to MK when athlete null', () => {
     expect(getDays(1, null)).toBe(PLAN[1].MK);
   });
-  it('clamps unknown future weeks to MAX_WEEK', () => {
-    expect(getDays(99, 'MK')).toBe(PLAN[MAX_WEEK].MK);
+  it('clamps unknown future weeks to the last defined plan week', () => {
+    // PLAN is sparse (only baseline weeks are hard-coded); getDays falls back
+    // to the highest defined week, not the macrocycle's MAX_WEEK (23).
+    const lastDefined = Math.max(...Object.keys(PLAN).map(Number));
+    expect(getDays(99, 'MK')).toBe(PLAN[lastDefined].MK);
   });
 });
 

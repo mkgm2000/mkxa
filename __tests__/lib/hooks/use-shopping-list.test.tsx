@@ -12,6 +12,16 @@ const update  = vi.fn(() => ({ eq: eqId }));
 vi.mock('@/lib/supabase/client', () => ({
   supabaseClient: () => ({
     from: () => ({ select: sel, update }),
+    // Realtime subscription used by the hook — a self-returning channel
+    // handles any number of chained .on() calls, then .subscribe().
+    channel: () => {
+      const ch: { on: () => typeof ch; subscribe: () => typeof ch } = {
+        on: () => ch,
+        subscribe: () => ch,
+      };
+      return ch;
+    },
+    removeChannel: () => {},
   }),
 }));
 

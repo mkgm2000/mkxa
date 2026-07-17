@@ -44,6 +44,18 @@ export function useAthlete(): Athlete | null {
   return useContext(AthleteCtx);
 }
 
+/**
+ * Synchronously read the persisted athlete straight from localStorage.
+ * Useful for client components that need to decide before the provider's
+ * hydration effect has run (e.g. gating a redirect to /pick). Returns null
+ * on the server or when nothing valid is stored.
+ */
+export function getStoredAthlete(): Athlete | null {
+  if (typeof window === 'undefined') return null;
+  const stored = window.localStorage.getItem(STORE_KEY);
+  return stored === 'MK' || stored === 'Xabi' ? stored : null;
+}
+
 export function setAthlete(a: Athlete | null) {
   athleteStore.getState().setAthlete(a);
 }

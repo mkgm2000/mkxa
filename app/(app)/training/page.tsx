@@ -322,6 +322,13 @@ export default function TrainingPage() {
           Tabla HYROX
           <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
         </Link>
+        <Link
+          href="/training/exercises"
+          className="inline-flex items-center gap-1.5 rounded-action border border-ink-soft bg-white px-4 py-2.5 text-[13px] font-semibold text-ink shadow-action transition-transform duration-150 active:scale-95"
+        >
+          Ejercicios
+          <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
+        </Link>
       </section>
 
       <RpeModal
