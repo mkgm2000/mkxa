@@ -113,6 +113,27 @@ for week in WEEKS_TO_PERSIST:
 
 ---
 
+## 4.5 · MANDATO DE ORIGINALIDAD (pedido explícito por Xabier 2026-07-24)
+
+**Cada semana debe ser DISTINTA y entretenida — no el mismo template de siempre.** Aprobado en S12. Reglas:
+
+- **Rota ejercicios frescos de la batería.** No repetir siempre F01 Sentadilla / F02 PM / F03 Press. Usar el catálogo COMPLETO: unilateral (F06 Búlgara, F12-F16, subida a cajón), core variado (R04 Pallof, R06 Dead Bug, R08 Suitcase, R10 Russian Twist en vez de siempre R01 Plancha), potencia/KB (F17 Thruster, F18 Push Press, F19 Snatch KB, F20 KB Swing, F21 Devils Press, F24 Power Clean, F25 Med Ball Slam, F26 Single-arm Swing), pliometría ligera (F22 Box Jump, F23 Broad Jump, F27 Skater Hops).
+- **Varía el FORMATO de sesión**, no solo los ejercicios: series en pirámide (200-400-600-400-200) vs 5x400, tempo, progresivos, énfasis unilateral, HYROX flow con estaciones distintas. SIN etiquetas de mini-circuito (bloques listados normales).
+- **Usa web search** para nutrir el diseño con ideas útiles y con transferencia real a HYROX (KB→trineo/wall ball, unilateral→carrera/lunges, etc.). Cita fuentes en el rationale.
+- **Sigue siendo útil y respeta todo lo demás**: fase del Excel, cargas por RM/atleta, registros + feedback, deload intocable, batería como fuente de nombres. Originalidad ≠ inventar ejercicios fuera de la batería ni ignorar la periodización.
+- **Justifica cada elección "rara" en el rationale** con su transferencia (por qué ese ejercicio ayuda a HYROX).
+
+## 4.6 · Log de progresión (mejorar iterando — mantener al día)
+
+| Semana | Fecha gen | Enfoque | Notas clave |
+|---|---|---|---|
+| S11 | 2026-07-24 | REACTIVACIÓN tras ~3 sem bajo volumen (último confirmado S8). Moderado, base, sin picos. | Cargas S6 mantenidas · Z2 por respiración (MK RPE9 a 6:34/km) · HYROX reducido sin trineo (se saltó S5-S7) · series controladas. |
+| S12 | 2026-07-24 | DESCARGA VARIADA — 1ª semana con mandato de originalidad. Unilateral + KB + core anti-rotación + pirámide. | Búlgara/RDL 1-pierna/subida cajón · KB Swing+Snatch (transfer trineo/WB) · Pallof · Med Ball Slam · D4 pirámide 200-400-600-400-200. Fuentes: PureGym, Hybrid Pro Coach, Peak Strength. |
+
+> Al generar la siguiente semana: leer este log, NO repetir el mismo enfoque de la semana anterior, y añadir una fila nueva.
+
+---
+
 ## 5 · Quick reference — el resto de semanas en orden
 
 | S | Fecha | Fase | RPE | Vol | Int | %RM | Objetivo |

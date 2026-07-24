@@ -89,19 +89,22 @@ export function ExerciseSheet({ exerciseId, blockName, onClose }: ExerciseSheetP
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-8"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 28px)' }}>
           {/* Animation */}
-          <div className="mx-auto flex aspect-square w-full max-w-[340px] items-center justify-center overflow-hidden rounded-card bg-[#f3ecdd]">
+          <div className="mx-auto flex aspect-square w-full max-w-[300px] items-center justify-center overflow-hidden rounded-card bg-[#f3ecdd]">
             {mediaStage === 'none' ? (
               <span className="px-6 text-center text-[12px] font-semibold uppercase tracking-[0.06em] text-ink-muted">
                 Sin animación
               </span>
             ) : (
+              // Source media is small (180² native, 360² for upscaled ones).
+              // Cap the display so the browser never stretches it past native —
+              // a crisp smaller image beats a blurry enlarged one.
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={mediaStage === 'gif' ? gifUrl(exerciseId) : thumbUrl(exerciseId)}
                 alt={blockName}
                 loading="eager"
                 onError={() => setMediaStage((s) => (s === 'gif' ? 'thumb' : 'none'))}
-                className="h-full w-full object-contain"
+                className="max-h-[280px] max-w-[280px] object-contain"
               />
             )}
           </div>
