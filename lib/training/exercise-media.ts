@@ -17,8 +17,11 @@ export const MEDIA_BASE = (
 
 export const EXERCISE_ATTRIBUTION = '© Gym visual — gymvisual.com';
 
+// gif360/ holds the full catalog re-encoded to 360² (ffmpeg lanczos) for
+// sharper display. The original 180² gif/ prefix is kept untouched as an
+// instant rollback: revert this path to `/gif/` and redeploy.
 export function gifUrl(id: string): string {
-  return `${MEDIA_BASE}/gif/${id}.gif`;
+  return `${MEDIA_BASE}/gif360/${id}.gif`;
 }
 
 export function thumbUrl(id: string): string {
