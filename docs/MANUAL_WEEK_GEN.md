@@ -134,6 +134,8 @@ for week in WEEKS_TO_PERSIST:
 > Al generar la siguiente semana: leer este log, NO repetir el mismo enfoque de la semana anterior, y añadir una fila nueva.
 >
 > **Señales crónicas a vigilar**: (1) correr = RPE 9 para MK repetido (S6, S12) → mantener run/walk / intensidad controlada hasta que baje. (2) MK quita Wall Balls y trabajo de cajón repetidamente → no reponer sin alternativa. (3) MK adora el KB Swing → mantener.
+>
+> **Reglas fijas de Xabier (SIEMPRE)**: (a) Día de series/carrera = SOLO calentamiento + series, sin core ni extras añadidos (pedido S13). (b) Día de fuerza debe incluir un ejercicio de abdomen. (c) Nada de Suitcase Carry en fuerza (sustituido por abdomen en S13).
 
 ---
 
