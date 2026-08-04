@@ -129,8 +129,11 @@ for week in WEEKS_TO_PERSIST:
 |---|---|---|---|
 | S11 | 2026-07-24 | REACTIVACIÓN tras ~3 sem bajo volumen (último confirmado S8). Moderado, base, sin picos. | Cargas S6 mantenidas · Z2 por respiración (MK RPE9 a 6:34/km) · HYROX reducido sin trineo (se saltó S5-S7) · series controladas. |
 | S12 | 2026-07-24 | DESCARGA VARIADA — 1ª semana con mandato de originalidad. Unilateral + KB + core anti-rotación + pirámide. | Búlgara/RDL 1-pierna/subida cajón · KB Swing+Snatch (transfer trineo/WB) · Pallof · Med Ball Slam · D4 pirámide 200-400-600-400-200. Fuentes: PureGym, Hybrid Pro Coach, Peak Strength. |
+| S13 | 2026-08-04 | REALIZACIÓN 4 días — fuerza+potencia, run/walk, compromised-running brick, escalera. | Incorpora cambios MK S12: KB Swing 16kg (le encanta, lo pidió), fuera subida a cajón + Wall Balls (las quita), Snatch cubre overhead. FIX correr RPE 9 crónico → D2 run/walk. D3 brick run+lunges (compromised running). D4 escalera 600-500-400-300-200 (≠ pirámide S12). Fuentes: Xendurance/ROXFIT, Optimal Readiness/Doc Lyss. |
 
 > Al generar la siguiente semana: leer este log, NO repetir el mismo enfoque de la semana anterior, y añadir una fila nueva.
+>
+> **Señales crónicas a vigilar**: (1) correr = RPE 9 para MK repetido (S6, S12) → mantener run/walk / intensidad controlada hasta que baje. (2) MK quita Wall Balls y trabajo de cajón repetidamente → no reponer sin alternativa. (3) MK adora el KB Swing → mantener.
 
 ---
 
